@@ -11,7 +11,7 @@ exports.submitAssessment = async (req, res) => {
     if (!answers || answers.length !== config.questions.length) {
       return res.status(400).json({ error: 'Invalid answers count' });
     }
-    const score = Assessment.computeScore(answers);
+    const score = Assessment.getScore(type, answers);
     const level = Assessment.getLevel(type, score);
     const recommendations = Assessment.getRecommendations(type, level.label);
 
