@@ -57,9 +57,15 @@ const Navigation = () => {
               ) : (
                 <>
                   <Nav.Link as={Link} to="/login" className="ms-lg-2">Login</Nav.Link>
-                  <Nav.Link as={Link} to="/register" className="btn btn-primary text-white ms-lg-2 px-3">
+                  <Button 
+                    as={Link} 
+                    to="/register" 
+                    variant="primary" 
+                    size="sm"
+                    className="ms-lg-2 px-3"
+                  >
                     Sign Up
-                  </Nav.Link>
+                  </Button>
                 </>
               )}
             </Nav>
@@ -67,7 +73,7 @@ const Navigation = () => {
         </Container>
       </Navbar>
 
-      {/* Emergency Modal */}
+      {/* Emergency Modal – unchanged */}
       <Modal show={showEmergency} onHide={handleEmergencyClose} centered>
         <Modal.Header closeButton className="border-0">
           <Modal.Title>🚨 Immediate Help</Modal.Title>
