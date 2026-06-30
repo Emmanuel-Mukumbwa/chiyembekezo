@@ -1,28 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Container, Row, Col, Button, Card, Accordion, Carousel, Badge } from 'react-bootstrap';
+import { useState } from 'react';
+import { Container, Row, Col, Button, Card, Accordion, Carousel } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import MoodTracker from '../components/MoodTracker';
 import '../styles/custom.css';
 
 const Home = () => {
-  // Mood state
-  const [selectedMood, setSelectedMood] = useState(null);
-  const moods = [
-    { emoji: '😊', label: 'Happy', value: 'happy' },
-    { emoji: '🙂', label: 'Okay', value: 'okay' },
-    { emoji: '😐', label: 'Stressed', value: 'stressed' },
-    { emoji: '😔', label: 'Sad', value: 'sad' },
-    { emoji: '😭', label: 'Overwhelmed', value: 'overwhelmed' },
-  ];
-
   // Breathing exercise
   const [isBreathing, setIsBreathing] = useState(false);
-  const [breathPhase, setBreathPhase] = useState('idle'); // idle, inhale, exhale
+  const [breathPhase, setBreathPhase] = useState('idle');
 
   const startBreathing = () => {
     if (isBreathing) return;
     setIsBreathing(true);
     setBreathPhase('inhale');
-    // Cycle inhale (4s) -> hold (4s) -> exhale (4s) -> hold (4s)
     const interval = setInterval(() => {
       setBreathPhase(prev => {
         if (prev === 'inhale') return 'hold1';
@@ -31,7 +21,6 @@ const Home = () => {
         return 'inhale';
       });
     }, 4000);
-    // Stop after 60 seconds (adjustable)
     const timer = setTimeout(() => {
       clearInterval(interval);
       setIsBreathing(false);
@@ -43,19 +32,14 @@ const Home = () => {
     };
   };
 
-  // Helper for breathing circle class
   const getBreathingClass = () => {
     if (breathPhase === 'inhale' || breathPhase === 'hold1') return 'inhale';
     if (breathPhase === 'exhale' || breathPhase === 'hold2') return 'exhale';
     return '';
   };
 
-  // For the emergency banner we just show a link
-  // We'll use a state for modal but we already have global emergency modal in Navbar, so we can just link to it? Actually we can use the same modal. But we'll keep it simple with a button that triggers the same modal? Better to use the Navbar emergency modal. We'll add a button that opens it via a global context or we can duplicate the modal here. For simplicity, we'll just use a button that opens the same modal by referencing the Navbar's state? Not straightforward without context. Instead, we'll create a separate modal for the banner or just use a Link to a dedicated emergency page. But the requirement is to have an emergency button. Since we already have it in Navbar, we can just duplicate the modal in Home or we can use a shared context. Let's duplicate the modal in Home for simplicity, or we can just use a button that triggers the Navbar's modal. I'll create a separate simple modal in Home for the emergency banner. It's okay.
-
   const [showEmergencyBannerModal, setShowEmergencyBannerModal] = useState(false);
 
-  // FAQ data
   const faqs = [
     { question: "What is Chiyembekezo?", answer: "Chiyembekezo is a digital platform that provides mental wellness resources, self-assessments, and support for people in Malawi. Our goal is to make mental health help accessible and reduce stigma." },
     { question: "Is the platform free?", answer: "Yes, all basic features (articles, assessments, breathing exercises, community reading) are free. Some advanced features like booking professionals or saving progress may require registration." },
@@ -64,7 +48,6 @@ const Home = () => {
     { question: "What if I need immediate help?", answer: "Click the red 'Emergency' button at the top of every page. It will show you crisis numbers and guidance. You can also call 999 (Police) or visit your nearest hospital." },
   ];
 
-  // Testimonials
   const testimonials = [
     { name: "Sarah, Lilongwe", text: "Chiyembekezo helped me understand my anxiety. The articles and the mood tracker gave me a sense of control. I finally felt heard." },
     { name: "John, Blantyre", text: "I was hesitant to seek help, but the anonymous community stories inspired me. I'm now seeing a counselor and feeling better every day." },
@@ -138,30 +121,14 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Mood Check-in */}
+      {/* Mood Check-in - Now using MoodTracker component */}
       <Container className="my-5">
         <h2 className="text-center mb-4">How are you feeling today?</h2>
         <Row className="justify-content-center">
-          {moods.map((mood) => (
-            <Col xs={6} sm={4} md={2} key={mood.value} className="text-center">
-              <div
-                className={`mood-option ${selectedMood === mood.value ? 'selected' : ''}`}
-                onClick={() => setSelectedMood(mood.value)}
-              >
-                <span className="mood-emoji">{mood.emoji}</span>
-                <span className="d-block">{mood.label}</span>
-              </div>
-            </Col>
-          ))}
+          <Col md={8} lg={6}>
+            <MoodTracker />
+          </Col>
         </Row>
-        {selectedMood && (
-          <p className="text-center mt-3 text-muted">
-            You chose <strong>{moods.find(m => m.value === selectedMood)?.emoji} {moods.find(m => m.value === selectedMood)?.label}</strong>. 
-            {' '} <Button variant="link" className="p-0" onClick={() => alert('Create an account to save your moods and track progress!')}>
-              Save your mood?
-            </Button>
-          </p>
-        )}
       </Container>
 
       {/* Popular Resources */}
@@ -189,17 +156,35 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* Quick Self Assessments */}
+      {/* Quick Self Assessments - ALL ENABLED with correct links */}
       <Container className="my-5">
         <h2 className="text-center mb-4">Quick Self Assessments</h2>
         <Row className="justify-content-center gap-3">
-          {["Depression", "Anxiety", "Stress", "Sleep", "Burnout"].map((test) => (
-            <Col xs="auto" key={test}>
-              <Button variant="outline-secondary" as={Link} to={`/assessments?type=${test.toLowerCase()}`}>
-                {test} Test
-              </Button>
-            </Col>
-          ))}
+          <Col xs="auto">
+            <Button variant="outline-secondary" as={Link} to="/assessments/phq9">
+              Depression Test
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button variant="outline-secondary" as={Link} to="/assessments/gad7">
+              Anxiety Test
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button variant="outline-secondary" as={Link} to="/assessments/stress">
+              Stress Test
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button variant="outline-secondary" as={Link} to="/assessments/sleep">
+              Sleep Test
+            </Button>
+          </Col>
+          <Col xs="auto">
+            <Button variant="outline-secondary" as={Link} to="/assessments/burnout">
+              Burnout Test
+            </Button>
+          </Col>
         </Row>
       </Container>
 
@@ -317,7 +302,7 @@ const Home = () => {
                   <Accordion.Body>{faq.answer}</Accordion.Body>
                 </Accordion.Item>
               ))}
-            </Accordion>
+            </Accordion> 
           </Col>
         </Row>
       </Container>
