@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
 
 const moods = [
   { emoji: '😊', label: 'Happy', value: 'happy' },
@@ -13,6 +14,7 @@ const moods = [
 
 const MoodTracker = ({ onSave }) => {
   const { user } = useAuth();
+  const { showModal } = useModal();
   const [selected, setSelected] = useState(null);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
@@ -20,11 +22,11 @@ const MoodTracker = ({ onSave }) => {
 
   const handleSave = async () => {
     if (!selected) {
-      setMessage('Please select a mood.');
+      showModal('Mood Not Selected', 'Please select a mood before saving.');
       return;
     }
     if (!user) {
-      setMessage('Please log in to save your mood.');
+      showModal('Login Required', 'Please log in to save your mood.');
       return;
     }
     setSaving(true);
@@ -37,7 +39,7 @@ const MoodTracker = ({ onSave }) => {
       setMessage('Mood saved!');
       if (onSave) onSave();
     } catch (err) {
-      setMessage('Error saving mood. Please try again.');
+      showModal('Error', 'Error saving mood. Please try again.');
     } finally {
       setSaving(false);
     }
