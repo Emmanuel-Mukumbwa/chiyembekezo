@@ -1,12 +1,20 @@
 import { useState } from 'react';
-import { Navbar, Nav, Container, Button, Modal } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Navbar, Nav, Container, Button, Modal, Dropdown } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
 const Navigation = () => {
   const [showEmergency, setShowEmergency] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
   const handleEmergencyOpen = () => setShowEmergency(true);
   const handleEmergencyClose = () => setShowEmergency(false);
+
+  const handleLogout = () => {
+    logout();
+    navigate('/');
+  };
 
   return (
     <>
@@ -19,12 +27,13 @@ const Navigation = () => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-lg-center">
               <Nav.Link as={Link} to="/">Home</Nav.Link>
-              <Nav.Link as={Link} to="/resources">Learn</Nav.Link>
+              <Nav.Link as={Link} to="/about">About</Nav.Link>
+              <Nav.Link as={Link} to="/resources">Resources</Nav.Link>
               <Nav.Link as={Link} to="/assessments">Assessments</Nav.Link>
               <Nav.Link as={Link} to="/community">Community</Nav.Link>
               <Nav.Link as={Link} to="/find-help">Find Help</Nav.Link>
-              <Nav.Link as={Link} to="/about">About</Nav.Link>
               <Nav.Link as={Link} to="/contact">Contact</Nav.Link>
+              <Nav.Link as={Link} to="/faq">FAQ</Nav.Link>
               <Button
                 variant="danger"
                 size="sm"
@@ -33,10 +42,26 @@ const Navigation = () => {
               >
                 🚨 Emergency
               </Button>
-              <Nav.Link as={Link} to="/login" className="ms-lg-2">Login</Nav.Link>
-              <Nav.Link as={Link} to="/register" className="btn btn-primary text-white ms-lg-2 px-3">
-                Sign Up
-              </Nav.Link>
+              {user ? (
+                <Dropdown align="end" className="ms-lg-3">
+                  <Dropdown.Toggle variant="outline-primary" size="sm" id="dropdown-user">
+                    {user.firstName || user.email}
+                  </Dropdown.Toggle>
+                  <Dropdown.Menu>
+                    <Dropdown.Item as={Link} to="/dashboard">Dashboard</Dropdown.Item>
+                    <Dropdown.Item as={Link} to="/profile">Profile</Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                  </Dropdown.Menu>
+                </Dropdown>
+              ) : (
+                <>
+                  <Nav.Link as={Link} to="/login" className="ms-lg-2">Login</Nav.Link>
+                  <Nav.Link as={Link} to="/register" className="btn btn-primary text-white ms-lg-2 px-3">
+                    Sign Up
+                  </Nav.Link>
+                </>
+              )}
             </Nav>
           </Navbar.Collapse>
         </Container>
