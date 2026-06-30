@@ -8,6 +8,8 @@ const morgan = require('morgan');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+
+const authRoutes = require('./routes/auth');
 const assessmentRoutes = require('./routes/assessments');
 const moodRoutes = require('./routes/moods');
 
@@ -23,6 +25,7 @@ app.get('/api/health', (req, res) => {
   res.json({ status: 'OK', message: 'Chiyembekezo API is running' });
 });
 
+app.use('/api/auth', authRoutes);
 app.use('/api/assessments', assessmentRoutes);
 app.use('/api/mood', moodRoutes);
 
