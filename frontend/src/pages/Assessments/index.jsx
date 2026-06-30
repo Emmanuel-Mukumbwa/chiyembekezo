@@ -1,21 +1,43 @@
 import React from 'react';
-import { Container, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Badge } from 'react-bootstrap';
 import AssessmentCard from '../../components/AssessmentCard';
 
 const assessments = [
   {
     slug: 'phq9',
     title: 'Depression Screening',
-    description: 'Quick 2-minute check-in (PHQ-9)',
-    icon: '😔'
+    description: 'Patient Health Questionnaire (PHQ-9)',
+    icon: '😔',
+    available: true
   },
   {
     slug: 'gad7',
     title: 'Anxiety Screening',
-    description: 'Assess your anxiety level (GAD-7)',
-    icon: '😰'
+    description: 'Generalized Anxiety Disorder (GAD-7)',
+    icon: '😰',
+    available: true
   },
-  // add more later
+  {
+    slug: 'stress',
+    title: 'Stress Test',
+    description: 'Perceived Stress Scale (PSS-10)',
+    icon: '😩',
+    available: true
+  },
+  {
+    slug: 'sleep',
+    title: 'Sleep Test',
+    description: 'Insomnia Severity Index (ISI)',
+    icon: '😴',
+    available: true
+  },
+  {
+    slug: 'burnout',
+    title: 'Burnout Test',
+    description: 'Copenhagen Burnout Inventory (CBI)',
+    icon: '🔥',
+    available: true
+  }
 ];
 
 const Assessments = () => {
@@ -29,6 +51,9 @@ const Assessments = () => {
         {assessments.map((a) => (
           <Col md={4} key={a.slug} className="mb-3">
             <AssessmentCard {...a} />
+            {!a.available && (
+              <Badge bg="secondary" className="mt-2 d-block text-center">Coming Soon</Badge>
+            )}
           </Col>
         ))}
       </Row>
