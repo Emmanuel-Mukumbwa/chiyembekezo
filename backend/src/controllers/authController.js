@@ -3,7 +3,22 @@ const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { sendPasswordResetEmail } = require('../services/emailService');
 
-// Generate JWT
+// ----- Ensure JWT_SECRET is defined (with fallback for development) -----
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('❌ JWT_SECRET is not defined in environment variables.');
+  console.error('   Please set JWT_SECRET in your .env file.');
+  console.error('   For development, a temporary secret will be used.');
+  // Generate a random secret for development only (DO NOT USE IN PRODUCTION)
+  const crypto = require('crypto');
+  const tempSecret = crypto.randomBytes(32).toString('hex');
+  console.warn(`⚠️  Using temporary JWT_SECRET: ${tempSecret}`);
+  process.env.JWT_SECRET = tempSecret;
+} else {
+  console.log('✅ JWT_SECRET loaded from environment.');
+}
+
+// Generate JWT – uses process.env.JWT_SECRET (now always defined)
 const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
@@ -59,7 +74,8 @@ exports.register = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Registration error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -74,13 +90,22 @@ exports.login = async (req, res) => {
     }
 
     // Find user
-    const [rows] = await pool.query('SELECT id, email, password_hash, first_name, last_name, phone, is_admin FROM users WHERE email = ?', [email]);
+    const [rows] = await pool.query(
+      'SELECT id, email, password_hash, first_name, last_name, phone, is_admin FROM users WHERE email = ?',
+      [email]
+    );
     if (rows.length === 0) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
     const user = rows[0];
 
-    // Check password
+    // Ensure password_hash exists
+    if (!user.password_hash) {
+      console.error(`❌ User ${email} has no password_hash`);
+      return res.status(500).json({ error: 'Account error. Please contact support.' });
+    }
+
+    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
@@ -101,8 +126,9 @@ exports.login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    console.error('❌ Login error:', err.message);
+    console.error(err.stack);
+    res.status(500).json({ error: 'Server error. Please try again later.' });
   }
 };
 
@@ -122,27 +148,27 @@ exports.forgotPassword = async (req, res) => {
       return res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
     }
 
-    // Generate reset token (JWT or random string)
+    // Generate reset token (JWT with short expiry)
     const resetToken = jwt.sign(
       { id: rows[0].id, purpose: 'reset' },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Store token in DB (optional – we can also rely on JWT validation without storing)
-    // For extra security, store hashed token. But JWT validation is fine.
+    // Store token in DB with expiration
     const expires = new Date(Date.now() + 3600000); // 1 hour
     await pool.query(
       'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
       [resetToken, expires, rows[0].id]
     );
 
-    // Send email
+    // Send email (logs to console for now)
     await sendPasswordResetEmail(email, resetToken);
 
     res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Forgot password error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -167,7 +193,7 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
 
-    // Check token in DB (optional but adds extra validation)
+    // Check token in DB (extra validation)
     const [rows] = await pool.query(
       'SELECT id FROM users WHERE id = ? AND reset_token = ? AND reset_token_expires > NOW()',
       [decoded.id, token]
@@ -188,7 +214,8 @@ exports.resetPassword = async (req, res) => {
 
     res.json({ message: 'Password reset successful. You can now log in.' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Reset password error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -211,7 +238,8 @@ exports.getProfile = async (req, res) => {
     }
     res.json(rows[0]);
   } catch (err) {
-    console.error(err);
+    console.error('❌ Get profile error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 };
@@ -240,7 +268,6 @@ exports.updateProfile = async (req, res) => {
     `, [firstName, lastName, phone, dateOfBirth, gender, userId]);
 
     // Update profiles table (upsert)
-    // Check if profile exists
     const [profileRows] = await pool.query('SELECT id FROM profiles WHERE user_id = ?', [userId]);
     if (profileRows.length > 0) {
       await pool.query(`
@@ -265,7 +292,8 @@ exports.updateProfile = async (req, res) => {
 
     res.json({ message: 'Profile updated successfully' });
   } catch (err) {
-    console.error(err);
+    console.error('❌ Update profile error:', err.message);
+    console.error(err.stack);
     res.status(500).json({ error: 'Server error' });
   }
 };
