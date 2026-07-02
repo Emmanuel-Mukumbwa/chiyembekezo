@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { Container, Row, Col, Button, Card, Accordion, Carousel } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import MoodTracker from '../components/MoodTracker';
 import '../styles/custom.css';
 
 const Home = () => {
+  const { user } = useAuth();
+
   // Breathing exercise
   const [isBreathing, setIsBreathing] = useState(false);
   const [breathPhase, setBreathPhase] = useState('idle');
@@ -121,12 +124,19 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Mood Check-in - Now using MoodTracker component */}
+      {/* Mood Check-in - compact mode with "Go to Full Check-in" for logged-in users */}
       <Container className="my-5">
         <h2 className="text-center mb-4">How are you feeling today?</h2>
         <Row className="justify-content-center">
           <Col md={8} lg={6}>
-            <MoodTracker />
+            <MoodTracker compact />
+            {user && (
+              <div className="text-center mt-3">
+                <Button as={Link} to="/dashboard" variant="outline-primary" size="sm">
+                  Go to Full Check‑in
+                </Button>
+              </div>
+            )}
           </Col>
         </Row>
       </Container>
@@ -136,7 +146,7 @@ const Home = () => {
         <h2 className="text-center mb-4">Popular Resources</h2>
         <Row>
           {[
-            "Managing Anxiety", "Understanding Depression", "Exam Stress", 
+            "Managing Anxiety", "Understanding Depression", "Exam Stress",
             "Grief", "Relationship Problems", "Burnout", "Financial Stress"
           ].map((topic, idx) => (
             <Col md={3} sm={6} key={idx} className="mb-3">
@@ -194,15 +204,15 @@ const Home = () => {
         <div className="breathing-circle-container">
           <div className={`breathing-circle ${getBreathingClass()}`}></div>
           <p className="mt-3">
-            {!isBreathing ? 'Press start to begin' : 
+            {!isBreathing ? 'Press start to begin' :
               breathPhase === 'inhale' ? 'Inhale...' :
               breathPhase === 'hold1' ? 'Hold...' :
               breathPhase === 'exhale' ? 'Exhale...' :
               'Hold...'
             }
           </p>
-          <Button 
-            variant="primary" 
+          <Button
+            variant="primary"
             onClick={startBreathing}
             disabled={isBreathing}
           >
@@ -302,7 +312,7 @@ const Home = () => {
                   <Accordion.Body>{faq.answer}</Accordion.Body>
                 </Accordion.Item>
               ))}
-            </Accordion> 
+            </Accordion>
           </Col>
         </Row>
       </Container>
