@@ -23,6 +23,10 @@ import Profile from './pages/Profile';
 import ProtectedRoute from './components/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
 import { ModalProvider } from './context/ModalContext';
+import MoodHistory from './pages/MoodHistory';
+import Journal from './pages/Journal';
+import Goals from './pages/Goals';
+import SafetyPlan from './pages/SafetyPlan';
 import './styles/custom.css';
 
 function App() {
@@ -65,6 +69,20 @@ function App() {
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
+                } />
+                <Route path="/mood-history" element={
+                  <ProtectedRoute>
+                    <MoodHistory />
+                  </ProtectedRoute>
+                } />
+                <Route path="/journal" element={
+                  <ProtectedRoute><Journal /></ProtectedRoute>
+                } />
+                <Route path="/goals" element={
+                  <ProtectedRoute><Goals /></ProtectedRoute>
+                } />
+                <Route path="/safety-plan" element={
+                  <ProtectedRoute><SafetyPlan /></ProtectedRoute>
                 } />
               </Routes>
             </div>
