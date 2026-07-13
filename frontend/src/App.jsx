@@ -38,6 +38,8 @@ import Sounds from './pages/Wellness/Sounds';
 import Timers from './pages/Wellness/Timers';
 import DailyWellness from './pages/Wellness/DailyWellness';
 
+import ProfessionalAvailability from './pages/ProfessionalAvailability';
+
 import './styles/custom.css';
 
 function App() {
@@ -119,6 +121,8 @@ function App() {
                 <Route path="/wellness/daily" element={
                   <ProtectedRoute><DailyWellness /></ProtectedRoute>
                 } />
+                <Route path="/professional/availability" element={
+                  <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>} />
               </Routes>
             </div>
             <Footer />
