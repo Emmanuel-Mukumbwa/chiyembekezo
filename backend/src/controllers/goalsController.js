@@ -18,6 +18,22 @@ exports.getGoals = async (req, res) => {
   }
 };
 
+// Get goal progress (based on habits or manual updates) – NEW
+exports.getGoalProgress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [goals] = await pool.query(
+      `SELECT id, progress FROM goals WHERE user_id = ?`,
+      [userId]
+    );
+    // For now just return the stored progress
+    res.json(goals);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 // Create a new goal
 exports.createGoal = async (req, res) => {
   try {
@@ -81,7 +97,7 @@ exports.updateGoal = async (req, res) => {
 };
 
 // Delete a goal
-exports.deleteGoal = async (req, res) => { 
+exports.deleteGoal = async (req, res) => {
   try {
     const userId = req.user.id;
     const { id } = req.params;
