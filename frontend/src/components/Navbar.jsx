@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Navbar, Nav, Container, Button, Modal, Dropdown } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Navigation = () => {
@@ -33,38 +33,80 @@ const Navigation = () => {
       >
         <Container>
           <Navbar.Brand
-            as={Link}
+            as={NavLink}
             to="/"
             className="fw-bold text-primary"
             onClick={handleNavClick}
+            end
           >
             Chiyembekezo
           </Navbar.Brand>
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-lg-center">
-              <Nav.Link as={Link} to="/" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/"
+                onClick={handleNavClick}
+                end
+                className="nav-link"
+              >
                 Home
               </Nav.Link>
-              <Nav.Link as={Link} to="/about" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/about"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 About
               </Nav.Link>
-              <Nav.Link as={Link} to="/resources" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/resources"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 Resources
               </Nav.Link>
-              <Nav.Link as={Link} to="/assessments" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/assessments"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 Assessments
               </Nav.Link>
-              <Nav.Link as={Link} to="/community" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/community"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 Community
               </Nav.Link>
-              <Nav.Link as={Link} to="/find-help" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/find-help"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 Find Help
               </Nav.Link>
-              <Nav.Link as={Link} to="/contact" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/contact"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 Contact
               </Nav.Link>
-              <Nav.Link as={Link} to="/faq" onClick={handleNavClick}>
+              <Nav.Link
+                as={NavLink}
+                to="/faq"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
                 FAQ
               </Nav.Link>
 
@@ -86,12 +128,20 @@ const Navigation = () => {
                     {user.firstName || user.email}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item as={Link} to="/dashboard" onClick={handleNavClick}>
+                    <Dropdown.Item as={NavLink} to="/dashboard" onClick={handleNavClick}>
                       Dashboard
                     </Dropdown.Item>
-                    <Dropdown.Item as={Link} to="/profile" onClick={handleNavClick}>
+                    <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
                       Profile
                     </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
+                      Wellness Toolkit
+                    </Dropdown.Item>
+                    {user.isProfessional && (
+                      <Dropdown.Item as={NavLink} to="/professional/availability" onClick={handleNavClick}>
+                        Manage Availability
+                      </Dropdown.Item>
+                    )}
                     <Dropdown.Divider />
                     <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
                   </Dropdown.Menu>
@@ -99,15 +149,15 @@ const Navigation = () => {
               ) : (
                 <>
                   <Nav.Link
-                    as={Link}
+                    as={NavLink}
                     to="/login"
-                    className="ms-lg-2"
+                    className="ms-lg-2 nav-link"
                     onClick={handleNavClick}
                   >
                     Login
                   </Nav.Link>
                   <Button
-                    as={Link}
+                    as={NavLink}
                     to="/register"
                     variant="primary"
                     className="ms-lg-2 px-3 py-1"
