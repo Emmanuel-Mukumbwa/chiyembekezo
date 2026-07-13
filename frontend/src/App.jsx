@@ -12,6 +12,7 @@ import Sleep from './pages/Assessments/Sleep';
 import Burnout from './pages/Assessments/Burnout';
 import Result from './pages/Assessments/Result';
 import FindHelp from './pages/FindHelp';
+import ProfessionalProfile from './pages/ProfessionalProfile';
 import Contact from './pages/Contact';
 import FAQ from './pages/FAQ';
 import Dashboard from './pages/Dashboard';
@@ -27,6 +28,16 @@ import MoodHistory from './pages/MoodHistory';
 import Journal from './pages/Journal';
 import Goals from './pages/Goals';
 import SafetyPlan from './pages/SafetyPlan';
+
+// Wellness imports
+import WellnessToolkit from './pages/Wellness/WellnessToolkit';
+import Breathing from './pages/Wellness/Breathing';
+import Meditation from './pages/Wellness/Meditation';
+import Grounding from './pages/Wellness/Grounding';
+import Sounds from './pages/Wellness/Sounds';
+import Timers from './pages/Wellness/Timers';
+import DailyWellness from './pages/Wellness/DailyWellness';
+
 import './styles/custom.css';
 
 function App() {
@@ -50,9 +61,10 @@ function App() {
                 <Route path="/assessments/burnout" element={<Burnout />} />
                 <Route path="/assessments/result" element={<Result />} />
                 <Route path="/find-help" element={<FindHelp />} />
+                <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
-                
+
                 {/* Auth routes */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
@@ -83,6 +95,29 @@ function App() {
                 } />
                 <Route path="/safety-plan" element={
                   <ProtectedRoute><SafetyPlan /></ProtectedRoute>
+                } />
+
+                {/* Wellness Toolkit routes */}
+                <Route path="/wellness" element={
+                  <ProtectedRoute><WellnessToolkit /></ProtectedRoute>
+                } />
+                <Route path="/wellness/breathing" element={
+                  <ProtectedRoute><Breathing /></ProtectedRoute>
+                } />
+                <Route path="/wellness/meditation" element={
+                  <ProtectedRoute><Meditation /></ProtectedRoute>
+                } />
+                <Route path="/wellness/grounding" element={
+                  <ProtectedRoute><Grounding /></ProtectedRoute>
+                } />
+                <Route path="/wellness/sounds" element={
+                  <ProtectedRoute><Sounds /></ProtectedRoute>
+                } />
+                <Route path="/wellness/timers" element={
+                  <ProtectedRoute><Timers /></ProtectedRoute>
+                } />
+                <Route path="/wellness/daily" element={
+                  <ProtectedRoute><DailyWellness /></ProtectedRoute>
                 } />
               </Routes>
             </div>
