@@ -28,6 +28,7 @@ import MoodHistory from './pages/MoodHistory';
 import Journal from './pages/Journal';
 import Goals from './pages/Goals';
 import SafetyPlan from './pages/SafetyPlan';
+import Habits from './pages/Habits';
 
 // Wellness imports
 import WellnessToolkit from './pages/Wellness/WellnessToolkit';
@@ -127,6 +128,8 @@ function App() {
                 } />
                 <Route path="/professional/availability" element={
                   <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>} />
+                <Route path="/habits" element={
+                  <ProtectedRoute><Habits /></ProtectedRoute>} />
               </Routes>
             </div>
             <Footer />
