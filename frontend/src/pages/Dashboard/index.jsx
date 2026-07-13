@@ -38,6 +38,7 @@ const Dashboard = () => {
   const [assessments, setAssessments] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
   const [goals, setGoals] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
 
@@ -50,19 +51,23 @@ const Dashboard = () => {
   const fetchAllData = async () => {
     setLoading(true);
     try {
-      const [moodRes, assessmentRes, journalRes, goalsRes] = await Promise.all([
+      const [moodRes, assessmentRes, journalRes, goalsRes, recRes] = await Promise.all([
         api.get('/mood/history'),
         api.get('/assessments/history'),
         api.get('/journal'),
         api.get('/goals'),
+        api.get('/wellness/recommendations'),
       ]);
       setMoodHistory(moodRes.data);
       setAssessments(assessmentRes.data || []);
       setJournalEntries(journalRes.data || []);
       setGoals(goalsRes.data || []);
+      setRecommendations(recRes.data || []);
       setStreak(computeStreak(moodRes.data));
     } catch (err) {
-      console.error(err);
+      console.error('Error fetching dashboard data:', err);
+      // Still set recommendations to empty array if fails
+      setRecommendations([]);
     } finally {
       setLoading(false);
     }
@@ -206,7 +211,30 @@ const Dashboard = () => {
               <Button as={Link} to="/goals" variant="outline-primary">Manage Goals</Button>
               <Button as={Link} to="/safety-plan" variant="outline-primary">Safety Plan</Button>
               <Button as={Link} to="/mood-history" variant="outline-primary">View History</Button>
+              <Button as={Link} to="/wellness" variant="outline-primary">Wellness Toolkit</Button>
             </div>
+          </Card>
+
+          {/* Wellness Recommendations */}
+          <Card className="feature-card p-3 mb-4">
+            <Card.Title>Recommended for You</Card.Title>
+            {recommendations.length === 0 ? (
+              <p className="text-muted">No recommendations yet. Keep tracking your mood!</p>
+            ) : (
+              <div className="d-flex flex-wrap gap-2">
+                {recommendations.map((rec, idx) => (
+                  <Button
+                    as={Link}
+                    to={rec.link}
+                    variant="outline-primary"
+                    key={idx}
+                    size="sm"
+                  >
+                    {rec.name}
+                  </Button>
+                ))}
+              </div>
+            )}
           </Card>
 
           {/* Active Goals */}
