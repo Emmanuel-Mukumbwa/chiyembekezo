@@ -13,16 +13,30 @@ const ProfessionalProfile = () => {
   const [pro, setPro] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showBooking, setShowBooking] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [selectedDate, setSelectedDate] = useState('');
   const [bookingData, setBookingData] = useState({
     scheduledTime: '',
     durationMinutes: 60,
     notes: '',
+    meetingType: 'video',
   });
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchProfessional();
   }, [id]);
+
+  // Fetch available slots when date changes
+  useEffect(() => {
+    if (selectedDate && pro?.id) {
+      api.get(`/availability/professional/${pro.id}/slots?date=${selectedDate}`)
+        .then(res => setAvailableSlots(res.data))
+        .catch(err => console.error('Error fetching slots:', err));
+    } else {
+      setAvailableSlots([]);
+    }
+  }, [selectedDate, pro]);
 
   const fetchProfessional = async () => {
     setLoading(true);
@@ -43,6 +57,10 @@ const ProfessionalProfile = () => {
       navigate('/login');
       return;
     }
+    if (!bookingData.scheduledTime) {
+      showModal('Error', 'Please select a date and time.');
+      return;
+    }
     setSubmitting(true);
     try {
       await api.post('/appointments', {
@@ -50,9 +68,13 @@ const ProfessionalProfile = () => {
         scheduledTime: bookingData.scheduledTime,
         durationMinutes: bookingData.durationMinutes,
         notes: bookingData.notes,
+        meetingType: bookingData.meetingType,
       });
       showModal('Success', 'Appointment booked successfully!');
       setShowBooking(false);
+      setBookingData({ scheduledTime: '', durationMinutes: 60, notes: '', meetingType: 'video' });
+      setSelectedDate('');
+      setAvailableSlots([]);
     } catch (err) {
       showModal('Error', err.response?.data?.error || 'Failed to book appointment.');
     } finally {
@@ -146,21 +168,50 @@ const ProfessionalProfile = () => {
       </Row>
 
       {/* Booking Modal */}
-      <Modal show={showBooking} onHide={() => setShowBooking(false)}>
+      <Modal show={showBooking} onHide={() => setShowBooking(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>Book Appointment with {pro.first_name}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleBookingSubmit}>
           <Modal.Body>
             <Form.Group className="mb-3">
-              <Form.Label>Date & Time</Form.Label>
+              <Form.Label>Date</Form.Label>
               <Form.Control
-                type="datetime-local"
-                value={bookingData.scheduledTime}
-                onChange={(e) => setBookingData({ ...bookingData, scheduledTime: e.target.value })}
+                type="date"
+                value={selectedDate}
+                onChange={(e) => {
+                  const date = e.target.value;
+                  setSelectedDate(date);
+                  setBookingData({ ...bookingData, scheduledTime: date });
+                }}
+                min={new Date().toISOString().split('T')[0]}
                 required
               />
             </Form.Group>
+
+            {availableSlots.length > 0 && (
+              <Form.Group className="mb-3">
+                <Form.Label>Time</Form.Label>
+                <Form.Select
+                  value={bookingData.scheduledTime.split('T')[1] || ''}
+                  onChange={(e) => {
+                    const time = e.target.value;
+                    setBookingData({ ...bookingData, scheduledTime: `${selectedDate}T${time}` });
+                  }}
+                  required
+                >
+                  <option value="">Select time</option>
+                  {availableSlots.map(slot => (
+                    <option key={slot} value={slot}>{slot}</option>
+                  ))}
+                </Form.Select>
+              </Form.Group>
+            )}
+
+            {selectedDate && availableSlots.length === 0 && (
+              <p className="text-muted">No available slots for this date. Please choose another date.</p>
+            )}
+
             <Form.Group className="mb-3">
               <Form.Label>Duration (minutes)</Form.Label>
               <Form.Control
@@ -171,6 +222,20 @@ const ProfessionalProfile = () => {
                 onChange={(e) => setBookingData({ ...bookingData, durationMinutes: parseInt(e.target.value) })}
               />
             </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Meeting Type</Form.Label>
+              <Form.Select
+                value={bookingData.meetingType}
+                onChange={(e) => setBookingData({ ...bookingData, meetingType: e.target.value })}
+              >
+                <option value="video">Video Call</option>
+                <option value="audio">Audio Call</option>
+                <option value="physical">In-person</option>
+                <option value="chat">Chat</option>
+              </Form.Select>
+            </Form.Group>
+
             <Form.Group className="mb-3">
               <Form.Label>Notes (optional)</Form.Label>
               <Form.Control
@@ -184,7 +249,11 @@ const ProfessionalProfile = () => {
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowBooking(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
+            <Button
+              variant="primary"
+              type="submit"
+              disabled={submitting || !bookingData.scheduledTime || !bookingData.scheduledTime.includes('T')}
+            >
               {submitting ? 'Booking...' : 'Book'}
             </Button>
           </Modal.Footer>
