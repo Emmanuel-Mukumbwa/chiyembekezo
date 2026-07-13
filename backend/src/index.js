@@ -18,6 +18,7 @@ const safetyPlanRoutes = require('./routes/safetyPlan');
 const wellnessRoutes = require('./routes/wellness');
 const professionalRoutes = require('./routes/professionals');
 const appointmentRoutes = require('./routes/appointments');
+const communityRoutes = require('./routes/community');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,6 +46,7 @@ app.use('/api/safety-plan', safetyPlanRoutes);
 app.use('/api/wellness', wellnessRoutes);
 app.use('/api/professionals', professionalRoutes);
 app.use('/api/appointments', appointmentRoutes);
+app.use('/api/community', communityRoutes);
 
 // ---- Error handling ----
 app.use(errorLogger); // logs errors with full details
