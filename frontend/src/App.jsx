@@ -37,6 +37,8 @@ import Grounding from './pages/Wellness/Grounding';
 import Sounds from './pages/Wellness/Sounds';
 import Timers from './pages/Wellness/Timers';
 import DailyWellness from './pages/Wellness/DailyWellness';
+import CommunityHome from './pages/Community/CommunityHome';
+import PostDetail from './pages/Community/PostDetail';
 
 import ProfessionalAvailability from './pages/ProfessionalAvailability';
 
@@ -66,6 +68,8 @@ function App() {
                 <Route path="/professional/:id" element={<ProfessionalProfile />} />
                 <Route path="/contact" element={<Contact />} />
                 <Route path="/faq" element={<FAQ />} />
+                <Route path="/community" element={<CommunityHome />} />
+                <Route path="/community/post/:id" element={<PostDetail />} />
 
                 {/* Auth routes */}
                 <Route path="/login" element={<Login />} />
