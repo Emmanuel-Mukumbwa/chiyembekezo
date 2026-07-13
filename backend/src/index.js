@@ -15,6 +15,9 @@ const moodRoutes = require('./routes/moods');
 const journalRoutes = require('./routes/journal');
 const goalsRoutes = require('./routes/goals');
 const safetyPlanRoutes = require('./routes/safetyPlan');
+const wellnessRoutes = require('./routes/wellness');
+const professionalRoutes = require('./routes/professionals');
+const appointmentRoutes = require('./routes/appointments');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -39,6 +42,9 @@ app.use('/api/mood', moodRoutes);
 app.use('/api/journal', journalRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/safety-plan', safetyPlanRoutes);
+app.use('/api/wellness', wellnessRoutes);
+app.use('/api/professionals', professionalRoutes);
+app.use('/api/appointments', appointmentRoutes);
 
 // ---- Error handling ----
 app.use(errorLogger); // logs errors with full details
