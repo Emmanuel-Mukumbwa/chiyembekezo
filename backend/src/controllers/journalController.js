@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndAwardAchievements } = require('../services/achievementService');
 
 // Get all journal entries for a user
 exports.getEntries = async (req, res) => {
@@ -23,7 +24,7 @@ exports.createEntry = async (req, res) => {
   try {
     const userId = req.user.id;
     const { title, content, mood_at_entry, entry_type, is_favorite } = req.body;
-    
+
     // Calculate word count (rough estimate)
     const wordCount = content ? content.trim().split(/\s+/).length : 0;
 
@@ -42,6 +43,10 @@ exports.createEntry = async (req, res) => {
       is_favorite || false,
     ]);
     const id = result[0].insertId;
+
+    // Check for achievements after creating journal entry
+    await checkAndAwardAchievements(userId, 'journal');
+
     res.status(201).json({ id, message: 'Entry created' });
   } catch (err) {
     console.error(err);
@@ -86,7 +91,7 @@ exports.updateEntry = async (req, res) => {
   }
 };
 
-// Delete entry (no changes needed)
+// Delete entry
 exports.deleteEntry = async (req, res) => {
   try {
     const userId = req.user.id;
