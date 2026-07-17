@@ -156,6 +156,9 @@ const Navigation = () => {
                     <Dropdown.Item as={NavLink} to="/mood-history" onClick={handleNavClick}>
                       📈 Mood History
                     </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/achievements" onClick={handleNavClick}>
+                      🏆 Achievements
+                    </Dropdown.Item>
                     <Dropdown.Divider />
                     <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
                       🧘 Wellness Toolkit
