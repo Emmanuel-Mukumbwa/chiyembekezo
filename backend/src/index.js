@@ -22,6 +22,7 @@ const communityRoutes = require('./routes/community');
 const habitRoutes = require('./routes/habits');
 const emergencyRoutes = require('./routes/emergency');
 const achievementRoutes = require('./routes/achievements');
+const resourceRoutes = require('./routes/resources'); // ✅ added resources
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -53,6 +54,7 @@ app.use('/api/community', communityRoutes);
 app.use('/api/habits', habitRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api/achievements', achievementRoutes);
+app.use('/api/resources', resourceRoutes); // ✅ added
 
 // ---- Error handling ----
 app.use(errorLogger); // logs errors with full details
