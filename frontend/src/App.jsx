@@ -45,6 +45,7 @@ import PostDetail from './pages/Community/PostDetail';
 
 import ProfessionalAvailability from './pages/ProfessionalAvailability';
 import Emergency from './pages/Emergency';
+import Achievements from './pages/Achievements';
 
 import './styles/custom.css';
 
@@ -136,6 +137,8 @@ function App() {
                   <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>} />
                 <Route path="/habits" element={
                   <ProtectedRoute><Habits /></ProtectedRoute>} />
+                <Route path="/achievements" element={
+                  <ProtectedRoute><Achievements /></ProtectedRoute>} />
               </Routes>
             </div>
             <Footer />
