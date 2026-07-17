@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndAwardAchievements } = require('../services/achievementService');
 
 // Get all goals for a user
 exports.getGoals = async (req, res) => {
@@ -18,7 +19,7 @@ exports.getGoals = async (req, res) => {
   }
 };
 
-// Get goal progress (based on habits or manual updates) – NEW
+// Get goal progress (based on habits or manual updates)
 exports.getGoalProgress = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -26,7 +27,6 @@ exports.getGoalProgress = async (req, res) => {
       `SELECT id, progress FROM goals WHERE user_id = ?`,
       [userId]
     );
-    // For now just return the stored progress
     res.json(goals);
   } catch (err) {
     console.error(err);
@@ -57,6 +57,10 @@ exports.createGoal = async (req, res) => {
       progress || 0,
     ]);
     const id = result[0].insertId;
+
+    // Award achievement for creating a goal
+    await checkAndAwardAchievements(userId, 'goal');
+
     res.status(201).json({ id, message: 'Goal created' });
   } catch (err) {
     console.error(err);
@@ -70,6 +74,13 @@ exports.updateGoal = async (req, res) => {
     const userId = req.user.id;
     const { id } = req.params;
     const { title, description, target_date, status, progress } = req.body;
+
+    // Fetch previous status to detect completion
+    const [existing] = await pool.query('SELECT status FROM goals WHERE id = ? AND user_id = ?', [id, userId]);
+    if (existing.length === 0) {
+      return res.status(404).json({ error: 'Goal not found' });
+    }
+    const oldStatus = existing[0].status;
 
     const query = `
       UPDATE goals
@@ -89,6 +100,12 @@ exports.updateGoal = async (req, res) => {
       id,
       userId,
     ]);
+
+    // If status changed to 'completed', award achievement
+    if (status === 'completed' && oldStatus !== 'completed') {
+      await checkAndAwardAchievements(userId, 'goal_complete');
+    }
+
     res.json({ message: 'Goal updated' });
   } catch (err) {
     console.error(err);
