@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndAwardAchievements } = require('../services/achievementService');
 
 // ===== Resources =====
 exports.getResources = async (req, res) => {
@@ -146,6 +147,14 @@ exports.updateCourseProgress = async (req, res) => {
     const { progress } = req.body;
     const completed = progress >= 100;
 
+    // Get previous progress to detect start
+    const [prev] = await pool.query(
+      'SELECT progress_percent, completed FROM course_progress WHERE user_id = ? AND resource_id = ?',
+      [userId, id]
+    );
+    const wasStarted = prev.length > 0 && prev[0].progress_percent > 0;
+    const wasCompleted = prev.length > 0 && prev[0].completed;
+
     await pool.query(`
       INSERT INTO course_progress (user_id, resource_id, progress_percent, completed)
       VALUES (?, ?, ?, ?)
@@ -154,6 +163,15 @@ exports.updateCourseProgress = async (req, res) => {
         completed = VALUES(completed),
         last_accessed_at = CURRENT_TIMESTAMP
     `, [userId, id, progress, completed]);
+
+    // Award achievements
+    if (!wasStarted && progress > 0) {
+      await checkAndAwardAchievements(userId, 'course_start');
+    }
+    if (!wasCompleted && completed) {
+      await checkAndAwardAchievements(userId, 'course_complete');
+    }
+
     res.json({ message: 'Progress updated' });
   } catch (err) {
     console.error(err);
@@ -227,6 +245,11 @@ exports.submitQuiz = async (req, res) => {
       INSERT INTO quiz_attempts (user_id, quiz_id, score, passed, answers)
       VALUES (?, ?, ?, ?, ?)
     `, [userId, id, score, passed, JSON.stringify(answers)]);
+
+    // Award achievement if passed
+    if (passed) {
+      await checkAndAwardAchievements(userId, 'quiz_pass');
+    }
 
     res.json({ score, passed, correct, total });
   } catch (err) {
