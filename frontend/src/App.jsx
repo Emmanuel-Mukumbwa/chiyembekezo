@@ -42,6 +42,7 @@ import CommunityHome from './pages/Community/CommunityHome';
 import PostDetail from './pages/Community/PostDetail';
 
 import ProfessionalAvailability from './pages/ProfessionalAvailability';
+import Emergency from './pages/Emergency';
 
 import './styles/custom.css';
 
@@ -71,6 +72,7 @@ function App() {
                 <Route path="/faq" element={<FAQ />} />
                 <Route path="/community" element={<CommunityHome />} />
                 <Route path="/community/post/:id" element={<PostDetail />} />
+                <Route path="/emergency" element={<Emergency />} />
 
                 {/* Auth routes */}
                 <Route path="/login" element={<Login />} />
