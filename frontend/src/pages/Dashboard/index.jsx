@@ -16,7 +16,7 @@ const computeStreak = (history) => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  for (let i = 0; i < history.length; i++) {
+  for (let i = 0; i < history.length; i++) { 
     const entryDate = new Date(history[i].recorded_at);
     entryDate.setHours(0, 0, 0, 0);
     const expectedDate = new Date(today);
