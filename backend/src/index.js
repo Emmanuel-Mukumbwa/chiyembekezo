@@ -20,6 +20,7 @@ const professionalRoutes = require('./routes/professionals');
 const appointmentRoutes = require('./routes/appointments');
 const communityRoutes = require('./routes/community');
 const habitRoutes = require('./routes/habits');
+const emergencyRoutes = require('./routes/emergency');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -49,6 +50,7 @@ app.use('/api/professionals', professionalRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/habits', habitRoutes);
+app.use('/api/emergency', emergencyRoutes);
 
 // ---- Error handling ----
 app.use(errorLogger); // logs errors with full details
