@@ -159,6 +159,9 @@ const Navigation = () => {
                     <Dropdown.Item as={NavLink} to="/achievements" onClick={handleNavClick}>
                       🏆 Achievements
                     </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/reports" onClick={handleNavClick}>
+                      📊 Monthly Report
+                    </Dropdown.Item>
                     <Dropdown.Divider />
                     <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
                       🧘 Wellness Toolkit
