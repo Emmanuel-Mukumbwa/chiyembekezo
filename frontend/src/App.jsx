@@ -4,6 +4,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import About from './pages/About';
 import Resources from './pages/Resources';
+import ResourceDetail from './pages/ResourceDetail';
+import Quiz from './pages/Quiz';
 import Assessments from './pages/Assessments';
 import PHQ9 from './pages/Assessments/PHQ9';
 import GAD7 from './pages/Assessments/GAD7';
@@ -59,6 +61,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/resources" element={<Resources />} />
+                <Route path="/resources/:id" element={<ResourceDetail />} />
+                <Route path="/quiz/:id" element={<Quiz />} />
                 <Route path="/assessments" element={<Assessments />} />
                 <Route path="/assessments/phq9" element={<PHQ9 />} />
                 <Route path="/assessments/gad7" element={<GAD7 />} />
@@ -75,7 +79,7 @@ function App() {
                 <Route path="/emergency" element={<Emergency />} />
 
                 {/* Auth routes */}
-                <Route path="/login" element={<Login />} /> 
+                <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
