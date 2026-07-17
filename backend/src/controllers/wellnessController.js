@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const { logAuditAction } = require('../services/auditLogService');
+const { checkAndAwardAchievements } = require('../services/achievementService');
 
 // ---------- Breathing ----------
 exports.getBreathingTypes = async (req, res) => {
@@ -33,6 +34,10 @@ exports.completeBreathing = async (req, res) => {
       result.insertId,
       { session_name, duration_seconds }
     );
+
+    // Check for achievements after completing wellness session
+    await checkAndAwardAchievements(userId, 'wellness');
+
     res.json({ message: 'Breathing session saved.', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -74,6 +79,10 @@ exports.completeMeditation = async (req, res) => {
       result.insertId,
       { session_name, duration_seconds }
     );
+
+    // Check for achievements
+    await checkAndAwardAchievements(userId, 'wellness');
+
     res.json({ message: 'Meditation session saved.', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -113,6 +122,10 @@ exports.completeGrounding = async (req, res) => {
       result.insertId,
       { session_name, duration_seconds }
     );
+
+    // Check for achievements
+    await checkAndAwardAchievements(userId, 'wellness');
+
     res.json({ message: 'Grounding session saved.', id: result.insertId });
   } catch (err) {
     console.error(err);
