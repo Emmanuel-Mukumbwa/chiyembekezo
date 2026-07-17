@@ -17,9 +17,12 @@ const Footer = () => {
             <h6 className="text-white">Quick Links</h6>
             <ul className="list-unstyled small">
               <li><Link to="/">Home</Link></li>
-              <li><Link to="/resources">Learn</Link></li>
+              <li><Link to="/about">About</Link></li>
+              <li><Link to="/resources">Resources</Link></li>
               <li><Link to="/assessments">Assessments</Link></li>
+              <li><Link to="/community">Community</Link></li>
               <li><Link to="/find-help">Find Help</Link></li>
+              <li><Link to="/emergency" className="text-danger fw-bold">🚨 Emergency</Link></li>
             </ul>
           </Col>
           <Col md={2} className="mb-3">
@@ -38,11 +41,14 @@ const Footer = () => {
               <option value="tu">Tumbuka</option>
             </select>
             <p className="small mt-2">© 2026 Chiyembekezo. All rights reserved.</p>
+            <p className="small">
+              <Link to="/emergency" className="text-danger fw-bold">Need immediate help?</Link>
+            </p>
           </Col>
         </Row>
       </Container>
     </footer>
   );
-}; 
+};
 
 export default Footer;

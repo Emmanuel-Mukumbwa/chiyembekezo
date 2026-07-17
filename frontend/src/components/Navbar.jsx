@@ -95,6 +95,14 @@ const Navigation = () => {
               </Nav.Link>
               <Nav.Link
                 as={NavLink}
+                to="/emergency"
+                onClick={handleNavClick}
+                className="nav-link text-danger fw-bold"
+              >
+                🚨 Emergency
+              </Nav.Link>
+              <Nav.Link
+                as={NavLink}
                 to="/contact"
                 onClick={handleNavClick}
                 className="nav-link"
@@ -110,40 +118,63 @@ const Navigation = () => {
                 FAQ
               </Nav.Link>
 
+              {/* Quick emergency modal button */}
               <Button
                 variant="danger"
                 size="sm"
-                className="ms-lg-3 my-2 my-lg-0"
+                className="ms-lg-2 my-2 my-lg-0"
                 onClick={() => {
                   handleEmergencyOpen();
                   setExpanded(false);
                 }}
               >
-                🚨 Emergency
+                🚨 Help Now
               </Button>
 
               {user ? (
-                <Dropdown align="end" className="ms-lg-3">
+                <Dropdown align="end" className="ms-lg-2">
                   <Dropdown.Toggle variant="outline-primary" size="sm" id="dropdown-user">
                     {user.firstName || user.email}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
                     <Dropdown.Item as={NavLink} to="/dashboard" onClick={handleNavClick}>
-                      Dashboard
+                      📊 Dashboard
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item as={NavLink} to="/journal" onClick={handleNavClick}>
+                      📝 Journal
+                    </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/habits" onClick={handleNavClick}>
+                      ✅ Habits
+                    </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/goals" onClick={handleNavClick}>
+                      🎯 Goals
+                    </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/safety-plan" onClick={handleNavClick}>
+                      🛡️ Safety Plan
+                    </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/mood-history" onClick={handleNavClick}>
+                      📈 Mood History
+                    </Dropdown.Item>
+                    <Dropdown.Divider />
+                    <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
+                      🧘 Wellness Toolkit
                     </Dropdown.Item>
                     <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
-                      Profile
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
-                      Wellness Toolkit
+                      👤 Profile
                     </Dropdown.Item>
                     {user.isProfessional && (
-                      <Dropdown.Item as={NavLink} to="/professional/availability" onClick={handleNavClick}>
-                        Manage Availability
-                      </Dropdown.Item>
+                      <>
+                        <Dropdown.Divider />
+                        <Dropdown.Item as={NavLink} to="/professional/availability" onClick={handleNavClick}>
+                          📅 Manage Availability
+                        </Dropdown.Item>
+                      </>
                     )}
                     <Dropdown.Divider />
-                    <Dropdown.Item onClick={handleLogout}>Logout</Dropdown.Item>
+                    <Dropdown.Item onClick={handleLogout} className="text-danger">
+                      Logout
+                    </Dropdown.Item>
                   </Dropdown.Menu>
                 </Dropdown>
               ) : (
@@ -172,7 +203,7 @@ const Navigation = () => {
         </Container>
       </Navbar>
 
-      {/* Emergency Modal */}
+      {/* Emergency Modal - Quick Dial */}
       <Modal show={showEmergency} onHide={handleEmergencyClose} centered>
         <Modal.Header closeButton className="border-0">
           <Modal.Title>🚨 Immediate Help</Modal.Title>
@@ -189,6 +220,11 @@ const Navigation = () => {
             <li><strong>Domestic Violence Support:</strong> +265 888 123 456</li>
           </ul>
           <p className="mb-0">Talk to someone you trust. You are not alone.</p>
+          <div className="mt-3">
+            <Button as={NavLink} to="/emergency" variant="danger" onClick={handleEmergencyClose} className="w-100">
+              Open Full Emergency Page →
+            </Button>
+          </div>
         </Modal.Body>
         <Modal.Footer className="border-0">
           <Button variant="secondary" onClick={handleEmergencyClose}>
