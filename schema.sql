@@ -372,6 +372,97 @@ CREATE TABLE admin_logs (
 -- End of script
 -- =============================================
 
+
+
+
+
+
+
+need to run,
+
+-- =============================================
+-- Resources Library Extension
+-- =============================================
+
+-- Enhanced resources table with more fields
+ALTER TABLE resources
+ADD COLUMN content TEXT,
+ADD COLUMN duration_minutes INT,
+ADD COLUMN file_size VARCHAR(20),
+ADD COLUMN author VARCHAR(255),
+ADD COLUMN tags JSON,
+ADD COLUMN is_featured BOOLEAN DEFAULT FALSE,
+ADD COLUMN view_count INT DEFAULT 0,
+ADD COLUMN like_count INT DEFAULT 0;
+
+-- Quizzes table
+CREATE TABLE quizzes (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    category_id INT,
+    questions JSON NOT NULL, -- [{question, options:[], correct_answer_index}]
+    passing_score INT DEFAULT 70,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (category_id) REFERENCES categories(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Quiz attempts (user progress)
+CREATE TABLE quiz_attempts (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    quiz_id INT NOT NULL,
+    score INT,
+    passed BOOLEAN DEFAULT FALSE,
+    answers JSON,
+    completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Course progress
+CREATE TABLE course_progress (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    resource_id INT NOT NULL,
+    progress_percent INT DEFAULT 0,
+    completed BOOLEAN DEFAULT FALSE,
+    last_accessed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (resource_id) REFERENCES resources(id) ON DELETE CASCADE,
+    UNIQUE KEY (user_id, resource_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert sample categories (if not exists)
+INSERT INTO categories (name, slug, description) VALUES 
+('Videos', 'videos', 'Mental health video content'),
+('Podcasts', 'podcasts', 'Audio content for mental wellness'),
+('PDFs', 'pdfs', 'Downloadable guides and worksheets'),
+('Worksheets', 'worksheets', 'Interactive mental health exercises'),
+('Courses', 'courses', 'Structured learning paths'),
+('Interactive Lessons', 'interactive-lessons', 'Step-by-step guided learning'),
+('Quizzes', 'quizzes', 'Mental health knowledge checks')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 in -- =============================================
 -- Clean Install for Chiyembekezo Database
 -- =============================================
