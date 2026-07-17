@@ -444,6 +444,55 @@ INSERT INTO categories (name, slug, description) VALUES
 ('Quizzes', 'quizzes', 'Mental health knowledge checks')
 ON DUPLICATE KEY UPDATE name = VALUES(name);
 
+need to run, 
+-- =============================================
+-- Gamification Tables
+-- =============================================
+
+-- Predefined achievements
+CREATE TABLE achievements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    icon VARCHAR(50),
+    category VARCHAR(50),
+    criteria JSON NOT NULL, -- e.g., {"action": "mood_checkin", "count": 1}
+    points INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- User earned achievements
+CREATE TABLE user_achievements (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    achievement_id INT NOT NULL,
+    earned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (achievement_id) REFERENCES achievements(id) ON DELETE CASCADE,
+    UNIQUE KEY (user_id, achievement_id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert sample achievements
+INSERT INTO achievements (name, description, icon, category, criteria, points) VALUES
+('First Check-in', 'Completed your first mood check-in', '🌱', 'Mood', '{"action":"mood_checkin","count":1}', 10),
+('Mood Tracker', 'Completed 7 mood check-ins', '📊', 'Mood', '{"action":"mood_checkin","count":7}', 20),
+('Mood Master', 'Completed 30 mood check-ins', '📈', 'Mood', '{"action":"mood_checkin","count":30}', 50),
+('First Journal', 'Wrote your first journal entry', '📖', 'Journal', '{"action":"journal","count":1}', 10),
+('Journal Keeper', 'Wrote 10 journal entries', '📚', 'Journal', '{"action":"journal","count":10}', 30),
+('Journal Master', 'Wrote 50 journal entries', '📕', 'Journal', '{"action":"journal","count":50}', 75),
+('7-Day Streak', 'Maintained a 7-day mood streak', '🔥', 'Streak', '{"action":"streak","days":7}', 25),
+('30-Day Streak', 'Maintained a 30-day mood streak', '💪', 'Streak', '{"action":"streak","days":30}', 50),
+('100-Day Streak', 'Maintained a 100-day mood streak', '🏆', 'Streak', '{"action":"streak","days":100}', 100),
+('Wellness Explorer', 'Completed your first wellness session', '🧘', 'Wellness', '{"action":"wellness","count":1}', 10),
+('Wellness Enthusiast', 'Completed 10 wellness sessions', '🌟', 'Wellness', '{"action":"wellness","count":10}', 30),
+('Wellness Champion', 'Completed 50 wellness sessions', '🏅', 'Wellness', '{"action":"wellness","count":50}', 75),
+('Quiz Taker', 'Passed your first quiz', '📝', 'Learning', '{"action":"quiz_pass","count":1}', 15),
+('Quiz Master', 'Passed 5 quizzes', '🎓', 'Learning', '{"action":"quiz_pass","count":5}', 40),
+('Course Starter', 'Started your first course', '📚', 'Learning', '{"action":"course_start","count":1}', 10),
+('Course Finisher', 'Completed your first course', '🎉', 'Learning', '{"action":"course_complete","count":1}', 30),
+('Goal Setter', 'Created your first goal', '🎯', 'Goals', '{"action":"goal","count":1}', 10),
+('Goal Achiever', 'Completed your first goal', '✅', 'Goals', '{"action":"goal_complete","count":1}', 25);
+
 
 
 
