@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { checkAndAwardAchievements } = require('../services/achievementService');
 
 // Map mood string to score
 const moodMap = { happy: 5, okay: 4, neutral: 3, sad: 2, overwhelmed: 1 };
@@ -48,6 +49,9 @@ exports.saveMood = async (req, res) => {
       [userId]
     );
     const entry = rows[0] || {};
+
+    // Check for achievements after saving mood
+    await checkAndAwardAchievements(userId, 'mood_checkin');
 
     res.status(201).json({
       message: 'Mood saved successfully',
