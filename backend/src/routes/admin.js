@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+const adminLogMiddleware = require('../middleware/adminLogMiddleware');
 
 // Import admin controllers
 const userController = require('../controllers/admin/userController');
@@ -12,8 +13,8 @@ const appointmentController = require('../controllers/admin/appointmentControlle
 const communityController = require('../controllers/admin/communityController');
 const analyticsController = require('../controllers/admin/analyticsController');
 
-// Apply auth + isAdmin to all routes
-router.use(auth, isAdmin);
+// Apply auth + isAdmin + adminLogMiddleware to all routes
+router.use(auth, isAdmin, adminLogMiddleware);
 
 // Users
 router.get('/users', userController.getUsers);
