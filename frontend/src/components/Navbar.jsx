@@ -169,6 +169,14 @@ const Navigation = () => {
                     <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
                       👤 Profile
                     </Dropdown.Item>
+                    
+                    {/* Admin Panel link – only for admins */}
+                    {user.isAdmin && (
+                      <Dropdown.Item as={NavLink} to="/admin" onClick={handleNavClick}>
+                        ⚙️ Admin Panel
+                      </Dropdown.Item>
+                    )}
+
                     {user.isProfessional && (
                       <>
                         <Dropdown.Divider />
