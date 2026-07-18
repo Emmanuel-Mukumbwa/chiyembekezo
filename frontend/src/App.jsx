@@ -48,6 +48,18 @@ import Emergency from './pages/Emergency';
 import Achievements from './pages/Achievements';
 import Reports from './pages/Reports';
 
+import AdminLayout from './pages/Admin/AdminLayout';
+import AdminDashboard from './pages/Admin/AdminDashboard';
+import AdminUsers from './pages/Admin/AdminUsers';
+import AdminProfessionals from './pages/Admin/AdminProfessionals';
+import AdminArticles from './pages/Admin/AdminArticles';
+import AdminResources from './pages/Admin/AdminResources';
+import AdminAppointments from './pages/Admin/AdminAppointments';
+import AdminCommunity from './pages/Admin/AdminCommunity';
+import AdminAnalytics from './pages/Admin/AdminAnalytics';
+
+
+
 import './styles/custom.css';
 
 function App() {
@@ -142,6 +154,18 @@ function App() {
                   <ProtectedRoute><Achievements /></ProtectedRoute>} />
                 <Route path="/reports" element={
                   <ProtectedRoute><Reports /></ProtectedRoute>} />
+
+                <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="users" element={<AdminUsers />} />
+                  <Route path="professionals" element={<AdminProfessionals />} />
+                  <Route path="articles" element={<AdminArticles />} />
+                  <Route path="resources" element={<AdminResources />} />
+                  <Route path="appointments" element={<AdminAppointments />} />
+                  <Route path="community" element={<AdminCommunity />} />
+                  <Route path="analytics" element={<AdminAnalytics />} />
+                </Route>
+
               </Routes>
             </div>
             <Footer />
