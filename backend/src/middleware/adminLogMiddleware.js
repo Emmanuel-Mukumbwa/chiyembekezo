@@ -15,7 +15,7 @@ const adminLogMiddleware = (req, res, next) => {
       if (adminUserId) {
         logAdminAction(
           adminUserId,
-          `${req.method} ${req.originalUrl}`,
+          `${req.method} ${req.originalUrl}`, 
           'route',
           null,
           {
