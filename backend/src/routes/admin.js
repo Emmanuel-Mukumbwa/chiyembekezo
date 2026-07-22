@@ -12,6 +12,20 @@ const resourceController = require('../controllers/admin/resourceController');
 const appointmentController = require('../controllers/admin/appointmentController');
 const communityController = require('../controllers/admin/communityController');
 const analyticsController = require('../controllers/admin/analyticsController');
+const volunteerController = require('../controllers/admin/volunteerController');
+const volunteerController = require('../controllers/admin/volunteerController');
+const organizationController = require('../controllers/admin/organizationController');
+
+// Volunteer Listeners
+router.get('/volunteers', volunteerController.getVolunteers);
+router.put('/volunteers/:id/verify', volunteerController.verifyVolunteer);
+router.delete('/volunteers/:id', volunteerController.deleteVolunteer);
+
+// Organizations
+router.get('/organizations', organizationController.getOrganizations);
+router.post('/organizations', organizationController.createOrganization);
+router.post('/organizations/:orgId/members', organizationController.addMember);
+router.delete('/organizations/:orgId/members/:userId', organizationController.removeMember);
 
 // Apply auth + isAdmin + adminLogMiddleware to all routes
 router.use(auth, isAdmin, adminLogMiddleware);
@@ -46,5 +60,9 @@ router.put('/community/posts/:id/pin', communityController.pinPost);
 
 // Analytics
 router.get('/analytics', analyticsController.getStats);
+
+router.get('/volunteers', volunteerController.getVolunteers);
+router.put('/volunteers/:id/verify', volunteerController.verifyVolunteer);
+
 
 module.exports = router;
