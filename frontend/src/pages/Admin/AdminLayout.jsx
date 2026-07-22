@@ -14,10 +14,13 @@ const AdminLayout = () => {
 
   const isActive = (path) => location.pathname === `/admin${path}` || location.pathname.startsWith(`/admin${path}`);
 
+  // Updated menu items with Volunteers and Organizations
   const menuItems = [
     { path: '', label: 'Dashboard', icon: '📊' },
     { path: '/users', label: 'Users', icon: '👥' },
     { path: '/professionals', label: 'Professionals', icon: '👨‍⚕️' },
+    { path: '/volunteers', label: 'Volunteers', icon: '🤝' },
+    { path: '/organizations', label: 'Organizations', icon: '🏢' },
     { path: '/articles', label: 'Articles', icon: '📄' },
     { path: '/resources', label: 'Resources', icon: '📁' },
     { path: '/appointments', label: 'Appointments', icon: '📅' },
