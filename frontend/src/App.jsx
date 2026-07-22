@@ -68,6 +68,9 @@ import ProfessionalPatients from './pages/Professional/ProfessionalPatients';
 import ProfessionalMessages from './pages/Professional/ProfessionalMessages';
 import ProfessionalReports from './pages/Professional/ProfessionalReports';
 
+import OrganizationLayout from './pages/Organization/OrganizationLayout';
+import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
+
 import './styles/custom.css';
 
 function App() {
@@ -185,6 +188,12 @@ function App() {
                   <Route path="availability" element={<ProfessionalAvailability />} />
                   <Route path="reports" element={<ProfessionalReports />} />
                 </Route>
+
+
+                <Route path="/organization" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
+                  <Route index element={<OrganizationDashboard />} />
+                </Route>
+
 
               </Routes>
             </div>
