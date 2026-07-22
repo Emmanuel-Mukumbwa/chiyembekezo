@@ -43,11 +43,13 @@ import DailyWellness from './pages/Wellness/DailyWellness';
 import CommunityHome from './pages/Community/CommunityHome';
 import PostDetail from './pages/Community/PostDetail';
 
+// Professional availability (reusable)
 import ProfessionalAvailability from './pages/ProfessionalAvailability';
 import Emergency from './pages/Emergency';
 import Achievements from './pages/Achievements';
 import Reports from './pages/Reports';
 
+// Admin imports
 import AdminLayout from './pages/Admin/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminUsers from './pages/Admin/AdminUsers';
@@ -58,15 +60,13 @@ import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 
+// Professional Portal imports
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
 import ProfessionalDashboard from './pages/Professional/ProfessionalDashboard';
 import ProfessionalAppointments from './pages/Professional/ProfessionalAppointments';
 import ProfessionalPatients from './pages/Professional/ProfessionalPatients';
 import ProfessionalMessages from './pages/Professional/ProfessionalMessages';
-import ProfessionalAvailability from './pages/Professional/ProfessionalAvailability';
 import ProfessionalReports from './pages/Professional/ProfessionalReports';
-
-
 
 import './styles/custom.css';
 
@@ -79,7 +79,7 @@ function App() {
             <Navigation />
             <div className="flex-grow-1">
               <Routes>
-                {/* Public routes */}
+                {/* ===== Public routes ===== */}
                 <Route path="/" element={<Home />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/resources" element={<Resources />} />
@@ -100,27 +100,21 @@ function App() {
                 <Route path="/community/post/:id" element={<PostDetail />} />
                 <Route path="/emergency" element={<Emergency />} />
 
-                {/* Auth routes */}
+                {/* ===== Auth routes ===== */}
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/forgot-password" element={<ForgotPassword />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
 
-                {/* Protected routes */}
+                {/* ===== Protected routes ===== */}
                 <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                  <ProtectedRoute><Dashboard /></ProtectedRoute>
                 } />
                 <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <Profile />
-                  </ProtectedRoute>
+                  <ProtectedRoute><Profile /></ProtectedRoute>
                 } />
                 <Route path="/mood-history" element={
-                  <ProtectedRoute>
-                    <MoodHistory />
-                  </ProtectedRoute>
+                  <ProtectedRoute><MoodHistory /></ProtectedRoute>
                 } />
                 <Route path="/journal" element={
                   <ProtectedRoute><Journal /></ProtectedRoute>
@@ -131,8 +125,17 @@ function App() {
                 <Route path="/safety-plan" element={
                   <ProtectedRoute><SafetyPlan /></ProtectedRoute>
                 } />
+                <Route path="/habits" element={
+                  <ProtectedRoute><Habits /></ProtectedRoute>
+                } />
+                <Route path="/achievements" element={
+                  <ProtectedRoute><Achievements /></ProtectedRoute>
+                } />
+                <Route path="/reports" element={
+                  <ProtectedRoute><Reports /></ProtectedRoute>
+                } />
 
-                {/* Wellness Toolkit routes */}
+                {/* ===== Wellness Toolkit ===== */}
                 <Route path="/wellness" element={
                   <ProtectedRoute><WellnessToolkit /></ProtectedRoute>
                 } />
@@ -154,15 +157,13 @@ function App() {
                 <Route path="/wellness/daily" element={
                   <ProtectedRoute><DailyWellness /></ProtectedRoute>
                 } />
-                <Route path="/professional/availability" element={
-                  <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>} />
-                <Route path="/habits" element={
-                  <ProtectedRoute><Habits /></ProtectedRoute>} />
-                <Route path="/achievements" element={
-                  <ProtectedRoute><Achievements /></ProtectedRoute>} />
-                <Route path="/reports" element={
-                  <ProtectedRoute><Reports /></ProtectedRoute>} />
 
+                {/* ===== Professional Availability (standalone) ===== */}
+                <Route path="/professional/availability" element={
+                  <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>
+                } />
+
+                {/* ===== Admin Panel ===== */}
                 <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="users" element={<AdminUsers />} />
@@ -173,11 +174,13 @@ function App() {
                   <Route path="community" element={<AdminCommunity />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                 </Route>
-  
+
+                {/* ===== Professional Portal ===== */}
                 <Route path="/professional" element={<ProtectedRoute><ProfessionalLayout /></ProtectedRoute>}>
                   <Route index element={<ProfessionalDashboard />} />
                   <Route path="appointments" element={<ProfessionalAppointments />} />
                   <Route path="patients" element={<ProfessionalPatients />} />
+                  <Route path="patients/:patientId" element={<ProfessionalPatients />} />
                   <Route path="messages" element={<ProfessionalMessages />} />
                   <Route path="availability" element={<ProfessionalAvailability />} />
                   <Route path="reports" element={<ProfessionalReports />} />
