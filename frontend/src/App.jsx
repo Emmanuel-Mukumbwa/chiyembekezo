@@ -58,6 +58,14 @@ import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 
+import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
+import ProfessionalDashboard from './pages/Professional/ProfessionalDashboard';
+import ProfessionalAppointments from './pages/Professional/ProfessionalAppointments';
+import ProfessionalPatients from './pages/Professional/ProfessionalPatients';
+import ProfessionalMessages from './pages/Professional/ProfessionalMessages';
+import ProfessionalAvailability from './pages/Professional/ProfessionalAvailability';
+import ProfessionalReports from './pages/Professional/ProfessionalReports';
+
 
 
 import './styles/custom.css';
@@ -164,6 +172,15 @@ function App() {
                   <Route path="appointments" element={<AdminAppointments />} />
                   <Route path="community" element={<AdminCommunity />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
+                </Route>
+  
+                <Route path="/professional" element={<ProtectedRoute><ProfessionalLayout /></ProtectedRoute>}>
+                  <Route index element={<ProfessionalDashboard />} />
+                  <Route path="appointments" element={<ProfessionalAppointments />} />
+                  <Route path="patients" element={<ProfessionalPatients />} />
+                  <Route path="messages" element={<ProfessionalMessages />} />
+                  <Route path="availability" element={<ProfessionalAvailability />} />
+                  <Route path="reports" element={<ProfessionalReports />} />
                 </Route>
 
               </Routes>
