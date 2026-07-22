@@ -8,10 +8,19 @@ const ProfessionalLayout = () => {
   const location = useLocation();
 
   if (!user?.isProfessional) {
-    return <div className="text-center mt-5">Access Denied. Professional only.</div>;
+    return (
+      <Container className="my-5 text-center">
+        <h3>Access Denied</h3>
+        <p>You need to be a verified professional to view this page.</p>
+        <Link to="/dashboard" className="btn btn-primary">Back to Dashboard</Link>
+      </Container>
+    );
   }
 
-  const isActive = (path) => location.pathname === `/professional${path}` || location.pathname.startsWith(`/professional${path}`);
+  const isActive = (path) => {
+    if (path === '' && location.pathname === '/professional') return true;
+    return location.pathname === `/professional${path}` || location.pathname.startsWith(`/professional${path}`);
+  };
 
   const menuItems = [
     { path: '', label: 'Dashboard', icon: '📊' },
@@ -26,7 +35,7 @@ const ProfessionalLayout = () => {
     <Container fluid className="my-4">
       <Row>
         <Col md={3} lg={2} className="bg-light p-3" style={{ minHeight: '80vh' }}>
-          <h5 className="mb-3">Professional Portal</h5>
+          <h5 className="mb-3">👨‍⚕️ Professional Portal</h5>
           <Nav className="flex-column">
             {menuItems.map(item => (
               <Nav.Link
@@ -34,14 +43,20 @@ const ProfessionalLayout = () => {
                 as={Link}
                 to={`/professional${item.path}`}
                 className={isActive(item.path) ? 'active fw-bold' : ''}
-                style={{ color: isActive(item.path) ? '#0d6efd' : 'inherit' }}
+                style={{
+                  color: isActive(item.path) ? '#0d6efd' : 'inherit',
+                  backgroundColor: isActive(item.path) ? '#e7f1ff' : 'transparent',
+                  borderRadius: '0.25rem',
+                }}
               >
                 {item.icon} {item.label}
               </Nav.Link>
             ))}
           </Nav>
           <hr />
-          <Nav.Link as={Link} to="/dashboard" className="text-muted">← Back to Dashboard</Nav.Link>
+          <Nav.Link as={Link} to="/dashboard" className="text-muted">
+            ← Back to Dashboard
+          </Nav.Link>
         </Col>
         <Col md={9} lg={10}>
           <Outlet />
