@@ -27,6 +27,7 @@ const reportRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
 const professionalRoutes = require('./routes/professional');
 const organizationRoutes = require('./routes/organization');
+const peerSupportRoutes = require('./routes/peerSupport');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -63,6 +64,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/professional', professionalRoutes);
 app.use('/api/organization', organizationRoutes);
+app.use('/api/peer-support', peerSupportRoutes);
 // ---- Error handling ----
 app.use(errorLogger); // logs errors with full details
 
