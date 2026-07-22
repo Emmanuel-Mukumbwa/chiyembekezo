@@ -70,6 +70,9 @@ import ProfessionalReports from './pages/Professional/ProfessionalReports';
 
 import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
+import AdminVolunteers from './pages/Admin/AdminVolunteers';
+import AdminOrganizations from './pages/Admin/AdminOrganizations';
+import PeerSupport from './pages/PeerSupport';
 
 import './styles/custom.css';
 
@@ -166,6 +169,10 @@ function App() {
                   <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>
                 } />
 
+                <Route path="/peer-support" element={
+                  <ProtectedRoute><PeerSupport /></ProtectedRoute>
+                } />
+
                 {/* ===== Admin Panel ===== */}
                 <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
                   <Route index element={<AdminDashboard />} />
@@ -176,6 +183,9 @@ function App() {
                   <Route path="appointments" element={<AdminAppointments />} />
                   <Route path="community" element={<AdminCommunity />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
+                  <Route path="volunteers" element={<AdminVolunteers />} />
+                  <Route path="organizations" element={<AdminOrganizations />} />
+
                 </Route>
 
                 {/* ===== Professional Portal ===== */}
