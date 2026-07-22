@@ -44,8 +44,13 @@ const Register = () => {
     try {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...registerData } = formData;
-      await register(registerData);
-      navigate('/dashboard');
+      const userData = await register(registerData);
+      // Redirect based on role (admins are usually created manually, but just in case)
+      if (userData.isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
