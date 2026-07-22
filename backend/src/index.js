@@ -1,4 +1,15 @@
+// Global error handlers for uncaught exceptions/rejections
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err);
+  process.exit(1);
+});
+process.on('unhandledRejection', (reason) => {
+  console.error('Unhandled Rejection:', reason);
+  process.exit(1);
+});
+
 require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -16,16 +27,16 @@ const journalRoutes = require('./routes/journal');
 const goalsRoutes = require('./routes/goals');
 const safetyPlanRoutes = require('./routes/safetyPlan');
 const wellnessRoutes = require('./routes/wellness');
-const professionalRoutes = require('./routes/professionals');
+const professionalsPublicRoutes = require('./routes/professionals');
+const professionalPortalRoutes = require('./routes/professional');
 const appointmentRoutes = require('./routes/appointments');
 const communityRoutes = require('./routes/community');
 const habitRoutes = require('./routes/habits');
 const emergencyRoutes = require('./routes/emergency');
 const achievementRoutes = require('./routes/achievements');
-const resourceRoutes = require('./routes/resources'); 
+const resourceRoutes = require('./routes/resources');
 const reportRoutes = require('./routes/reports');
 const adminRoutes = require('./routes/admin');
-const professionalRoutes = require('./routes/professional');
 const organizationRoutes = require('./routes/organization');
 const peerSupportRoutes = require('./routes/peerSupport');
 
@@ -36,8 +47,6 @@ const PORT = process.env.PORT || 5000;
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-
-// Custom request logger (replaces Morgan)
 app.use(requestLogger);
 
 // ---- Test route ----
@@ -53,7 +62,8 @@ app.use('/api/journal', journalRoutes);
 app.use('/api/goals', goalsRoutes);
 app.use('/api/safety-plan', safetyPlanRoutes);
 app.use('/api/wellness', wellnessRoutes);
-app.use('/api/professionals', professionalRoutes);
+app.use('/api/professionals', professionalsPublicRoutes);
+app.use('/api/professional', professionalPortalRoutes);
 app.use('/api/appointments', appointmentRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/habits', habitRoutes);
@@ -62,13 +72,12 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/resources', resourceRoutes);
 app.use('/api/reports', reportRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/professional', professionalRoutes);
 app.use('/api/organization', organizationRoutes);
 app.use('/api/peer-support', peerSupportRoutes);
-// ---- Error handling ----
-app.use(errorLogger); // logs errors with full details
 
-// Generic error handler (sends JSON response)
+// ---- Error handling ----
+app.use(errorLogger);
+
 app.use((err, req, res, next) => {
   const status = err.status || 500;
   res.status(status).json({
