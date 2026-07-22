@@ -17,6 +17,15 @@ const analyticsController = require('../controllers/admin/analyticsController');
 // Apply authentication and admin check to ALL routes
 router.use(auth, isAdmin);
 
+// Test endpoint – returns user admin status
+router.get('/check', (req, res) => {
+  res.json({
+    message: 'Admin access confirmed',
+    userId: req.user.id,
+    isAdmin: true,
+  });
+});
+
 // ===== Users =====
 router.get('/users', userController.getUsers);
 router.put('/users/:id', userController.updateUserStatus);
