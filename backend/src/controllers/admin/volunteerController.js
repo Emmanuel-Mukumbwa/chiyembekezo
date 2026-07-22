@@ -29,3 +29,16 @@ exports.verifyVolunteer = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
+
+// ⭐ NEW: Delete volunteer listener
+exports.deleteVolunteer = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query('DELETE FROM volunteer_listeners WHERE id = ?', [id]);
+    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted volunteer ${id}`, 'volunteer', id);
+    res.json({ message: 'Volunteer deleted' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
