@@ -9,7 +9,6 @@ if (!JWT_SECRET) {
   console.error('❌ JWT_SECRET is not defined in environment variables.');
   console.error('   Please set JWT_SECRET in your .env file.');
   console.error('   For development, a temporary secret will be used.');
-  // Generate a random secret for development only (DO NOT USE IN PRODUCTION)
   const crypto = require('crypto');
   const tempSecret = crypto.randomBytes(32).toString('hex');
   console.warn(`⚠️  Using temporary JWT_SECRET: ${tempSecret}`);
@@ -29,7 +28,6 @@ exports.register = async (req, res) => {
   try {
     const { email, password, firstName, lastName, phone } = req.body;
 
-    // Validate
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
     }
@@ -37,30 +35,25 @@ exports.register = async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Check if user exists
     const [existing] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (existing.length > 0) {
       return res.status(409).json({ error: 'Email already registered' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert user
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, phone) VALUES (?, ?, ?, ?, ?)',
       [email, hashedPassword, firstName || null, lastName || null, phone || null]
     );
     const userId = result[0].insertId;
 
-    // Create profile record
     await pool.query(
       'INSERT INTO profiles (user_id, preferred_language) VALUES (?, ?)',
       [userId, 'en']
     );
 
-    // Generate token
     const token = generateToken(userId);
 
     res.status(201).json({
@@ -71,6 +64,8 @@ exports.register = async (req, res) => {
         firstName,
         lastName,
         phone,
+        isAdmin: false,
+        isProfessional: false,
       }
     });
   } catch (err) {
@@ -89,9 +84,8 @@ exports.login = async (req, res) => {
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
-    // Find user
     const [rows] = await pool.query(
-      'SELECT id, email, password_hash, first_name, last_name, phone, is_admin FROM users WHERE email = ?',
+      'SELECT id, email, password_hash, first_name, last_name, phone, is_admin, is_professional FROM users WHERE email = ?',
       [email]
     );
     if (rows.length === 0) {
@@ -99,19 +93,16 @@ exports.login = async (req, res) => {
     }
     const user = rows[0];
 
-    // Ensure password_hash exists
     if (!user.password_hash) {
       console.error(`❌ User ${email} has no password_hash`);
       return res.status(500).json({ error: 'Account error. Please contact support.' });
     }
 
-    // Compare passwords
     const isMatch = await bcrypt.compare(password, user.password_hash);
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
 
-    // Generate token
     const token = generateToken(user.id);
 
     res.json({
@@ -122,7 +113,8 @@ exports.login = async (req, res) => {
         firstName: user.first_name,
         lastName: user.last_name,
         phone: user.phone,
-        isAdmin: user.is_admin === 1,
+        isAdmin: user.is_admin === 1 || user.is_admin === true,
+        isProfessional: user.is_professional === 1 || user.is_professional === true,
       }
     });
   } catch (err) {
@@ -141,28 +133,23 @@ exports.forgotPassword = async (req, res) => {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    // Check if user exists
     const [rows] = await pool.query('SELECT id FROM users WHERE email = ?', [email]);
     if (rows.length === 0) {
-      // For security, still return success message
       return res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
     }
 
-    // Generate reset token (JWT with short expiry)
     const resetToken = jwt.sign(
       { id: rows[0].id, purpose: 'reset' },
       process.env.JWT_SECRET,
       { expiresIn: '1h' }
     );
 
-    // Store token in DB with expiration
-    const expires = new Date(Date.now() + 3600000); // 1 hour
+    const expires = new Date(Date.now() + 3600000);
     await pool.query(
       'UPDATE users SET reset_token = ?, reset_token_expires = ? WHERE id = ?',
       [resetToken, expires, rows[0].id]
     );
 
-    // Send email (logs to console for now)
     await sendPasswordResetEmail(email, resetToken);
 
     res.json({ message: 'If an account with that email exists, a reset link has been sent.' });
@@ -185,7 +172,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Password must be at least 6 characters' });
     }
 
-    // Verify token
     let decoded;
     try {
       decoded = jwt.verify(token, process.env.JWT_SECRET);
@@ -193,7 +179,6 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
 
-    // Check token in DB (extra validation)
     const [rows] = await pool.query(
       'SELECT id FROM users WHERE id = ? AND reset_token = ? AND reset_token_expires > NOW()',
       [decoded.id, token]
@@ -202,11 +187,9 @@ exports.resetPassword = async (req, res) => {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
 
-    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-    // Update password and clear reset token
     await pool.query(
       'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
       [hashedPassword, decoded.id]
@@ -227,6 +210,7 @@ exports.getProfile = async (req, res) => {
     const userId = req.user.id;
     const [rows] = await pool.query(`
       SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.date_of_birth, u.gender,
+             u.is_admin, u.is_professional,
              p.bio, p.location, p.district, p.city, p.occupation, p.emergency_contact_name,
              p.emergency_contact_phone, p.preferred_language, p.preferences
       FROM users u
@@ -236,7 +220,11 @@ exports.getProfile = async (req, res) => {
     if (rows.length === 0) {
       return res.status(404).json({ error: 'User not found' });
     }
-    res.json(rows[0]);
+    const user = rows[0];
+    // Add computed flags for frontend
+    user.isAdmin = user.is_admin === 1 || user.is_admin === true;
+    user.isProfessional = user.is_professional === 1 || user.is_professional === true;
+    res.json(user);
   } catch (err) {
     console.error('❌ Get profile error:', err.message);
     console.error(err.stack);
@@ -256,7 +244,6 @@ exports.updateProfile = async (req, res) => {
       preferredLanguage, preferences
     } = req.body;
 
-    // Update users table
     await pool.query(`
       UPDATE users
       SET first_name = COALESCE(?, first_name),
@@ -267,7 +254,6 @@ exports.updateProfile = async (req, res) => {
       WHERE id = ?
     `, [firstName, lastName, phone, dateOfBirth, gender, userId]);
 
-    // Update profiles table (upsert)
     const [profileRows] = await pool.query('SELECT id FROM profiles WHERE user_id = ?', [userId]);
     if (profileRows.length > 0) {
       await pool.query(`
