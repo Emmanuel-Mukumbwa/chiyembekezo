@@ -1408,3 +1408,6 @@ CREATE TABLE IF NOT EXISTS user_organizations (
     FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE CASCADE,
     UNIQUE KEY (user_id, organization_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+ALTER TABLE appointments ADD COLUMN rating INT CHECK (rating BETWEEN 1 AND 5);
+ALTER TABLE appointments ADD COLUMN review TEXT;
