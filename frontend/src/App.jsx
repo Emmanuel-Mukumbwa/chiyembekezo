@@ -43,8 +43,8 @@ import DailyWellness from './pages/Wellness/DailyWellness';
 import CommunityHome from './pages/Community/CommunityHome';
 import PostDetail from './pages/Community/PostDetail';
 
-// Professional availability (reusable)
-import ProfessionalAvailability from './pages/ProfessionalAvailability';
+// Professional availability – only one import (from the professional portal)
+import ProfessionalAvailability from './pages/Professional/ProfessionalAvailability';
 import Emergency from './pages/Emergency';
 import Achievements from './pages/Achievements';
 import Reports from './pages/Reports';
@@ -59,6 +59,8 @@ import AdminResources from './pages/Admin/AdminResources';
 import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
+import AdminVolunteers from './pages/Admin/AdminVolunteers';
+import AdminOrganizations from './pages/Admin/AdminOrganizations';
 
 // Professional Portal imports
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -68,10 +70,11 @@ import ProfessionalPatients from './pages/Professional/ProfessionalPatients';
 import ProfessionalMessages from './pages/Professional/ProfessionalMessages';
 import ProfessionalReports from './pages/Professional/ProfessionalReports';
 
+// Organization imports
 import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
-import AdminVolunteers from './pages/Admin/AdminVolunteers';
-import AdminOrganizations from './pages/Admin/AdminOrganizations';
+
+// Peer Support
 import PeerSupport from './pages/PeerSupport';
 
 import './styles/custom.css';
@@ -164,7 +167,7 @@ function App() {
                   <ProtectedRoute><DailyWellness /></ProtectedRoute>
                 } />
 
-                {/* ===== Professional Availability (standalone) ===== */}
+                {/* ===== Professional Availability (standalone – uses same component) ===== */}
                 <Route path="/professional/availability" element={
                   <ProtectedRoute><ProfessionalAvailability /></ProtectedRoute>
                 } />
@@ -178,14 +181,13 @@ function App() {
                   <Route index element={<AdminDashboard />} />
                   <Route path="users" element={<AdminUsers />} />
                   <Route path="professionals" element={<AdminProfessionals />} />
+                  <Route path="volunteers" element={<AdminVolunteers />} />
+                  <Route path="organizations" element={<AdminOrganizations />} />
                   <Route path="articles" element={<AdminArticles />} />
                   <Route path="resources" element={<AdminResources />} />
                   <Route path="appointments" element={<AdminAppointments />} />
                   <Route path="community" element={<AdminCommunity />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
-                  <Route path="volunteers" element={<AdminVolunteers />} />
-                  <Route path="organizations" element={<AdminOrganizations />} />
-
                 </Route>
 
                 {/* ===== Professional Portal ===== */}
@@ -199,11 +201,10 @@ function App() {
                   <Route path="reports" element={<ProfessionalReports />} />
                 </Route>
 
-
+                {/* ===== Organization Portal ===== */}
                 <Route path="/organization" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
                   <Route index element={<OrganizationDashboard />} />
                 </Route>
-
 
               </Routes>
             </div>
