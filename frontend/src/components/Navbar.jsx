@@ -169,7 +169,7 @@ const Navigation = () => {
                     <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
                       👤 Profile
                     </Dropdown.Item>
-                    
+
                     {/* Admin Panel link – only for admins */}
                     {user.isAdmin && (
                       <Dropdown.Item as={NavLink} to="/admin" onClick={handleNavClick}>
@@ -177,14 +177,19 @@ const Navigation = () => {
                       </Dropdown.Item>
                     )}
 
+                    {/* Professional Portal link – only for verified professionals */}
                     {user.isProfessional && (
                       <>
                         <Dropdown.Divider />
+                        <Dropdown.Item as={NavLink} to="/professional" onClick={handleNavClick}>
+                          👨‍⚕️ Professional Portal
+                        </Dropdown.Item>
                         <Dropdown.Item as={NavLink} to="/professional/availability" onClick={handleNavClick}>
                           📅 Manage Availability
                         </Dropdown.Item>
                       </>
                     )}
+
                     <Dropdown.Divider />
                     <Dropdown.Item onClick={handleLogout} className="text-danger">
                       Logout
