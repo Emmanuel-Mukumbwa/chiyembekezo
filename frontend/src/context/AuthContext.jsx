@@ -11,10 +11,15 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-      // Fetch user profile
       api.get('/auth/profile')
         .then(res => {
-          setUser(res.data);
+          // Ensure isAdmin is set (backend already sends it)
+          const userData = res.data;
+          // Fallback: if isAdmin not present, compute from is_admin
+          if (userData.isAdmin === undefined && userData.is_admin !== undefined) {
+            userData.isAdmin = userData.is_admin === 1 || userData.is_admin === true;
+          }
+          setUser(userData);
         })
         .catch(() => {
           localStorage.removeItem('token');
@@ -57,9 +62,12 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (data) => {
     const res = await api.put('/auth/profile', data);
-    // Refresh user data
     const profileRes = await api.get('/auth/profile');
-    setUser(profileRes.data);
+    const userData = profileRes.data;
+    if (userData.isAdmin === undefined && userData.is_admin !== undefined) {
+      userData.isAdmin = userData.is_admin === 1 || userData.is_admin === true;
+    }
+    setUser(userData);
     return res.data;
   };
 
