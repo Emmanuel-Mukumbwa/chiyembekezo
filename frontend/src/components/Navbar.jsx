@@ -85,6 +85,15 @@ const Navigation = () => {
               >
                 Community
               </Nav.Link>
+              {/* Peer Support Link - NEW */}
+              <Nav.Link
+                as={NavLink}
+                to="/peer-support"
+                onClick={handleNavClick}
+                className="nav-link"
+              >
+                🤝 Peer Support
+              </Nav.Link>
               <Nav.Link
                 as={NavLink}
                 to="/find-help"
@@ -168,6 +177,11 @@ const Navigation = () => {
                     </Dropdown.Item>
                     <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
                       👤 Profile
+                    </Dropdown.Item>
+
+                    {/* Peer Support link in dropdown */}
+                    <Dropdown.Item as={NavLink} to="/peer-support" onClick={handleNavClick}>
+                      🤝 Peer Support
                     </Dropdown.Item>
 
                     {/* Admin Panel link – only for admins */}
