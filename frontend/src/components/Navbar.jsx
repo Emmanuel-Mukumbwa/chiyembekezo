@@ -177,10 +177,9 @@ const Navigation = () => {
                       </Dropdown.Item>
                     )}
 
-                    {/* Professional Portal link – only for verified professionals */}
+                    {/* Professional Portal links – only for verified professionals */}
                     {user.isProfessional && (
                       <>
-                        <Dropdown.Divider />
                         <Dropdown.Item as={NavLink} to="/professional" onClick={handleNavClick}>
                           👨‍⚕️ Professional Portal
                         </Dropdown.Item>
@@ -188,6 +187,13 @@ const Navigation = () => {
                           📅 Manage Availability
                         </Dropdown.Item>
                       </>
+                    )}
+
+                    {/* Organization Dashboard link – only for org admins */}
+                    {user.isOrgAdmin && (
+                      <Dropdown.Item as={NavLink} to="/organization" onClick={handleNavClick}>
+                        🏢 Organization Dashboard
+                      </Dropdown.Item>
                     )}
 
                     <Dropdown.Divider />
