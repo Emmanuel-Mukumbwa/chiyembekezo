@@ -2,7 +2,6 @@ import React from 'react';
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useModal } from '../../context/ModalContext';
 
 const AdminLayout = () => {
   const { user } = useAuth();
@@ -14,7 +13,6 @@ const AdminLayout = () => {
 
   const isActive = (path) => location.pathname === `/admin${path}` || location.pathname.startsWith(`/admin${path}`);
 
-  // Updated menu items with Volunteers and Organizations
   const menuItems = [
     { path: '', label: 'Dashboard', icon: '📊' },
     { path: '/users', label: 'Users', icon: '👥' },
@@ -25,6 +23,7 @@ const AdminLayout = () => {
     { path: '/resources', label: 'Resources', icon: '📁' },
     { path: '/appointments', label: 'Appointments', icon: '📅' },
     { path: '/community', label: 'Community', icon: '💬' },
+    { path: '/peer-support', label: 'Peer Support', icon: '🤝' },
     { path: '/analytics', label: 'Analytics', icon: '📈' },
   ];
 
