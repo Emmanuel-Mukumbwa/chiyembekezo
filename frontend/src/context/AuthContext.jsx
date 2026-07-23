@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       api.get('/auth/profile')
         .then(res => {
           const userData = res.data;
-          // Ensure boolean flags
+          // Ensure boolean flags and role
           userData.isAdmin = userData.isAdmin !== undefined ? userData.isAdmin : (userData.is_admin === 1 || userData.is_admin === true);
           userData.isProfessional = userData.isProfessional !== undefined ? userData.isProfessional : (userData.is_professional === 1 || userData.is_professional === true);
           userData.role = userData.role || 'user';
@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
     api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     setToken(token);
     setUser(user);
-    return user;
+    return user; // always return user object
   };
 
   const register = async (userData) => {
