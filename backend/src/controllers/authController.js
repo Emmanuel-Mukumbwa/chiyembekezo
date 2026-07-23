@@ -44,8 +44,8 @@ exports.register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const result = await pool.query(
-      'INSERT INTO users (email, password_hash, first_name, last_name, phone) VALUES (?, ?, ?, ?, ?)',
-      [email, hashedPassword, firstName || null, lastName || null, phone || null]
+      'INSERT INTO users (email, password_hash, first_name, last_name, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
+      [email, hashedPassword, firstName || null, lastName || null, phone || null, 'user']
     );
     const userId = result[0].insertId;
 
@@ -66,6 +66,7 @@ exports.register = async (req, res) => {
         phone,
         isAdmin: false,
         isProfessional: false,
+        role: 'user',
       }
     });
   } catch (err) {
@@ -85,7 +86,7 @@ exports.login = async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      'SELECT id, email, password_hash, first_name, last_name, phone, is_admin, is_professional FROM users WHERE email = ?',
+      'SELECT id, email, password_hash, first_name, last_name, phone, is_admin, is_professional, role FROM users WHERE email = ?',
       [email]
     );
     if (rows.length === 0) {
@@ -115,6 +116,7 @@ exports.login = async (req, res) => {
         phone: user.phone,
         isAdmin: user.is_admin === 1 || user.is_admin === true,
         isProfessional: user.is_professional === 1 || user.is_professional === true,
+        role: user.role || 'user',
       }
     });
   } catch (err) {
@@ -210,7 +212,7 @@ exports.getProfile = async (req, res) => {
     const userId = req.user.id;
     const [rows] = await pool.query(`
       SELECT u.id, u.email, u.first_name, u.last_name, u.phone, u.date_of_birth, u.gender,
-             u.is_admin, u.is_professional,
+             u.is_admin, u.is_professional, u.role,
              p.bio, p.location, p.district, p.city, p.occupation, p.emergency_contact_name,
              p.emergency_contact_phone, p.preferred_language, p.preferences
       FROM users u
@@ -224,6 +226,7 @@ exports.getProfile = async (req, res) => {
     // Add computed flags for frontend
     user.isAdmin = user.is_admin === 1 || user.is_admin === true;
     user.isProfessional = user.is_professional === 1 || user.is_professional === true;
+    user.role = user.role || 'user';
     res.json(user);
   } catch (err) {
     console.error('❌ Get profile error:', err.message);
