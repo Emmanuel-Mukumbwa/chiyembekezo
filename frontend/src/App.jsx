@@ -61,6 +61,7 @@ import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminVolunteers from './pages/Admin/AdminVolunteers';
 import AdminOrganizations from './pages/Admin/AdminOrganizations';
+import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 
 // Professional Portal imports
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -73,6 +74,12 @@ import ProfessionalReports from './pages/Professional/ProfessionalReports';
 // Organization imports
 import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
+
+// Volunteer & Listener Dashboards
+import VolunteerDashboard from './pages/Volunteer/VolunteerDashboard';
+import ListenerDashboard from './pages/Listener/ListenerDashboard';
+import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
+import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
 
 // Peer Support
 import PeerSupport from './pages/PeerSupport';
@@ -187,6 +194,7 @@ function App() {
                   <Route path="resources" element={<AdminResources />} />
                   <Route path="appointments" element={<AdminAppointments />} />
                   <Route path="community" element={<AdminCommunity />} />
+                  <Route path="peer-support" element={<AdminPeerSupport />} />
                   <Route path="analytics" element={<AdminAnalytics />} />
                 </Route>
 
@@ -205,6 +213,24 @@ function App() {
                 <Route path="/organization" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
                   <Route index element={<OrganizationDashboard />} />
                 </Route>
+
+                {/* ===== Volunteer Dashboard ===== */}
+                <Route path="/volunteer/dashboard" element={
+                  <ProtectedRoute><VolunteerDashboard /></ProtectedRoute>
+                } />
+
+                {/* ===== Listener Dashboard ===== */}
+                <Route path="/listener/dashboard" element={
+                  <ProtectedRoute><ListenerDashboard /></ProtectedRoute>
+                } />
+
+                <Route path="/volunteer/requests" element={
+                  <ProtectedRoute><VolunteerRequests /></ProtectedRoute>
+                } />
+
+                <Route path="/volunteer/available" element={
+                  <ProtectedRoute><VolunteerAvailable /></ProtectedRoute>
+                } />
 
               </Routes>
             </div>
