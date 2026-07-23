@@ -22,6 +22,20 @@ const Navigation = () => {
     setExpanded(false);
   };
 
+  // Determine dashboard link based on role
+  const getDashboardLink = () => {
+    if (!user) return '/dashboard';
+    const roleDashboards = {
+      admin: '/admin',
+      professional: '/professional',
+      volunteer: '/volunteer/dashboard',
+      org_admin: '/organization',
+      listener: '/listener/dashboard',
+      user: '/dashboard',
+    };
+    return roleDashboards[user.role] || '/dashboard';
+  };
+
   return (
     <>
       <Navbar
@@ -85,7 +99,7 @@ const Navigation = () => {
               >
                 Community
               </Nav.Link>
-              {/* Peer Support Link - NEW */}
+              {/* Peer Support Link */}
               <Nav.Link
                 as={NavLink}
                 to="/peer-support"
@@ -146,7 +160,8 @@ const Navigation = () => {
                     {user.firstName || user.email}
                   </Dropdown.Toggle>
                   <Dropdown.Menu>
-                    <Dropdown.Item as={NavLink} to="/dashboard" onClick={handleNavClick}>
+                    {/* Dashboard – role-specific */}
+                    <Dropdown.Item as={NavLink} to={getDashboardLink()} onClick={handleNavClick}>
                       📊 Dashboard
                     </Dropdown.Item>
                     <Dropdown.Divider />
@@ -184,15 +199,13 @@ const Navigation = () => {
                       🤝 Peer Support
                     </Dropdown.Item>
 
-                    {/* Admin Panel link – only for admins */}
-                    {user.isAdmin && (
+                    {/* Role-specific links */}
+                    {user.role === 'admin' && (
                       <Dropdown.Item as={NavLink} to="/admin" onClick={handleNavClick}>
                         ⚙️ Admin Panel
                       </Dropdown.Item>
                     )}
-
-                    {/* Professional Portal links – only for verified professionals */}
-                    {user.isProfessional && (
+                    {user.role === 'professional' && (
                       <>
                         <Dropdown.Item as={NavLink} to="/professional" onClick={handleNavClick}>
                           👨‍⚕️ Professional Portal
@@ -202,11 +215,19 @@ const Navigation = () => {
                         </Dropdown.Item>
                       </>
                     )}
-
-                    {/* Organization Dashboard link – only for org admins */}
-                    {user.isOrgAdmin && (
+                    {user.role === 'org_admin' && (
                       <Dropdown.Item as={NavLink} to="/organization" onClick={handleNavClick}>
                         🏢 Organization Dashboard
+                      </Dropdown.Item>
+                    )}
+                    {user.role === 'volunteer' && (
+                      <Dropdown.Item as={NavLink} to="/volunteer/dashboard" onClick={handleNavClick}>
+                        🤝 Volunteer Dashboard
+                      </Dropdown.Item>
+                    )}
+                    {user.role === 'listener' && (
+                      <Dropdown.Item as={NavLink} to="/listener/dashboard" onClick={handleNavClick}>
+                        👂 Listener Dashboard
                       </Dropdown.Item>
                     )}
 
@@ -242,7 +263,7 @@ const Navigation = () => {
         </Container>
       </Navbar>
 
-      {/* Emergency Modal - Quick Dial */}
+      {/* Emergency Modal */}
       <Modal show={showEmergency} onHide={handleEmergencyClose} centered>
         <Modal.Header closeButton className="border-0">
           <Modal.Title>🚨 Immediate Help</Modal.Title>
