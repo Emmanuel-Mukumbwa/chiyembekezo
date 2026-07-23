@@ -11,7 +11,7 @@ process.on('unhandledRejection', (reason) => {
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors');
+const cors = require('cors'); 
 const helmet = require('helmet');
 
 // Import custom logger and middlewares
