@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Form, Table, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Table, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
@@ -29,9 +29,7 @@ const ProfessionalAvailability = () => {
   const fetchAvailability = async () => {
     setLoading(true);
     try {
-      // We need the professional id; we can get from user's profile or separate endpoint.
-      // For simplicity, assume user is a professional and we fetch their own slots.
-      const res = await api.get(`/professional/availability`);
+      const res = await api.get('/professional/availability');
       setAvailability(res.data);
     } catch (err) {
       showModal('Error', 'Failed to load availability.');
