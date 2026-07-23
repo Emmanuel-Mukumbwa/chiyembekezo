@@ -7,9 +7,13 @@ const isProfessional = require('../middleware/isProfessional');
 const appointmentController = require('../controllers/professional/appointmentController');
 const messageController = require('../controllers/professional/messageController');
 const reportController = require('../controllers/professional/reportController');
-const availabilityController = require('../controllers/availabilityController'); // reuse existing
+const availabilityController = require('../controllers/availabilityController');
+const dashboardController = require('../controllers/professional/dashboardController');
 
 router.use(auth, isProfessional);
+
+// Dashboard
+router.get('/dashboard', dashboardController.getDashboard);
 
 // Appointments
 router.get('/appointments/upcoming', appointmentController.getUpcoming);
@@ -26,8 +30,8 @@ router.post('/messages', messageController.sendMessage);
 // Reports
 router.get('/reports/stats', reportController.getStats);
 
-// Availability (reuse existing)
-router.get('/availability', availabilityController.getAvailability);
+// Availability
+router.get('/availability', availabilityController.getMyAvailability);
 router.put('/availability', availabilityController.setAvailability);
 router.delete('/availability/:id', availabilityController.deleteAvailability);
 
