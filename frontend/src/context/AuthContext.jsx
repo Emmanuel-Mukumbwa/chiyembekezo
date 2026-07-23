@@ -13,12 +13,11 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
       api.get('/auth/profile')
         .then(res => {
-          // Ensure isAdmin is set (backend already sends it)
           const userData = res.data;
-          // Fallback: if isAdmin not present, compute from is_admin
-          if (userData.isAdmin === undefined && userData.is_admin !== undefined) {
-            userData.isAdmin = userData.is_admin === 1 || userData.is_admin === true;
-          }
+          // Ensure boolean flags
+          userData.isAdmin = userData.isAdmin !== undefined ? userData.isAdmin : (userData.is_admin === 1 || userData.is_admin === true);
+          userData.isProfessional = userData.isProfessional !== undefined ? userData.isProfessional : (userData.is_professional === 1 || userData.is_professional === true);
+          userData.role = userData.role || 'user';
           setUser(userData);
         })
         .catch(() => {
@@ -64,9 +63,9 @@ export const AuthProvider = ({ children }) => {
     const res = await api.put('/auth/profile', data);
     const profileRes = await api.get('/auth/profile');
     const userData = profileRes.data;
-    if (userData.isAdmin === undefined && userData.is_admin !== undefined) {
-      userData.isAdmin = userData.is_admin === 1 || userData.is_admin === true;
-    }
+    userData.isAdmin = userData.isAdmin !== undefined ? userData.isAdmin : (userData.is_admin === 1 || userData.is_admin === true);
+    userData.isProfessional = userData.isProfessional !== undefined ? userData.isProfessional : (userData.is_professional === 1 || userData.is_professional === true);
+    userData.role = userData.role || 'user';
     setUser(userData);
     return res.data;
   };
