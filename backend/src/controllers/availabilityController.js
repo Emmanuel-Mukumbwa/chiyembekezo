@@ -1,7 +1,7 @@
 const pool = require('../config/db');
 const { logAuditAction } = require('../services/auditLogService');
 
-// Get availability for a professional (all slots)
+// Get availability for a specific professional (public)
 exports.getAvailability = async (req, res) => {
   try {
     const { professionalId } = req.params;
@@ -18,14 +18,40 @@ exports.getAvailability = async (req, res) => {
   }
 };
 
-// Set availability (upsert)
+// Get availability for the authenticated professional (using req.user.id)
+exports.getMyAvailability = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    // Get professional record
+    const [pro] = await pool.query('SELECT id FROM professionals WHERE user_id = ?', [userId]);
+    if (pro.length === 0) {
+      return res.status(404).json({ error: 'Professional profile not found' });
+    }
+    const professionalId = pro[0].id;
+    const [rows] = await pool.query(`
+      SELECT id, day_of_week, start_time, end_time, is_recurring, specific_date
+      FROM professional_availability
+      WHERE professional_id = ?
+      ORDER BY FIELD(day_of_week, 'monday','tuesday','wednesday','thursday','friday','saturday','sunday'), start_time
+    `, [professionalId]);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Set availability (upsert) for authenticated professional
 exports.setAvailability = async (req, res) => {
   try {
-    const professionalId = req.user.id; // logged-in professional
-    const { slots } = req.body; // array of { day_of_week, start_time, end_time, is_recurring, specific_date }
+    const userId = req.user.id;
+    const [pro] = await pool.query('SELECT id FROM professionals WHERE user_id = ?', [userId]);
+    if (pro.length === 0) {
+      return res.status(404).json({ error: 'Professional profile not found' });
+    }
+    const professionalId = pro[0].id;
 
-    // Delete existing availability for this professional (or upsert one by one)
-    // We'll simply replace all slots.
+    const { slots } = req.body;
     await pool.query('DELETE FROM professional_availability WHERE professional_id = ?', [professionalId]);
 
     if (slots && slots.length > 0) {
@@ -40,7 +66,7 @@ exports.setAvailability = async (req, res) => {
     }
 
     await logAuditAction(
-      professionalId,
+      userId,
       'professional',
       req.user.email,
       'Updated availability',
@@ -59,7 +85,12 @@ exports.setAvailability = async (req, res) => {
 // Delete a specific slot
 exports.deleteAvailability = async (req, res) => {
   try {
-    const professionalId = req.user.id;
+    const userId = req.user.id;
+    const [pro] = await pool.query('SELECT id FROM professionals WHERE user_id = ?', [userId]);
+    if (pro.length === 0) {
+      return res.status(404).json({ error: 'Professional profile not found' });
+    }
+    const professionalId = pro[0].id;
     const { id } = req.params;
     await pool.query('DELETE FROM professional_availability WHERE id = ? AND professional_id = ?', [id, professionalId]);
     res.json({ message: 'Slot deleted' });
@@ -79,7 +110,6 @@ exports.getAvailableSlots = async (req, res) => {
     const targetDate = new Date(date);
     const dayOfWeek = ['sunday','monday','tuesday','wednesday','thursday','friday','saturday'][targetDate.getDay()];
 
-    // Get recurring availability for that day
     const [slots] = await pool.query(`
       SELECT start_time, end_time
       FROM professional_availability
@@ -88,7 +118,6 @@ exports.getAvailableSlots = async (req, res) => {
               OR (is_recurring = 0 AND specific_date = ?) )
     `, [professionalId, dayOfWeek, date]);
 
-    // Also get booked appointments for that date
     const [bookings] = await pool.query(`
       SELECT scheduled_time, duration_minutes
       FROM appointments
@@ -96,22 +125,20 @@ exports.getAvailableSlots = async (req, res) => {
         AND status IN ('pending','confirmed')
     `, [professionalId, date]);
 
-    // Generate time slots (e.g., 30-min intervals) within each availability block
     const availableSlots = [];
     for (const slot of slots) {
       let start = new Date(`${date}T${slot.start_time}`);
       const end = new Date(`${date}T${slot.end_time}`);
       while (start < end) {
-        // Check if this time is already booked
         const isBooked = bookings.some(b => {
           const bookedStart = new Date(b.scheduled_time);
           const bookedEnd = new Date(bookedStart.getTime() + b.duration_minutes * 60000);
           return (start >= bookedStart && start < bookedEnd);
         });
         if (!isBooked) {
-          availableSlots.push(start.toTimeString().slice(0,5)); // HH:MM
+          availableSlots.push(start.toTimeString().slice(0,5));
         }
-        start = new Date(start.getTime() + 30 * 60000); // 30-min steps
+        start = new Date(start.getTime() + 30 * 60000);
       }
     }
     res.json(availableSlots);
