@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -16,13 +17,18 @@ const Login = () => {
     setError('');
     setLoading(true);
     try {
-      const userData = await login(email, password);
-      // Redirect based on role
-      if (userData.isAdmin) {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      const user = await login(email, password);
+      // Role-based dashboard mapping
+      const roleDashboards = {
+        admin: '/admin',
+        professional: '/professional',
+        volunteer: '/volunteer/dashboard',
+        org_admin: '/organization',
+        listener: '/listener/dashboard',
+        user: '/dashboard',
+      };
+      const dashboardPath = roleDashboards[user.role] || '/dashboard';
+      navigate(dashboardPath);
     } catch (err) {
       setError(err.response?.data?.error || 'Login failed. Please try again.');
     } finally {
@@ -50,13 +56,22 @@ const Login = () => {
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label>Password</Form.Label>
-                <Form.Control
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength="6"
-                />
+                <InputGroup>
+                  <Form.Control
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength="6"
+                  />
+                  <Button
+                    variant="outline-secondary"
+                    onClick={() => setShowPassword(!showPassword)}
+                    tabIndex="-1"
+                  >
+                    {showPassword ? '🙈' : '👁️'}
+                  </Button>
+                </InputGroup>
               </Form.Group>
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <Link to="/forgot-password" className="small">Forgot password?</Link>
