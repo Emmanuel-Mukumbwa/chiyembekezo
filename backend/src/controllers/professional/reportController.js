@@ -2,10 +2,16 @@ const pool = require('../../config/db');
 
 exports.getStats = async (req, res) => {
   try {
-    const professionalId = req.professionalId;
+    const userId = req.user.id;
+    const [pro] = await pool.query('SELECT id FROM professionals WHERE user_id = ?', [userId]);
+    if (pro.length === 0) {
+      return res.status(404).json({ error: 'Professional not found' });
+    }
+    const professionalId = pro[0].id;
+
     const [totalPatients] = await pool.query(
-      'SELECT COUNT(DISTINCT user_id) as count FROM appointments WHERE professional_id = ?',
-      [professionalId]
+      'SELECT COUNT(DISTINCT user_id) as count FROM appointments WHERE professional_id = ? AND status = ?',
+      [professionalId, 'completed']
     );
     const [totalAppointments] = await pool.query(
       'SELECT COUNT(*) as count FROM appointments WHERE professional_id = ?',
@@ -16,9 +22,10 @@ exports.getStats = async (req, res) => {
       [professionalId]
     );
     const [upcoming] = await pool.query(
-      'SELECT COUNT(*) as count FROM appointments WHERE professional_id = ? AND scheduled_time > NOW() AND status IN ("pending", "confirmed")',
-      [professionalId]
+      'SELECT COUNT(*) as count FROM appointments WHERE professional_id = ? AND scheduled_time > NOW() AND status IN (?, ?)',
+      [professionalId, 'pending', 'confirmed']
     );
+
     res.json({
       total_patients: totalPatients[0].count || 0,
       total_appointments: totalAppointments[0].count || 0,
