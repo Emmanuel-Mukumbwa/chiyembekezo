@@ -12,6 +12,7 @@ const articleController = require('../controllers/admin/articleController');
 const resourceController = require('../controllers/admin/resourceController');
 const appointmentController = require('../controllers/admin/appointmentController');
 const communityController = require('../controllers/admin/communityController');
+const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
 
 // Apply authentication and admin check to ALL routes
@@ -64,6 +65,10 @@ router.put('/appointments/:id', appointmentController.updateAppointmentStatus);
 router.get('/community/posts', communityController.getPosts);
 router.delete('/community/posts/:id', communityController.deletePost);
 router.put('/community/posts/:id/pin', communityController.pinPost);
+
+router.get('/peer-support/requests', peerSupportController.adminGetRequests);
+router.put('/peer-support/requests/:id/assign', peerSupportController.adminAssignRequest);
+router.put('/peer-support/requests/:id/unassign', peerSupportController.adminUnassignRequest);
 
 // ===== Analytics =====
 router.get('/analytics', analyticsController.getStats);
