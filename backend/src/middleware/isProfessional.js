@@ -3,13 +3,13 @@ const pool = require('../config/db');
 module.exports = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const [rows] = await pool.query(`
-      SELECT id FROM professionals WHERE user_id = ? AND is_verified = 1
-    `, [userId]);
-    if (rows.length === 0) {
-      return res.status(403).json({ error: 'Access denied. Verified professional required.' });
+    const [rows] = await pool.query(
+      'SELECT role FROM users WHERE id = ?',
+      [userId]
+    );
+    if (rows.length === 0 || rows[0].role !== 'professional') {
+      return res.status(403).json({ error: 'Access denied. Professional only.' });
     }
-    req.professionalId = rows[0].id;
     next();
   } catch (err) {
     console.error(err);
