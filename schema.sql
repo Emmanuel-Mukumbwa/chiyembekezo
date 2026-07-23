@@ -1411,3 +1411,24 @@ CREATE TABLE IF NOT EXISTS user_organizations (
 
 ALTER TABLE appointments ADD COLUMN rating INT CHECK (rating BETWEEN 1 AND 5);
 ALTER TABLE appointments ADD COLUMN review TEXT;
+
+-- 1. Temporarily disable safe update mode
+SET SQL_SAFE_UPDATES = 0;
+
+-- 2. Update existing users based on current flags
+UPDATE users SET role = 'admin' WHERE is_admin = 1;
+UPDATE users SET role = 'professional' WHERE is_professional = 1;
+
+-- 3. Manually set other roles (adjust emails as needed)
+UPDATE users SET role = 'volunteer' WHERE email = 'volunteer@example.com';
+UPDATE users SET role = 'org_admin' WHERE email = 'orgadmin@example.com';
+UPDATE users SET role = 'listener' WHERE email = 'listener@example.com';
+
+-- 4. (Optional) If you have other users, keep them as 'user' (the default)
+-- They already have role = 'user' from the default
+
+-- 5. Verify the updates
+SELECT id, email, role, is_admin, is_professional FROM users;
+
+-- 6. Re-enable safe update mode (recommended)
+SET SQL_SAFE_UPDATES = 1;
