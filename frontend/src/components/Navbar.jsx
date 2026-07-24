@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Navbar, Nav, Container, Button, Modal, Dropdown } from 'react-bootstrap';
+import { Navbar, Nav, Container, Button, Modal, Dropdown, Badge } from 'react-bootstrap';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,7 +22,7 @@ const Navigation = () => {
     setExpanded(false);
   };
 
-  // Determine dashboard link based on role
+  // Role‑specific dashboard link
   const getDashboardLink = () => {
     if (!user) return '/dashboard';
     const roleDashboards = {
@@ -35,6 +35,9 @@ const Navigation = () => {
     };
     return roleDashboards[user.role] || '/dashboard';
   };
+
+  // Determine if user is a regular user (can apply for roles)
+  const canApply = user && user.role === 'user';
 
   return (
     <>
@@ -58,201 +61,203 @@ const Navigation = () => {
           <Navbar.Toggle aria-controls="basic-navbar-nav" />
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-lg-center">
-              <Nav.Link
-                as={NavLink}
-                to="/"
-                onClick={handleNavClick}
-                end
-                className="nav-link"
-              >
-                Home
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/about"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                About
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/resources"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                Resources
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/assessments"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                Assessments
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/community"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                Community
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/peer-support"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                🤝 Peer Support
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/find-help"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                Find Help
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/emergency"
-                onClick={handleNavClick}
-                className="nav-link text-danger fw-bold"
-              >
-                🚨 Emergency
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/contact"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                Contact
-              </Nav.Link>
-              <Nav.Link
-                as={NavLink}
-                to="/faq"
-                onClick={handleNavClick}
-                className="nav-link"
-              >
-                FAQ
-              </Nav.Link>
-
-              {/* Apply link - visible to all logged-in users */}
-              {user && (
-                <Nav.Link
-                  as={NavLink}
-                  to="/apply"
-                  onClick={handleNavClick}
-                  className="nav-link"
-                >
-                  📝 Apply
-                </Nav.Link>
-              )}
-
-              {/* Quick emergency modal button */}
-              <Button
-                variant="danger"
-                size="sm"
-                className="ms-lg-2 my-2 my-lg-0"
-                onClick={() => {
-                  handleEmergencyOpen();
-                  setExpanded(false);
-                }}
-              >
-                🚨 Help Now
-              </Button>
-
               {user ? (
-                <Dropdown align="end" className="ms-lg-2">
-                  <Dropdown.Toggle variant="outline-primary" size="sm" id="dropdown-user">
-                    {user.firstName || user.email}
-                  </Dropdown.Toggle>
-                  <Dropdown.Menu>
-                    {/* Dashboard – role-specific */}
-                    <Dropdown.Item as={NavLink} to={getDashboardLink()} onClick={handleNavClick}>
-                      📊 Dashboard
-                    </Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item as={NavLink} to="/journal" onClick={handleNavClick}>
-                      📝 Journal
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/habits" onClick={handleNavClick}>
-                      ✅ Habits
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/goals" onClick={handleNavClick}>
-                      🎯 Goals
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/safety-plan" onClick={handleNavClick}>
-                      🛡️ Safety Plan
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/mood-history" onClick={handleNavClick}>
-                      📈 Mood History
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/achievements" onClick={handleNavClick}>
-                      🏆 Achievements
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/reports" onClick={handleNavClick}>
-                      📊 Monthly Report
-                    </Dropdown.Item>
-                    <Dropdown.Divider />
-                    <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
-                      🧘 Wellness Toolkit
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/apply" onClick={handleNavClick}>
-                      📝 Apply
-                    </Dropdown.Item>
-                    <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
-                      👤 Profile
-                    </Dropdown.Item>
+                // ---------- LOGGED IN ----------
+                <>
+                  <Nav.Link
+                    as={NavLink}
+                    to={getDashboardLink()}
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Dashboard
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/resources"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Resources
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/community"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Community
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/find-help"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Find Help
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/emergency"
+                    onClick={handleNavClick}
+                    className="nav-link text-danger fw-bold"
+                  >
+                    🚨 Emergency
+                  </Nav.Link>
 
-                    {/* Peer Support link in dropdown */}
-                    <Dropdown.Item as={NavLink} to="/peer-support" onClick={handleNavClick}>
-                      🤝 Peer Support
-                    </Dropdown.Item>
+                  {/* Notifications placeholder */}
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    className="ms-2 position-relative"
+                    onClick={() => { /* open notifications panel */ }}
+                  >
+                    🔔
+                    <Badge
+                      bg="danger"
+                      pill
+                      className="position-absolute top-0 start-100 translate-middle"
+                      style={{ fontSize: '0.6rem' }}
+                    >
+                      3
+                    </Badge>
+                  </Button>
 
-                    {/* Role-specific links */}
-                    {user.role === 'admin' && (
-                      <Dropdown.Item as={NavLink} to="/admin" onClick={handleNavClick}>
-                        ⚙️ Admin Panel
+                  {/* Avatar dropdown */}
+                  <Dropdown align="end" className="ms-2">
+                    <Dropdown.Toggle variant="outline-primary" size="sm" id="dropdown-user">
+                      {user.firstName || user.email}
+                    </Dropdown.Toggle>
+                    <Dropdown.Menu>
+                      {/* Profile & account */}
+                      <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
+                        👤 Profile
                       </Dropdown.Item>
-                    )}
-                    {user.role === 'professional' && (
-                      <>
+                      <Dropdown.Item as={NavLink} to="/settings" onClick={handleNavClick}>
+                        ⚙️ Settings
+                      </Dropdown.Item>
+                      <Dropdown.Divider />
+
+                      {/* Apply – only for regular users */}
+                      {canApply && (
+                        <>
+                          <Dropdown.Item as={NavLink} to="/apply" onClick={handleNavClick}>
+                            📝 Become a Professional / Volunteer
+                          </Dropdown.Item>
+                          <Dropdown.Divider />
+                        </>
+                      )}
+
+                      {/* Role‑specific portals */}
+                      {user.role === 'admin' && (
+                        <Dropdown.Item as={NavLink} to="/admin" onClick={handleNavClick}>
+                          ⚙️ Admin Panel
+                        </Dropdown.Item>
+                      )}
+                      {user.role === 'professional' && (
                         <Dropdown.Item as={NavLink} to="/professional" onClick={handleNavClick}>
                           👨‍⚕️ Professional Portal
                         </Dropdown.Item>
-                        <Dropdown.Item as={NavLink} to="/professional/availability" onClick={handleNavClick}>
-                          📅 Manage Availability
+                      )}
+                      {user.role === 'org_admin' && (
+                        <Dropdown.Item as={NavLink} to="/organization" onClick={handleNavClick}>
+                          🏢 Organization Dashboard
                         </Dropdown.Item>
-                      </>
-                    )}
-                    {user.role === 'org_admin' && (
-                      <Dropdown.Item as={NavLink} to="/organization" onClick={handleNavClick}>
-                        🏢 Organization Dashboard
-                      </Dropdown.Item>
-                    )}
-                    {user.role === 'volunteer' && (
-                      <Dropdown.Item as={NavLink} to="/volunteer/dashboard" onClick={handleNavClick}>
-                        🤝 Volunteer Dashboard
-                      </Dropdown.Item>
-                    )}
-                    {user.role === 'listener' && (
-                      <Dropdown.Item as={NavLink} to="/listener/dashboard" onClick={handleNavClick}>
-                        👂 Listener Dashboard
-                      </Dropdown.Item>
-                    )}
+                      )}
+                      {user.role === 'volunteer' && (
+                        <Dropdown.Item as={NavLink} to="/volunteer/dashboard" onClick={handleNavClick}>
+                          🤝 Volunteer Dashboard
+                        </Dropdown.Item>
+                      )}
+                      {user.role === 'listener' && (
+                        <Dropdown.Item as={NavLink} to="/listener/dashboard" onClick={handleNavClick}>
+                          👂 Listener Dashboard
+                        </Dropdown.Item>
+                      )}
 
-                    <Dropdown.Divider />
-                    <Dropdown.Item onClick={handleLogout} className="text-danger">
-                      Logout
-                    </Dropdown.Item>
-                  </Dropdown.Menu>
-                </Dropdown>
+                      <Dropdown.Divider />
+                      <Dropdown.Item onClick={handleLogout} className="text-danger">
+                        Logout
+                      </Dropdown.Item>
+                    </Dropdown.Menu>
+                  </Dropdown>
+                </>
               ) : (
+                // ---------- PUBLIC ----------
                 <>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/"
+                    onClick={handleNavClick}
+                    end
+                    className="nav-link"
+                  >
+                    Home
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/about"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    About
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/resources"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Resources
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/assessments"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Assessments
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/find-help"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Find Help
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/community"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Community
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/emergency"
+                    onClick={handleNavClick}
+                    className="nav-link text-danger fw-bold"
+                  >
+                    🚨 Emergency
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/contact"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    Contact
+                  </Nav.Link>
+                  <Nav.Link
+                    as={NavLink}
+                    to="/faq"
+                    onClick={handleNavClick}
+                    className="nav-link"
+                  >
+                    FAQ
+                  </Nav.Link>
                   <Nav.Link
                     as={NavLink}
                     to="/login"
@@ -277,7 +282,7 @@ const Navigation = () => {
         </Container>
       </Navbar>
 
-      {/* Emergency Modal */}
+      {/* Emergency Modal – unchanged */}
       <Modal show={showEmergency} onHide={handleEmergencyClose} centered>
         <Modal.Header closeButton className="border-0">
           <Modal.Title>🚨 Immediate Help</Modal.Title>
