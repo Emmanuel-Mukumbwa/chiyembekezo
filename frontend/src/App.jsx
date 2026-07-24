@@ -74,6 +74,8 @@ import ProfessionalReports from './pages/Professional/ProfessionalReports';
 // Organization imports
 import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
+import OrganizationMembers from './pages/Organization/OrganizationMembers';
+import OrganizationInsights from './pages/Organization/OrganizationInsights';
 
 // Volunteer & Listener Dashboards
 import VolunteerDashboard from './pages/Volunteer/VolunteerDashboard';
@@ -212,6 +214,8 @@ function App() {
                 {/* ===== Organization Portal ===== */}
                 <Route path="/organization" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
                   <Route index element={<OrganizationDashboard />} />
+                  <Route path="members" element={<OrganizationMembers />} />
+                  <Route path="insights" element={<OrganizationInsights />} />
                 </Route>
 
                 {/* ===== Volunteer Dashboard ===== */}
