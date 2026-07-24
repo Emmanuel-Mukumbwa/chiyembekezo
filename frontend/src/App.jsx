@@ -83,6 +83,16 @@ import ListenerDashboard from './pages/Listener/ListenerDashboard';
 import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
 import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
 
+// Legal & Policy Pages
+import GetStarted from './pages/GetStarted';
+import Terms from './pages/Terms';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
+import CommunityGuidelines from './pages/CommunityGuidelines';
+
+// Cookie Consent Banner
+import CookieConsentBanner from './components/CookieConsentBanner';
+
 // Peer Support
 import PeerSupport from './pages/PeerSupport';
 
@@ -117,6 +127,11 @@ function App() {
                 <Route path="/community" element={<CommunityHome />} />
                 <Route path="/community/post/:id" element={<PostDetail />} />
                 <Route path="/emergency" element={<Emergency />} />
+                <Route path="/get-started" element={<GetStarted />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/cookie-policy" element={<CookiePolicy />} />
+                <Route path="/community-guidelines" element={<CommunityGuidelines />} />
 
                 {/* ===== Auth routes ===== */}
                 <Route path="/login" element={<Login />} />
@@ -238,6 +253,8 @@ function App() {
 
               </Routes>
             </div>
+            {/* Cookie Consent Banner – fixed position */}
+            <CookieConsentBanner />
             <Footer />
           </div>
         </Router>
