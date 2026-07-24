@@ -1,9 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
+  const inviteToken = searchParams.get('invite');
+
+  const [inviteData, setInviteData] = useState(null);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -18,9 +23,23 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
+  // Validate invitation token if present
+  useEffect(() => {
+    if (inviteToken) {
+      api.get(`/invitations/validate?token=${inviteToken}`)
+        .then(res => {
+          setInviteData(res.data);
+          // Pre-fill email
+          setFormData(prev => ({ ...prev, email: res.data.email }));
+        })
+        .catch(() => {
+          setError('Invalid or expired invitation token.');
+        });
+    }
+  }, [inviteToken]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    // Clear error when user types
     setError('');
   };
 
@@ -28,13 +47,10 @@ const Register = () => {
     e.preventDefault();
     setError('');
 
-    // Check if passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
-
-    // Check password length
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters.');
       return;
@@ -42,10 +58,16 @@ const Register = () => {
 
     setLoading(true);
     try {
-      // Remove confirmPassword before sending to API
       const { confirmPassword, ...registerData } = formData;
+      // If invitation, include organizationId? Not needed for invite flow, role will be set after acceptance.
       const userData = await register(registerData);
-      // Redirect based on role (admins are usually created manually, but just in case)
+
+      // If there is an invitation token, accept it
+      if (inviteToken) {
+        await api.post('/invitations/accept', { token: inviteToken, userId: userData.id });
+      }
+
+      // Redirect based on role
       if (userData.isAdmin) {
         navigate('/admin');
       } else {
@@ -68,7 +90,9 @@ const Register = () => {
         <Col md={6} lg={5}>
           <Card className="feature-card p-4">
             <h3 className="text-center">Create Account</h3>
-            <p className="text-muted text-center">Start your wellness journey today.</p>
+            <p className="text-muted text-center">
+              {inviteData ? `Join as ${inviteData.role}` : 'Start your wellness journey today.'}
+            </p>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Row>
@@ -104,6 +128,7 @@ const Register = () => {
                   value={formData.email}
                   onChange={handleChange}
                   required
+                  disabled={!!inviteData?.email}
                 />
               </Form.Group>
 
@@ -158,7 +183,13 @@ const Register = () => {
                 />
               </Form.Group>
 
-              <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+              {inviteData && (
+                <Form.Text className="text-muted">
+                  You are registering as a <strong>{inviteData.role}</strong>.
+                </Form.Text>
+              )}
+
+              <Button variant="primary" type="submit" className="w-100 mt-3" disabled={loading}>
                 {loading ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </Form>
