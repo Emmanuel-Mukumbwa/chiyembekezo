@@ -16,9 +16,9 @@ const ProtectedRoute = ({ children }) => {
   // Role-based dashboard redirection
   const roleDashboards = {
     admin: '/admin',
-    professional: '/professional/dashboard',
+    professional: '/professional',
     volunteer: '/volunteer/dashboard',
-    org_admin: '/org/dashboard',
+    org_admin: '/organization',        // ✅ fixed
     listener: '/listener/dashboard',
     user: '/dashboard',
   };
