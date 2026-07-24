@@ -15,6 +15,10 @@ const communityController = require('../controllers/admin/communityController');
 const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
 
+// NEW: Application and Invitation controllers
+const applicationController = require('../controllers/applicationController');
+const invitationController = require('../controllers/invitationController');
+
 // Apply authentication and admin check to ALL routes
 router.use(auth, isAdmin);
 
@@ -66,9 +70,17 @@ router.get('/community/posts', communityController.getPosts);
 router.delete('/community/posts/:id', communityController.deletePost);
 router.put('/community/posts/:id/pin', communityController.pinPost);
 
+// ===== Peer Support =====
 router.get('/peer-support/requests', peerSupportController.adminGetRequests);
 router.put('/peer-support/requests/:id/assign', peerSupportController.adminAssignRequest);
 router.put('/peer-support/requests/:id/unassign', peerSupportController.adminUnassignRequest);
+
+// ===== Applications =====
+router.get('/applications', applicationController.adminGetApplications);
+router.put('/applications/:id', applicationController.adminReviewApplication);
+
+// ===== Invitations =====
+router.post('/invitations', invitationController.sendInvitation);
 
 // ===== Analytics =====
 router.get('/analytics', analyticsController.getStats);
