@@ -12,38 +12,45 @@ const Footer = () => {
               A digital mental wellness platform for Malawi. <br />
               <em>Hope begins here.</em>
             </p>
+            <p className="small">
+              <Link to="/emergency" className="text-danger fw-bold">🚨 Need immediate help?</Link>
+            </p>
           </Col>
           <Col md={2} className="mb-3">
             <h6 className="text-white">Quick Links</h6>
             <ul className="list-unstyled small">
               <li><Link to="/">Home</Link></li>
+              <li><Link to="/get-started">Get Started</Link></li>
               <li><Link to="/about">About</Link></li>
               <li><Link to="/resources">Resources</Link></li>
               <li><Link to="/assessments">Assessments</Link></li>
               <li><Link to="/community">Community</Link></li>
               <li><Link to="/find-help">Find Help</Link></li>
-              <li><Link to="/emergency" className="text-danger fw-bold">🚨 Emergency</Link></li>
             </ul>
           </Col>
-          <Col md={2} className="mb-3">
+          <Col md={3} className="mb-3">
+            <h6 className="text-white">Legal &amp; Policies</h6>
+            <ul className="list-unstyled small">
+              <li><Link to="/terms">Terms &amp; Conditions</Link></li>
+              <li><Link to="/privacy-policy">Privacy Policy</Link></li>
+              <li><Link to="/cookie-policy">🍪 Cookie Policy</Link></li>
+              <li><Link to="/community-guidelines">🤝 Community Guidelines</Link></li>
+            </ul>
+          </Col>
+          <Col md={3} className="mb-3">
             <h6 className="text-white">Support</h6>
             <ul className="list-unstyled small">
               <li><Link to="/contact">Contact Us</Link></li>
               <li><Link to="/faq">FAQs</Link></li>
-              <li><Link to="/privacy">Privacy Policy</Link></li>
+              <li><Link to="/emergency">🚨 Emergency</Link></li>
             </ul>
-          </Col>
-          <Col md={4} className="mb-3">
-            <h6 className="text-white">Language</h6>
+            <h6 className="text-white mt-2">Language</h6>
             <select className="form-select form-select-sm bg-dark text-white border-secondary" style={{ width: 'auto' }}>
               <option value="en">English</option>
               <option value="ch">Chichewa</option>
               <option value="tu">Tumbuka</option>
             </select>
             <p className="small mt-2">© 2026 Chiyembekezo. All rights reserved.</p>
-            <p className="small">
-              <Link to="/emergency" className="text-danger fw-bold">Need immediate help?</Link>
-            </p>
           </Col>
         </Row>
       </Container>
