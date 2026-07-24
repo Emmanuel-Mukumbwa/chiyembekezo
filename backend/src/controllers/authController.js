@@ -22,11 +22,11 @@ const generateToken = (userId) => {
   return jwt.sign({ id: userId }, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
-// @desc    Register user
+// @desc    Register user (with optional organization ID)
 // @route   POST /api/auth/register
 exports.register = async (req, res) => {
   try {
-    const { email, password, firstName, lastName, phone } = req.body;
+    const { email, password, firstName, lastName, phone, organizationId } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password are required' });
@@ -43,16 +43,33 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Determine role: if organizationId is provided, user becomes an org_member
+    const role = organizationId ? 'org_member' : 'user';
+
     const result = await pool.query(
       'INSERT INTO users (email, password_hash, first_name, last_name, phone, role) VALUES (?, ?, ?, ?, ?, ?)',
-      [email, hashedPassword, firstName || null, lastName || null, phone || null, 'user']
+      [email, hashedPassword, firstName || null, lastName || null, phone || null, role]
     );
     const userId = result[0].insertId;
 
+    // Create profile record
     await pool.query(
       'INSERT INTO profiles (user_id, preferred_language) VALUES (?, ?)',
       [userId, 'en']
     );
+
+    // If organizationId is provided, link user to that organization
+    if (organizationId) {
+      const [org] = await pool.query('SELECT id FROM organizations WHERE id = ?', [organizationId]);
+      if (org.length > 0) {
+        await pool.query(
+          'INSERT INTO user_organizations (user_id, organization_id, role) VALUES (?, ?, ?)',
+          [userId, organizationId, 'member']
+        );
+      } else {
+        console.warn(`Organization ${organizationId} not found for user ${email}`);
+      }
+    }
 
     const token = generateToken(userId);
 
@@ -66,7 +83,8 @@ exports.register = async (req, res) => {
         phone,
         isAdmin: false,
         isProfessional: false,
-        role: 'user',
+        role: role,
+        organizationId: organizationId || null,
       }
     });
   } catch (err) {
@@ -283,6 +301,27 @@ exports.updateProfile = async (req, res) => {
   } catch (err) {
     console.error('❌ Update profile error:', err.message);
     console.error(err.stack);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// @desc    Get the current user's organization (if any)
+// @route   GET /api/auth/organization
+exports.getUserOrganization = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const [rows] = await pool.query(`
+      SELECT o.id, o.name, o.logo_url, uo.role as org_role
+      FROM user_organizations uo
+      JOIN organizations o ON uo.organization_id = o.id
+      WHERE uo.user_id = ?
+    `, [userId]);
+    if (rows.length === 0) {
+      return res.json({ organization: null });
+    }
+    res.json({ organization: rows[0] });
+  } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
