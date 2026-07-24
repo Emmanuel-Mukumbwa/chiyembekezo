@@ -1,3 +1,4 @@
+//src/pages/Organization/OrganizationLayout.jsx
 import React from 'react';
 import { Container, Row, Col, Nav } from 'react-bootstrap';
 import { Link, Outlet, useLocation } from 'react-router-dom';
