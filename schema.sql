@@ -1432,3 +1432,64 @@ SELECT id, email, role, is_admin, is_professional FROM users;
 
 -- 6. Re-enable safe update mode (recommended)
 SET SQL_SAFE_UPDATES = 1;
+
+
+-- Create organizations table
+CREATE TABLE IF NOT EXISTS organizations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    logo_url VARCHAR(500),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(20),
+    address TEXT,
+    created_by INT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add organization_id to users
+ALTER TABLE users ADD COLUMN organization_id INT NULL;
+ALTER TABLE users ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL;
+
+-- Add org_admin_id to organizations (to track who is the admin)
+ALTER TABLE organizations ADD COLUMN org_admin_id INT NULL;
+ALTER TABLE organizations ADD FOREIGN KEY (org_admin_id) REFERENCES users(id) ON DELETE SET NULL;
+
+-- Applications for professionals and volunteers
+CREATE TABLE IF NOT EXISTS applications (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_id INT NOT NULL,
+    type ENUM('professional','volunteer') NOT NULL,
+    status ENUM('pending','approved','rejected') DEFAULT 'pending',
+    message TEXT,
+    qualifications TEXT,
+    experience TEXT,
+    specialization VARCHAR(255),
+    license_number VARCHAR(100),
+    languages JSON,
+    availability TEXT,
+    reviewed_by INT NULL,
+    reviewed_at TIMESTAMP NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Invitations table
+CREATE TABLE IF NOT EXISTS invitations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    role ENUM('professional','volunteer','org_admin') NOT NULL,
+    token VARCHAR(255) UNIQUE NOT NULL,
+    invited_by INT NOT NULL,
+    status ENUM('pending','accepted','expired') DEFAULT 'pending',
+    expires_at TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (invited_by) REFERENCES users(id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Add listener flag to volunteer_listeners
+ALTER TABLE volunteer_listeners ADD COLUMN is_listener BOOLEAN DEFAULT FALSE;
