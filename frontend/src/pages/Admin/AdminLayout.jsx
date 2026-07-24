@@ -19,6 +19,8 @@ const AdminLayout = () => {
     { path: '/professionals', label: 'Professionals', icon: '👨‍⚕️' },
     { path: '/volunteers', label: 'Volunteers', icon: '🤝' },
     { path: '/organizations', label: 'Organizations', icon: '🏢' },
+    { path: '/applications', label: 'Applications', icon: '📝' },
+    { path: '/invitations', label: 'Invitations', icon: '✉️' },
     { path: '/articles', label: 'Articles', icon: '📄' },
     { path: '/resources', label: 'Resources', icon: '📁' },
     { path: '/appointments', label: 'Appointments', icon: '📅' },
