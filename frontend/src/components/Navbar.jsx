@@ -99,7 +99,6 @@ const Navigation = () => {
               >
                 Community
               </Nav.Link>
-              {/* Peer Support Link */}
               <Nav.Link
                 as={NavLink}
                 to="/peer-support"
@@ -140,6 +139,18 @@ const Navigation = () => {
               >
                 FAQ
               </Nav.Link>
+
+              {/* Apply link - visible to all logged-in users */}
+              {user && (
+                <Nav.Link
+                  as={NavLink}
+                  to="/apply"
+                  onClick={handleNavClick}
+                  className="nav-link"
+                >
+                  📝 Apply
+                </Nav.Link>
+              )}
 
               {/* Quick emergency modal button */}
               <Button
@@ -189,6 +200,9 @@ const Navigation = () => {
                     <Dropdown.Divider />
                     <Dropdown.Item as={NavLink} to="/wellness" onClick={handleNavClick}>
                       🧘 Wellness Toolkit
+                    </Dropdown.Item>
+                    <Dropdown.Item as={NavLink} to="/apply" onClick={handleNavClick}>
+                      📝 Apply
                     </Dropdown.Item>
                     <Dropdown.Item as={NavLink} to="/profile" onClick={handleNavClick}>
                       👤 Profile
