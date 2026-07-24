@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Container, Row, Col, Button, Card, Accordion, Carousel } from 'react-bootstrap';
+import { Container, Row, Col, Button, Card, Accordion, Carousel, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import MoodTracker from '../components/MoodTracker';
@@ -56,6 +56,52 @@ const Home = () => {
     { name: "John, Blantyre", text: "I was hesitant to seek help, but the anonymous community stories inspired me. I'm now seeing a counselor and feeling better every day." },
   ];
 
+  // Statistics (static for now – can be dynamic later)
+  const stats = [
+    { icon: '📖', number: '200+', label: 'Resources' },
+    { icon: '🧠', number: '5', label: 'Self-Assessments' },
+    { icon: '🫁', number: '8', label: 'Wellness Tools' },
+    { icon: '👨‍⚕️', number: '50+', label: 'Professionals' },
+  ];
+
+  // Choose Your Journey options
+  const journeyCards = [
+    { icon: '😊', label: 'I\'m feeling stressed', link: '/wellness/breathing' },
+    { icon: '😔', label: 'I\'m feeling depressed', link: '/assessments/phq9' },
+    { icon: '😰', label: 'I\'m anxious', link: '/assessments/gad7' },
+    { icon: '😴', label: 'I can\'t sleep', link: '/assessments/sleep' },
+    { icon: '📚', label: 'I\'m a student', link: '/resources?category=students' },
+    { icon: '👨‍👩‍👧', label: 'I\'m supporting someone', link: '/resources?category=parenting' },
+    { icon: '💼', label: 'I\'m a professional', link: '/find-help' },
+  ];
+
+  // Explore by Need (categories)
+  const exploreNeeds = [
+    { icon: '🌙', label: 'Better Sleep', link: '/resources?category=sleep' },
+    { icon: '😰', label: 'Anxiety', link: '/resources?category=anxiety' },
+    { icon: '💔', label: 'Grief', link: '/resources?category=grief' },
+    { icon: '🎓', label: 'Exam Stress', link: '/resources?category=students' },
+    { icon: '💼', label: 'Workplace Stress', link: '/resources?category=workplace' },
+    { icon: '👨‍👩‍👧', label: 'Relationships', link: '/resources?category=relationships' },
+    { icon: '💸', label: 'Financial Pressure', link: '/resources?category=financial' },
+    { icon: '🌱', label: 'Self-Esteem', link: '/resources?category=self-esteem' },
+  ];
+
+  // Features grid (What you can do)
+  const features = [
+    { icon: '🧠', label: 'Take Assessments', link: '/assessments' },
+    { icon: '📖', label: 'Read Resources', link: '/resources' },
+    { icon: '📝', label: 'Keep a Journal', link: '/journal' },
+    { icon: '😊', label: 'Track Your Mood', link: '/dashboard' },
+    { icon: '🫁', label: 'Practice Breathing', link: '/wellness/breathing' },
+    { icon: '🧘', label: 'Meditate', link: '/wellness/meditation' },
+    { icon: '🎧', label: 'Calming Sounds', link: '/wellness/sounds' },
+    { icon: '🤝', label: 'Join Community', link: '/community' },
+    { icon: '👨‍⚕️', label: 'Find Professionals', link: '/find-help' },
+    { icon: '📅', label: 'Book Appointments', link: '/find-help' },
+    { icon: '🎯', label: 'Set Wellness Goals', link: '/goals' },
+  ];
+
   return (
     <main>
       {/* Hero Section */}
@@ -71,6 +117,9 @@ const Home = () => {
             </Button>
             <Button variant="outline-primary" size="lg" as={Link} to="/find-help">
               Find Support Near You
+            </Button>
+            <Button variant="outline-success" size="lg" as={Link} to="/get-started">
+              👋 New Here? Start Here
             </Button>
           </div>
         </Container>
@@ -124,40 +173,56 @@ const Home = () => {
         </div>
       </div>
 
-      {/* Mood Check-in - compact mode with "Go to Full Check-in" for logged-in users */}
+      {/* ===== NEW HERE? SECTION ===== */}
       <Container className="my-5">
-        <h2 className="text-center mb-4">How are you feeling today?</h2>
-        <Row className="justify-content-center">
-          <Col md={8} lg={6}>
-            <MoodTracker compact />
-            {user && (
-              <div className="text-center mt-3">
-                <Button as={Link} to="/dashboard" variant="outline-primary" size="sm">
-                  Go to Full Check‑in
+        <Row>
+          <Col lg={10} className="mx-auto">
+            <Card className="feature-card p-4 text-center border-primary">
+              <h2 className="mb-3">👋 New to Chiyembekezo?</h2>
+              <p className="text-muted mb-4" style={{ maxWidth: '600px', margin: '0 auto' }}>
+                Not sure where to begin? We've prepared a short guide that explains how the platform works and helps you get started.
+              </p>
+              <div className="d-flex flex-wrap justify-content-center gap-3">
+                <Button as={Link} to="/get-started" variant="primary" size="lg">
+                  📖 Read the Guide
+                </Button>
+                <Button as={Link} to="/assessments" variant="outline-primary" size="lg">
+                  🩺 Check Your Wellbeing
+                </Button>
+                <Button as={Link} to="/find-help" variant="outline-success" size="lg">
+                  💙 Find Support
                 </Button>
               </div>
-            )}
+            </Card>
           </Col>
         </Row>
       </Container>
 
-      {/* Popular Resources */}
+      {/* ===== STATISTICS ===== */}
       <Container className="my-5">
-        <h2 className="text-center mb-4">Popular Resources</h2>
-        <Row>
-          {[
-            "Managing Anxiety", "Understanding Depression", "Exam Stress",
-            "Grief", "Relationship Problems", "Burnout", "Financial Stress"
-          ].map((topic, idx) => (
-            <Col md={3} sm={6} key={idx} className="mb-3">
-              <Card className="feature-card">
+        <Row className="justify-content-center">
+          {stats.map((s, idx) => (
+            <Col key={idx} xs={6} sm={3} className="text-center mb-3">
+              <div style={{ fontSize: '2.5rem' }}>{s.icon}</div>
+              <h3>{s.number}</h3>
+              <div className="text-muted">{s.label}</div>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+
+      {/* ===== CHOOSE YOUR JOURNEY ===== */}
+      <Container className="my-5">
+        <h2 className="text-center mb-4">How can we help today?</h2>
+        <Row className="justify-content-center">
+          {journeyCards.map((item, idx) => (
+            <Col xs={6} sm={4} md={3} key={idx} className="mb-3">
+              <Card className="feature-card text-center h-100 p-2">
                 <Card.Body>
-                  <Card.Title className="h6">{topic}</Card.Title>
-                  <Card.Text className="small text-muted">
-                    Learn more about {topic.toLowerCase()}.
-                  </Card.Text>
-                  <Button variant="outline-primary" size="sm" as={Link} to={`/resources?topic=${topic}`}>
-                    Read
+                  <div style={{ fontSize: '2.5rem' }}>{item.icon}</div>
+                  <Card.Text className="small">{item.label}</Card.Text>
+                  <Button as={Link} to={item.link} variant="outline-primary" size="sm">
+                    Explore
                   </Button>
                 </Card.Body>
               </Card>
@@ -166,44 +231,115 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* Quick Self Assessments - ALL ENABLED with correct links */}
+      {/* ===== WHAT YOU CAN DO ===== */}
       <Container className="my-5">
-        <h2 className="text-center mb-4">Quick Self Assessments</h2>
-        <Row className="justify-content-center gap-3">
-          <Col xs="auto">
-            <Button variant="outline-secondary" as={Link} to="/assessments/phq9">
-              Depression Test
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button variant="outline-secondary" as={Link} to="/assessments/gad7">
-              Anxiety Test
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button variant="outline-secondary" as={Link} to="/assessments/stress">
-              Stress Test
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button variant="outline-secondary" as={Link} to="/assessments/sleep">
-              Sleep Test
-            </Button>
-          </Col>
-          <Col xs="auto">
-            <Button variant="outline-secondary" as={Link} to="/assessments/burnout">
-              Burnout Test
-            </Button>
+        <h2 className="text-center mb-4">What You Can Do</h2>
+        <Row>
+          {features.map((f, idx) => (
+            <Col xs={6} sm={4} md={3} key={idx} className="mb-3">
+              <Button
+                as={Link}
+                to={f.link}
+                variant="outline-secondary"
+                className="w-100 h-100 d-flex flex-column align-items-center justify-content-center p-3"
+                style={{ minHeight: '80px' }}
+              >
+                <div style={{ fontSize: '2rem' }}>{f.icon}</div>
+                <div className="small mt-1">{f.label}</div>
+              </Button>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+
+      {/* ===== HOW CHIYEMBEKEZO WORKS ===== */}
+      <Container className="my-5">
+        <h2 className="text-center mb-4">How Chiyembekezo Works</h2>
+        <Row className="justify-content-center">
+          <Col md={10}>
+            <div className="d-flex flex-wrap justify-content-center gap-3">
+              {[
+                'Create Account',
+                'Complete Profile',
+                'Take Assessment',
+                'Track Mood',
+                'Get Recommendations',
+                'Improve Daily Wellbeing',
+                'Connect With Professionals'
+              ].map((step, idx) => (
+                <div key={idx} className="text-center">
+                  <div className="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style={{ width: '50px', height: '50px' }}>
+                    {idx + 1}
+                  </div>
+                  <div className="mt-2 small">{step}</div>
+                  {idx < 6 && <div className="text-muted">↓</div>}
+                </div>
+              ))}
+            </div>
           </Col>
         </Row>
       </Container>
 
-      {/* Breathing Exercise */}
+      {/* ===== QUICK SELF ASSESSMENTS ===== */}
+      <Container className="my-5">
+        <h2 className="text-center mb-4">Quick Self Assessments</h2>
+        <Row className="justify-content-center gap-3">
+          {["Depression", "Anxiety", "Stress", "Sleep", "Burnout"].map((test) => (
+            <Col xs="auto" key={test}>
+              <Button variant="outline-secondary" as={Link} to={`/assessments/${test.toLowerCase()}`}>
+                {test} Test
+              </Button>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+
+      {/* ===== EXPLORE BY NEED ===== */}
+      <Container className="my-5">
+        <h2 className="text-center mb-4">Explore by Need</h2>
+        <Row className="justify-content-center">
+          {exploreNeeds.map((item, idx) => (
+            <Col xs={6} sm={4} md={3} key={idx} className="mb-3">
+              <Card className="feature-card text-center h-100 p-2">
+                <Card.Body>
+                  <div style={{ fontSize: '2.5rem' }}>{item.icon}</div>
+                  <Card.Text className="small">{item.label}</Card.Text>
+                  <Button as={Link} to={item.link} variant="outline-primary" size="sm">
+                    Explore
+                  </Button>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      </Container>
+
+      {/* ===== WELLNESS TOOLKIT PREVIEW ===== */}
       <Container className="my-5 text-center">
-        <h2>Take 60 seconds to relax</h2>
-        <div className="breathing-circle-container">
-          <div className={`breathing-circle ${getBreathingClass()}`}></div>
-          <p className="mt-3">
+        <h2 className="mb-4">🧘 Wellness Toolkit</h2>
+        <p className="text-muted mb-4">Take a moment to relax and reset.</p>
+        <div className="d-flex flex-wrap justify-content-center gap-3">
+          <Button as={Link} to="/wellness/breathing" variant="outline-primary">
+            🫁 Breathing
+          </Button>
+          <Button as={Link} to="/wellness/meditation" variant="outline-primary">
+            🧘 Meditation
+          </Button>
+          <Button as={Link} to="/wellness/grounding" variant="outline-primary">
+            🌿 Grounding
+          </Button>
+          <Button as={Link} to="/wellness/sounds" variant="outline-primary">
+            🌧 Relaxation Sounds
+          </Button>
+          <Button as={Link} to="/wellness" variant="primary">
+            Open Toolkit
+          </Button>
+        </div>
+        {/* Breathing preview (optional) */}
+        <Card className="feature-card p-3 mt-4 mx-auto" style={{ maxWidth: '400px' }}>
+          <h6>Try 60 seconds of calm</h6>
+          <div className={`breathing-circle ${getBreathingClass()}`} style={{ width: '120px', height: '120px', margin: '1rem auto' }}></div>
+          <p className="small">
             {!isBreathing ? 'Press start to begin' :
               breathPhase === 'inhale' ? 'Inhale...' :
               breathPhase === 'hold1' ? 'Hold...' :
@@ -211,17 +347,13 @@ const Home = () => {
               'Hold...'
             }
           </p>
-          <Button
-            variant="primary"
-            onClick={startBreathing}
-            disabled={isBreathing}
-          >
+          <Button variant="primary" size="sm" onClick={startBreathing} disabled={isBreathing}>
             {isBreathing ? 'Breathing...' : 'Start Exercise'}
           </Button>
-        </div>
+        </Card>
       </Container>
 
-      {/* Find Professional Help */}
+      {/* ===== FIND PROFESSIONAL HELP ===== */}
       <Container className="my-5">
         <h2 className="text-center mb-4">Find Professional Help</h2>
         <Row className="justify-content-center">
@@ -256,7 +388,7 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* Community Stories */}
+      {/* ===== COMMUNITY STORIES ===== */}
       <Container className="my-5">
         <h2 className="text-center mb-4">Community Stories</h2>
         <Carousel interval={5000} indicators={false}>
@@ -283,7 +415,34 @@ const Home = () => {
         </Carousel>
       </Container>
 
-      {/* Testimonials */}
+      {/* ===== WHY TRUST CHIYEMBEKEZO ===== */}
+      <Container className="my-5">
+        <h2 className="text-center mb-4">🔒 Why People Trust Chiyembekezo</h2>
+        <Row className="justify-content-center">
+          <Col md={3} sm={6} className="text-center mb-3">
+            <div style={{ fontSize: '3rem' }}>🔒</div>
+            <h6>Private</h6>
+            <p className="small text-muted">Your data is encrypted and never shared.</p>
+          </Col>
+          <Col md={3} sm={6} className="text-center mb-3">
+            <div style={{ fontSize: '3rem' }}>📚</div>
+            <h6>Evidence-informed</h6>
+            <p className="small text-muted">Tools based on validated research.</p>
+          </Col>
+          <Col md={3} sm={6} className="text-center mb-3">
+            <div style={{ fontSize: '3rem' }}>🇲🇼</div>
+            <h6>Built for Malawi</h6>
+            <p className="small text-muted">Designed with local context in mind.</p>
+          </Col>
+          <Col md={3} sm={6} className="text-center mb-3">
+            <div style={{ fontSize: '3rem' }}>❤️</div>
+            <h6>Compassion-first</h6>
+            <p className="small text-muted">Everything we do starts with empathy.</p>
+          </Col>
+        </Row>
+      </Container>
+
+      {/* ===== TESTIMONIALS ===== */}
       <Container className="my-5">
         <h2 className="text-center mb-4">What Our Users Say</h2>
         <Row>
@@ -300,7 +459,7 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* FAQs */}
+      {/* ===== FAQ ===== */}
       <Container className="my-5">
         <h2 className="text-center mb-4">Frequently Asked Questions</h2>
         <Row className="justify-content-center">
@@ -317,7 +476,7 @@ const Home = () => {
         </Row>
       </Container>
 
-      {/* Bottom CTA */}
+      {/* ===== BOTTOM CTA ===== */}
       <Container className="text-center my-5 py-4 bg-light rounded-3">
         <h3>Ready to take the next step?</h3>
         <p className="text-muted">Join our community and start your journey toward better mental health.</p>
