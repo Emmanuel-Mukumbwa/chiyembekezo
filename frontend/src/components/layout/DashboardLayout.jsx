@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button } from 'react-bootstrap';
+import { Container, Button } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
+import ScrollToTop from '../ScrollToTop';
 
 const DashboardLayout = ({ children }) => {
   const { user } = useAuth();
@@ -13,15 +14,13 @@ const DashboardLayout = ({ children }) => {
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      <ScrollToTop />
       <Navbar />
       <div className="d-flex flex-grow-1">
-        {/* Sidebar - hidden on mobile unless toggled */}
         <div className={`bg-surface border-end ${sidebarOpen ? 'd-block' : 'd-none d-md-block'}`} style={{ width: '280px', minHeight: 'calc(100vh - 72px)' }}>
           <Sidebar />
         </div>
-        {/* Main content */}
         <div className="flex-grow-1 p-4 bg-warm">
-          {/* Mobile toggle */}
           <Button
             variant="outline-primary"
             size="sm"
