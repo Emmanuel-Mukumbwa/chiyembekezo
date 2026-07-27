@@ -1,39 +1,45 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Button, Spinner, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Container, Row, Col, Badge, Spinner } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
+import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
 import MoodTracker from '../../components/MoodTracker';
+import {
+  Card,
+  Button,
+  StatCard,
+  GoalCard,
+  JournalCard,
+} from '../../components/ui';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-// Helper: compute mood streak (consecutive days with entries)
 const computeStreak = (history) => {
   if (!history || history.length === 0) return 0;
   let streak = 0;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-
-  for (let i = 0; i < history.length; i++) { 
+  for (let i = 0; i < history.length; i++) {
     const entryDate = new Date(history[i].recorded_at);
     entryDate.setHours(0, 0, 0, 0);
     const expectedDate = new Date(today);
     expectedDate.setDate(today.getDate() - i);
     expectedDate.setHours(0, 0, 0, 0);
-
     if (entryDate.getTime() === expectedDate.getTime()) {
       streak++;
-    } else {
-      break;
-    }
+    } else break;
   }
   return streak;
 };
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const { showModal } = useModal();
+  const navigate = useNavigate();
   const [moodHistory, setMoodHistory] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
@@ -42,10 +48,19 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
 
-  useEffect(() => {
-    if (user) {
-      fetchAllData();
+  // Block navigation to /login with confirmation
+  usePrompt(
+    () => {
+      logout();
+      navigate('/login');
+    },
+    () => {
+      // User cancelled – stay on dashboard
     }
+  );
+
+  useEffect(() => {
+    if (user) fetchAllData();
   }, [user]);
 
   const fetchAllData = async () => {
@@ -66,30 +81,37 @@ const Dashboard = () => {
       setStreak(computeStreak(moodRes.data));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      // Still set recommendations to empty array if fails
       setRecommendations([]);
     } finally {
       setLoading(false);
     }
   };
 
-  // Chart data (last 7 days)
+  const handleLogout = () => {
+    showModal(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      () => {
+        logout();
+        navigate('/login');
+      }
+    );
+  };
+
   const last7 = moodHistory.slice(0, 7).reverse();
   const labels = last7.map(entry => new Date(entry.recorded_at).toLocaleDateString());
   const dataPoints = last7.map(entry => entry.mood_score);
 
   const chartData = {
     labels: labels.length ? labels : ['No data'],
-    datasets: [
-      {
-        label: 'Mood Score (1-5)',
-        data: dataPoints.length ? dataPoints : [0],
-        fill: false,
-        backgroundColor: '#3b82f6',
-        borderColor: '#3b82f6',
-        tension: 0.2,
-      }
-    ]
+    datasets: [{
+      label: 'Mood Score (1-5)',
+      data: dataPoints.length ? dataPoints : [0],
+      fill: false,
+      backgroundColor: 'var(--color-primary-500)',
+      borderColor: 'var(--color-primary-500)',
+      tension: 0.2,
+    }]
   };
 
   const displayName = user?.firstName && user?.lastName
@@ -112,7 +134,7 @@ const Dashboard = () => {
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
+        <Spinner animation="border" variant="primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
@@ -120,45 +142,50 @@ const Dashboard = () => {
   }
 
   return (
-    <Container className="my-4">
-      <div className="d-flex flex-wrap align-items-center justify-content-between mb-3">
-        <h2>Welcome back, {displayName}!</h2>
-        {streak > 0 && (
-          <Badge bg="success" className="p-2">
-            🔥 {streak}-day streak!
-          </Badge>
-        )}
+    <Container fluid className="px-4">
+      {/* Header with Logout button */}
+      <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+          <h2 className="fw-bold mb-0">Welcome back, {displayName}!</h2>
+          <p className="text-muted">Let's check in on your wellness today.</p>
+        </div>
+        <div className="d-flex align-items-center gap-2">
+          {streak > 0 && <Badge bg="success" className="p-2">🔥 {streak}-day streak!</Badge>}
+          <Button variant="outline-danger" size="sm" onClick={handleLogout}>Logout</Button>
+        </div>
       </div>
+
+      {/* Stats row */}
+      <Row className="g-3 mb-4">
+        <Col md={3} sm={6}><StatCard icon="😊" value={moodHistory.length} label="Mood Entries" /></Col>
+        <Col md={3} sm={6}><StatCard icon="📝" value={journalEntries.length} label="Journal Entries" /></Col>
+        <Col md={3} sm={6}><StatCard icon="🎯" value={goals.filter(g => g.status === 'completed').length} label="Goals Completed" /></Col>
+        <Col md={3} sm={6}><StatCard icon="🔥" value={streak} label="Day Streak" /></Col>
+      </Row>
 
       <Row>
         <Col lg={7}>
-          {/* Mood Trend */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title>
-              Your Mood Trend
-              <Button as={Link} to="/mood-history" variant="link" size="sm" className="float-end">
-                View History
-              </Button>
-            </Card.Title>
-            <div style={{ height: '250px' }}>
+          <Card className="p-3 mb-4">
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="fw-bold mb-0">Your Mood Trend</h6>
+              <Button as={Link} to="/mood-history" variant="outline-primary" size="sm">View History</Button>
+            </div>
+            <div style={{ height: '250px' }} className="mt-2">
               <Line data={chartData} options={{ maintainAspectRatio: false }} />
             </div>
           </Card>
 
-          {/* Recent Assessments */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title className="d-flex justify-content-between">
-              <span>Recent Assessments</span>
-              <Button as={Link} to="/assessments" variant="outline-primary" size="sm">
-                Take New
-              </Button>
-            </Card.Title>
+          <Card className="p-3 mb-4">
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="fw-bold mb-0">Recent Assessments</h6>
+              <Button as={Link} to="/assessments" variant="outline-primary" size="sm">Take New</Button>
+            </div>
             {latestAssessments.length === 0 ? (
-              <p className="text-muted">No assessments taken yet.</p>
+              <p className="text-muted mt-2">No assessments taken yet.</p>
             ) : (
-              <Row>
+              <Row className="mt-2 g-2">
                 {latestAssessments.map((item, idx) => (
-                  <Col sm={6} md={4} key={idx} className="mb-2">
+                  <Col sm={6} md={4} key={idx}>
                     <div className="border rounded p-2 text-center">
                       <div className="small text-muted">{item.assessment_type}</div>
                       <div className="fw-bold">{item.severity_level}</div>
@@ -171,40 +198,43 @@ const Dashboard = () => {
             )}
           </Card>
 
-          {/* Recent Journal Entries */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title className="d-flex justify-content-between">
-              <span>Recent Journal</span>
-              <Button as={Link} to="/journal" variant="outline-primary" size="sm">
-                Write New
-              </Button>
-            </Card.Title>
+          <Card className="p-3 mb-4">
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="fw-bold mb-0">Recent Journal</h6>
+              <Button as={Link} to="/journal" variant="outline-primary" size="sm">Write New</Button>
+            </div>
             {recentJournals.length === 0 ? (
-              <p className="text-muted">No journal entries yet.</p>
+              <p className="text-muted mt-2">No journal entries yet.</p>
             ) : (
-              <ul className="list-unstyled">
+              <div className="mt-2">
                 {recentJournals.map(entry => (
-                  <li key={entry.id} className="border-bottom py-2">
-                    <strong>{entry.title || 'Untitled'}</strong>
-                    <div className="text-muted small">{new Date(entry.created_at).toLocaleDateString()}</div>
-                    <div className="small">{entry.content.substring(0, 80)}...</div>
-                  </li>
+                  <JournalCard
+                    key={entry.id}
+                    title={entry.title || 'Untitled'}
+                    content={entry.content}
+                    date={entry.created_at}
+                    wordCount={entry.word_count}
+                    isFavorite={entry.is_favorite}
+                    entryType={entry.entry_type}
+                    moodAtEntry={entry.mood_at_entry}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    onToggleFavorite={() => {}}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
           </Card>
         </Col>
 
         <Col lg={5}>
-          {/* Today's Check-in */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title>Today's Check-in</Card.Title>
+          <Card className="p-3 mb-4">
+            <h6 className="fw-bold mb-0">Today's Check-in</h6>
             <MoodTracker onSave={fetchAllData} />
           </Card>
 
-          {/* Quick Actions */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title>Quick Actions</Card.Title>
+          <Card className="p-3 mb-4">
+            <h6 className="fw-bold mb-2">Quick Actions</h6>
             <div className="d-grid gap-2">
               <Button as={Link} to="/assessments" variant="outline-primary">Take Assessment</Button>
               <Button as={Link} to="/journal" variant="outline-primary">Write Journal</Button>
@@ -212,24 +242,18 @@ const Dashboard = () => {
               <Button as={Link} to="/safety-plan" variant="outline-primary">Safety Plan</Button>
               <Button as={Link} to="/mood-history" variant="outline-primary">View History</Button>
               <Button as={Link} to="/wellness" variant="outline-primary">Wellness Toolkit</Button>
+              <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
             </div>
           </Card>
 
-          {/* Wellness Recommendations */}
-          <Card className="feature-card p-3 mb-4">
-            <Card.Title>Recommended for You</Card.Title>
+          <Card className="p-3 mb-4">
+            <h6 className="fw-bold mb-0">Recommended for You</h6>
             {recommendations.length === 0 ? (
-              <p className="text-muted">No recommendations yet. Keep tracking your mood!</p>
+              <p className="text-muted mt-2">No recommendations yet. Keep tracking!</p>
             ) : (
-              <div className="d-flex flex-wrap gap-2">
+              <div className="d-flex flex-wrap gap-2 mt-2">
                 {recommendations.map((rec, idx) => (
-                  <Button
-                    as={Link}
-                    to={rec.link}
-                    variant="outline-primary"
-                    key={idx}
-                    size="sm"
-                  >
+                  <Button as={Link} to={rec.link} variant="outline-primary" key={idx} size="sm">
                     {rec.name}
                   </Button>
                 ))}
@@ -237,23 +261,30 @@ const Dashboard = () => {
             )}
           </Card>
 
-          {/* Active Goals */}
-          <Card className="feature-card p-3">
-            <Card.Title className="d-flex justify-content-between">
-              <span>Active Goals</span>
+          <Card className="p-3">
+            <div className="d-flex justify-content-between align-items-center">
+              <h6 className="fw-bold mb-0">Active Goals</h6>
               <Button as={Link} to="/goals" variant="outline-primary" size="sm">Manage</Button>
-            </Card.Title>
+            </div>
             {activeGoals.length === 0 ? (
-              <p className="text-muted">No active goals. Set one!</p>
+              <p className="text-muted mt-2">No active goals. Set one!</p>
             ) : (
-              <ul className="list-unstyled">
+              <div className="mt-2">
                 {activeGoals.map(goal => (
-                  <li key={goal.id} className="border-bottom py-1">
-                    <strong>{goal.title}</strong>
-                    <div className="small text-muted">Progress: {goal.progress}%</div>
-                  </li>
+                  <GoalCard
+                    key={goal.id}
+                    id={goal.id}
+                    title={goal.title}
+                    description={goal.description}
+                    progress={goal.progress}
+                    status={goal.status}
+                    targetDate={goal.target_date}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                    onUpdateProgress={() => {}}
+                  />
                 ))}
-              </ul>
+              </div>
             )}
           </Card>
         </Col>
