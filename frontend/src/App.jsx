@@ -1,9 +1,8 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import DashboardLayout from './components/layout/DashboardLayout';
-import ScrollToTop from './components/ScrollToTop'; // NEW
 
-// Components
+// Pages
 import Home from './pages/Home';
 import About from './pages/About';
 import Resources from './pages/Resources';
@@ -56,7 +55,7 @@ import ListenerDashboard from './pages/Listener/ListenerDashboard';
 import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
 import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
 
-// Admin imports
+// Admin
 import AdminLayout from './pages/Admin/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminUsers from './pages/Admin/AdminUsers';
@@ -70,7 +69,7 @@ import AdminVolunteers from './pages/Admin/AdminVolunteers';
 import AdminOrganizations from './pages/Admin/AdminOrganizations';
 import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 
-// Professional Portal imports
+// Professional Portal
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
 import ProfessionalDashboard from './pages/Professional/ProfessionalDashboard';
 import ProfessionalAppointments from './pages/Professional/ProfessionalAppointments';
@@ -78,7 +77,7 @@ import ProfessionalPatients from './pages/Professional/ProfessionalPatients';
 import ProfessionalMessages from './pages/Professional/ProfessionalMessages';
 import ProfessionalReports from './pages/Professional/ProfessionalReports';
 
-// Organization imports
+// Organization Portal
 import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
 import OrganizationMembers from './pages/Organization/OrganizationMembers';
@@ -93,252 +92,129 @@ import CookieConsentBanner from './components/CookieConsentBanner';
 
 import './styles/custom.css';
 
+// ---- Layout wrappers ----
+const PublicLayout = ({ children }) => <AppLayout>{children}</AppLayout>;
+
+const ProtectedLayout = ({ children }) => (
+  <ProtectedRoute>
+    <DashboardLayout>{children}</DashboardLayout>
+  </ProtectedRoute>
+);
+
+// ---- Create router ----
+const router = createBrowserRouter([
+  // Public routes
+  { path: '/', element: <PublicLayout><Home /></PublicLayout> },
+  { path: '/about', element: <PublicLayout><About /></PublicLayout> },
+  { path: '/resources', element: <PublicLayout><Resources /></PublicLayout> },
+  { path: '/resources/:id', element: <PublicLayout><ResourceDetail /></PublicLayout> },
+  { path: '/quiz/:id', element: <PublicLayout><Quiz /></PublicLayout> },
+  { path: '/assessments', element: <PublicLayout><Assessments /></PublicLayout> },
+  { path: '/assessments/phq9', element: <PublicLayout><PHQ9 /></PublicLayout> },
+  { path: '/assessments/gad7', element: <PublicLayout><GAD7 /></PublicLayout> },
+  { path: '/assessments/stress', element: <PublicLayout><Stress /></PublicLayout> },
+  { path: '/assessments/sleep', element: <PublicLayout><Sleep /></PublicLayout> },
+  { path: '/assessments/burnout', element: <PublicLayout><Burnout /></PublicLayout> },
+  { path: '/assessments/result', element: <PublicLayout><Result /></PublicLayout> },
+  { path: '/find-help', element: <PublicLayout><FindHelp /></PublicLayout> },
+  { path: '/professional/:id', element: <PublicLayout><ProfessionalProfile /></PublicLayout> },
+  { path: '/contact', element: <PublicLayout><Contact /></PublicLayout> },
+  { path: '/faq', element: <PublicLayout><FAQ /></PublicLayout> },
+  { path: '/community', element: <PublicLayout><CommunityHome /></PublicLayout> },
+  { path: '/community/post/:id', element: <PublicLayout><PostDetail /></PublicLayout> },
+  { path: '/emergency', element: <PublicLayout><Emergency /></PublicLayout> },
+  { path: '/get-started', element: <PublicLayout><GetStarted /></PublicLayout> },
+  { path: '/terms', element: <PublicLayout><Terms /></PublicLayout> },
+  { path: '/privacy-policy', element: <PublicLayout><PrivacyPolicy /></PublicLayout> },
+  { path: '/cookie-policy', element: <PublicLayout><CookiePolicy /></PublicLayout> },
+  { path: '/community-guidelines', element: <PublicLayout><CommunityGuidelines /></PublicLayout> },
+
+  // Auth routes (no layout)
+  { path: '/login', element: <Login /> },
+  { path: '/register', element: <Register /> },
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/reset-password', element: <ResetPassword /> },
+  { path: '/verify-email', element: <VerifyEmail /> },
+
+  // Protected routes – each individually wrapped
+  { path: '/dashboard', element: <ProtectedLayout><Dashboard /></ProtectedLayout> },
+  { path: '/profile', element: <ProtectedLayout><Profile /></ProtectedLayout> },
+  { path: '/mood-history', element: <ProtectedLayout><MoodHistory /></ProtectedLayout> },
+  { path: '/journal', element: <ProtectedLayout><Journal /></ProtectedLayout> },
+  { path: '/goals', element: <ProtectedLayout><Goals /></ProtectedLayout> },
+  { path: '/safety-plan', element: <ProtectedLayout><SafetyPlan /></ProtectedLayout> },
+  { path: '/habits', element: <ProtectedLayout><Habits /></ProtectedLayout> },
+  { path: '/achievements', element: <ProtectedLayout><Achievements /></ProtectedLayout> },
+  { path: '/reports', element: <ProtectedLayout><Reports /></ProtectedLayout> },
+  { path: '/wellness', element: <ProtectedLayout><WellnessToolkit /></ProtectedLayout> },
+  { path: '/wellness/breathing', element: <ProtectedLayout><Breathing /></ProtectedLayout> },
+  { path: '/wellness/meditation', element: <ProtectedLayout><Meditation /></ProtectedLayout> },
+  { path: '/wellness/grounding', element: <ProtectedLayout><Grounding /></ProtectedLayout> },
+  { path: '/wellness/sounds', element: <ProtectedLayout><Sounds /></ProtectedLayout> },
+  { path: '/wellness/timers', element: <ProtectedLayout><Timers /></ProtectedLayout> },
+  { path: '/wellness/daily', element: <ProtectedLayout><DailyWellness /></ProtectedLayout> },
+  { path: '/professional/availability', element: <ProtectedLayout><ProfessionalAvailability /></ProtectedLayout> },
+  { path: '/peer-support', element: <ProtectedLayout><PeerSupport /></ProtectedLayout> },
+  { path: '/volunteer/dashboard', element: <ProtectedLayout><VolunteerDashboard /></ProtectedLayout> },
+  { path: '/volunteer/requests', element: <ProtectedLayout><VolunteerRequests /></ProtectedLayout> },
+  { path: '/volunteer/available', element: <ProtectedLayout><VolunteerAvailable /></ProtectedLayout> },
+  { path: '/listener/dashboard', element: <ProtectedLayout><ListenerDashboard /></ProtectedLayout> },
+
+  // Admin Panel (nested)
+  {
+    path: '/admin',
+    element: <ProtectedRoute><AdminLayout /></ProtectedRoute>,
+    children: [
+      { index: true, element: <AdminDashboard /> },
+      { path: 'users', element: <AdminUsers /> },
+      { path: 'professionals', element: <AdminProfessionals /> },
+      { path: 'volunteers', element: <AdminVolunteers /> },
+      { path: 'organizations', element: <AdminOrganizations /> },
+      { path: 'articles', element: <AdminArticles /> },
+      { path: 'resources', element: <AdminResources /> },
+      { path: 'appointments', element: <AdminAppointments /> },
+      { path: 'community', element: <AdminCommunity /> },
+      { path: 'peer-support', element: <AdminPeerSupport /> },
+      { path: 'analytics', element: <AdminAnalytics /> },
+    ],
+  },
+
+  // Professional Portal (nested)
+  {
+    path: '/professional',
+    element: <ProtectedRoute><ProfessionalLayout /></ProtectedRoute>,
+    children: [
+      { index: true, element: <ProfessionalDashboard /> },
+      { path: 'appointments', element: <ProfessionalAppointments /> },
+      { path: 'patients', element: <ProfessionalPatients /> },
+      { path: 'patients/:patientId', element: <ProfessionalPatients /> },
+      { path: 'messages', element: <ProfessionalMessages /> },
+      { path: 'availability', element: <ProfessionalAvailability /> },
+      { path: 'reports', element: <ProfessionalReports /> },
+    ],
+  },
+
+  // Organization Portal (nested)
+  {
+    path: '/organization',
+    element: <ProtectedRoute><OrganizationLayout /></ProtectedRoute>,
+    children: [
+      { index: true, element: <OrganizationDashboard /> },
+      { path: 'members', element: <OrganizationMembers /> },
+      { path: 'insights', element: <OrganizationInsights /> },
+    ],
+  },
+]);
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <ModalProvider>
-          <Router>
-            <div className="app-wrapper d-flex flex-column min-vh-100">
-              <ScrollToTop /> {/* <-- Added globally */}
-              <Routes>
-                {/* ===== Public routes (with AppLayout) ===== */}
-                <Route path="/" element={<AppLayout><Home /></AppLayout>} />
-                <Route path="/about" element={<AppLayout><About /></AppLayout>} />
-                <Route path="/resources" element={<AppLayout><Resources /></AppLayout>} />
-                <Route path="/resources/:id" element={<AppLayout><ResourceDetail /></AppLayout>} />
-                <Route path="/quiz/:id" element={<AppLayout><Quiz /></AppLayout>} />
-                <Route path="/assessments" element={<AppLayout><Assessments /></AppLayout>} />
-                <Route path="/assessments/phq9" element={<AppLayout><PHQ9 /></AppLayout>} />
-                <Route path="/assessments/gad7" element={<AppLayout><GAD7 /></AppLayout>} />
-                <Route path="/assessments/stress" element={<AppLayout><Stress /></AppLayout>} />
-                <Route path="/assessments/sleep" element={<AppLayout><Sleep /></AppLayout>} />
-                <Route path="/assessments/burnout" element={<AppLayout><Burnout /></AppLayout>} />
-                <Route path="/assessments/result" element={<AppLayout><Result /></AppLayout>} />
-                <Route path="/find-help" element={<AppLayout><FindHelp /></AppLayout>} />
-                <Route path="/professional/:id" element={<AppLayout><ProfessionalProfile /></AppLayout>} />
-                <Route path="/contact" element={<AppLayout><Contact /></AppLayout>} />
-                <Route path="/faq" element={<AppLayout><FAQ /></AppLayout>} />
-                <Route path="/community" element={<AppLayout><CommunityHome /></AppLayout>} />
-                <Route path="/community/post/:id" element={<AppLayout><PostDetail /></AppLayout>} />
-                <Route path="/emergency" element={<AppLayout><Emergency /></AppLayout>} />
-                <Route path="/get-started" element={<AppLayout><GetStarted /></AppLayout>} />
-                <Route path="/terms" element={<AppLayout><Terms /></AppLayout>} />
-                <Route path="/privacy-policy" element={<AppLayout><PrivacyPolicy /></AppLayout>} />
-                <Route path="/cookie-policy" element={<AppLayout><CookiePolicy /></AppLayout>} />
-                <Route path="/community-guidelines" element={<AppLayout><CommunityGuidelines /></AppLayout>} />
-
-                {/* ===== Auth routes (without layout) ===== */}
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/forgot-password" element={<ForgotPassword />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
-
-                {/* ===== Protected routes (with DashboardLayout) ===== */}
-                <Route path="/dashboard" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Dashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/profile" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Profile />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/mood-history" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <MoodHistory />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/journal" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Journal />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/goals" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Goals />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/safety-plan" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <SafetyPlan />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/habits" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Habits />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/achievements" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Achievements />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/reports" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Reports />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Wellness Toolkit ===== */}
-                <Route path="/wellness" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <WellnessToolkit />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/breathing" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Breathing />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/meditation" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Meditation />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/grounding" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Grounding />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/sounds" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Sounds />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/timers" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <Timers />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/wellness/daily" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <DailyWellness />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Professional Availability ===== */}
-                <Route path="/professional/availability" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <ProfessionalAvailability />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Peer Support ===== */}
-                <Route path="/peer-support" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <PeerSupport />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Volunteer Dashboard ===== */}
-                <Route path="/volunteer/dashboard" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <VolunteerDashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/volunteer/requests" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <VolunteerRequests />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-                <Route path="/volunteer/available" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <VolunteerAvailable />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Listener Dashboard ===== */}
-                <Route path="/listener/dashboard" element={
-                  <ProtectedRoute>
-                    <DashboardLayout>
-                      <ListenerDashboard />
-                    </DashboardLayout>
-                  </ProtectedRoute>
-                } />
-
-                {/* ===== Admin Panel ===== */}
-                <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-                  <Route index element={<AdminDashboard />} />
-                  <Route path="users" element={<AdminUsers />} />
-                  <Route path="professionals" element={<AdminProfessionals />} />
-                  <Route path="volunteers" element={<AdminVolunteers />} />
-                  <Route path="organizations" element={<AdminOrganizations />} />
-                  <Route path="articles" element={<AdminArticles />} />
-                  <Route path="resources" element={<AdminResources />} />
-                  <Route path="appointments" element={<AdminAppointments />} />
-                  <Route path="community" element={<AdminCommunity />} />
-                  <Route path="peer-support" element={<AdminPeerSupport />} />
-                  <Route path="analytics" element={<AdminAnalytics />} />
-                </Route>
-
-                {/* ===== Professional Portal ===== */}
-                <Route path="/professional" element={<ProtectedRoute><ProfessionalLayout /></ProtectedRoute>}>
-                  <Route index element={<ProfessionalDashboard />} />
-                  <Route path="appointments" element={<ProfessionalAppointments />} />
-                  <Route path="patients" element={<ProfessionalPatients />} />
-                  <Route path="patients/:patientId" element={<ProfessionalPatients />} />
-                  <Route path="messages" element={<ProfessionalMessages />} />
-                  <Route path="availability" element={<ProfessionalAvailability />} />
-                  <Route path="reports" element={<ProfessionalReports />} />
-                </Route>
-
-                {/* ===== Organization Portal ===== */}
-                <Route path="/organization" element={<ProtectedRoute><OrganizationLayout /></ProtectedRoute>}>
-                  <Route index element={<OrganizationDashboard />} />
-                  <Route path="members" element={<OrganizationMembers />} />
-                  <Route path="insights" element={<OrganizationInsights />} />
-                </Route>
-
-              </Routes>
-              {/* Cookie Consent Banner */}
-              <CookieConsentBanner />
-            </div>
-          </Router>
+          <div className="app-wrapper d-flex flex-column min-vh-100">
+            <RouterProvider router={router} />
+            <CookieConsentBanner />
+          </div>
         </ModalProvider>
       </AuthProvider>
     </ThemeProvider>
