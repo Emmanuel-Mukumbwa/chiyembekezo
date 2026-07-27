@@ -1,13 +1,27 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Spinner, Badge, Table } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Container, Row, Col, Badge, Spinner, Table } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
+import { Card, Button, StatCard } from '../../components/ui';
 
 const ProfessionalDashboard = () => {
+  const { logout } = useAuth();
   const { showModal } = useModal();
+  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Block navigation to /login with confirmation
+  usePrompt(
+    () => {
+      logout();
+      navigate('/login');
+    },
+    () => {}
+  );
 
   useEffect(() => {
     fetchData();
@@ -26,12 +40,21 @@ const ProfessionalDashboard = () => {
     }
   };
 
+  const handleLogout = () => {
+    showModal(
+      'Confirm Logout',
+      'Are you sure you want to logout?',
+      () => {
+        logout();
+        navigate('/login');
+      }
+    );
+  };
+
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <Spinner animation="border" variant="primary" />
       </Container>
     );
   }
@@ -40,7 +63,7 @@ const ProfessionalDashboard = () => {
     return (
       <Container className="my-5 text-center">
         <p>No professional data found.</p>
-        <Link to="/profile" className="btn btn-primary">Update Profile</Link>
+        <Button as={Link} to="/profile" variant="primary">Update Profile</Button>
       </Container>
     );
   }
@@ -48,48 +71,30 @@ const ProfessionalDashboard = () => {
   const { professional, appointmentStats, recentAppointments, totalPatients, todayAppointments } = dashboardData;
 
   return (
-    <Container className="my-4">
-      <h2>Professional Dashboard</h2>
-      {!professional.isVerified && (
-        <div className="alert alert-warning">
-          Your account is not yet verified. Some features may be limited.
+    <Container fluid className="px-4">
+      <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+        <div>
+          <h2 className="fw-bold">Professional Dashboard</h2>
+          {!professional.isVerified && <Badge bg="warning" className="mt-1">⚠️ Not Verified</Badge>}
         </div>
-      )}
-      <Row className="mb-4">
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="text-center p-3 bg-light">
-            <h6>Today's Appointments</h6>
-            <h3>{todayAppointments}</h3>
-          </Card>
-        </Col>
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="text-center p-3 bg-light">
-            <h6>Total Patients</h6>
-            <h3>{totalPatients}</h3>
-          </Card>
-        </Col>
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="text-center p-3 bg-light">
-            <h6>Pending Appointments</h6>
-            <h3>{appointmentStats.pending}</h3>
-          </Card>
-        </Col>
-        <Col md={3} sm={6} className="mb-3">
-          <Card className="text-center p-3 bg-light">
-            <h6>Completed</h6>
-            <h3>{appointmentStats.completed}</h3>
-          </Card>
-        </Col>
+        <Button variant="outline-danger" size="sm" onClick={handleLogout}>Logout</Button>
+      </div>
+
+      <Row className="g-3 mb-4">
+        <Col md={3} sm={6}><StatCard icon="📅" value={todayAppointments} label="Today's Appointments" variant="info" /></Col>
+        <Col md={3} sm={6}><StatCard icon="👤" value={totalPatients} label="Total Patients" variant="primary" /></Col>
+        <Col md={3} sm={6}><StatCard icon="⏳" value={appointmentStats.pending} label="Pending Appointments" variant="warning" /></Col>
+        <Col md={3} sm={6}><StatCard icon="✅" value={appointmentStats.completed} label="Completed" variant="success" /></Col>
       </Row>
 
       <Row>
         <Col md={8}>
           <Card className="p-3">
-            <h5>Recent Appointments</h5>
+            <h6 className="fw-bold">Recent Appointments</h6>
             {recentAppointments.length === 0 ? (
-              <p className="text-muted">No recent appointments.</p>
+              <p className="text-muted mt-2">No recent appointments.</p>
             ) : (
-              <Table striped hover responsive size="sm">
+              <Table striped hover responsive size="sm" className="mt-2">
                 <thead>
                   <tr>
                     <th>Date/Time</th>
@@ -119,24 +124,19 @@ const ProfessionalDashboard = () => {
                 </tbody>
               </Table>
             )}
-            <Link to="/professional/appointments" className="btn btn-outline-primary btn-sm">
+            <Button as={Link} to="/professional/appointments" variant="outline-primary" size="sm">
               View All Appointments
-            </Link>
+            </Button>
           </Card>
         </Col>
         <Col md={4}>
           <Card className="p-3">
-            <h5>Quick Actions</h5>
+            <h6 className="fw-bold">Quick Actions</h6>
             <div className="d-grid gap-2">
-              <Link to="/professional/availability" className="btn btn-outline-primary">
-                Manage Availability
-              </Link>
-              <Link to="/profile" className="btn btn-outline-secondary">
-                Edit Profile
-              </Link>
-              <Link to="/professional/patients" className="btn btn-outline-secondary">
-                View Patients
-              </Link>
+              <Button as={Link} to="/professional/availability" variant="outline-primary">Manage Availability</Button>
+              <Button as={Link} to="/profile" variant="outline-secondary">Edit Profile</Button>
+              <Button as={Link} to="/professional/patients" variant="outline-secondary">View Patients</Button>
+              <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
             </div>
           </Card>
         </Col>
