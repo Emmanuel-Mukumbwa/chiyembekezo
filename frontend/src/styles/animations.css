@@ -1,0 +1,86 @@
+/* ============================================
+   Chiyembekezo Animations v2.0
+   ============================================ */
+
+/* ---- Fades ---- */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeDown {
+  from { opacity: 0; transform: translateY(-20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Slides ---- */
+@keyframes slideLeft {
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+@keyframes slideRight {
+  from { transform: translateX(-30px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+/* ---- Scale ---- */
+@keyframes scaleIn {
+  from { transform: scale(0.95); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+@keyframes pop {
+  0%   { transform: scale(0.8); opacity: 0; }
+  70%  { transform: scale(1.05); opacity: 1; }
+  100% { transform: scale(1); }
+}
+
+/* ---- Loading ---- */
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 1; }
+}
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* ---- Breathing (for wellness) ---- */
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.08); }
+}
+
+/* ---- Utility classes ---- */
+.animate-fade-in       { animation: fadeIn var(--transition-normal) forwards; }
+.animate-fade-out      { animation: fadeOut var(--transition-normal) forwards; }
+.animate-fade-up       { animation: fadeUp var(--transition-slow) ease-out forwards; }
+.animate-fade-down     { animation: fadeDown var(--transition-slow) ease-out forwards; }
+.animate-slide-left    { animation: slideLeft var(--transition-normal) ease-out forwards; }
+.animate-slide-right   { animation: slideRight var(--transition-normal) ease-out forwards; }
+.animate-scale-in      { animation: scaleIn var(--transition-normal) ease-out forwards; }
+.animate-pop           { animation: pop var(--transition-normal) ease-out forwards; }
+.animate-pulse         { animation: pulse 2s ease-in-out infinite; }
+.animate-shimmer       { animation: shimmer 2s infinite linear; background-size: 200% 100%; }
+.animate-breathe       { animation: breathe 4s ease-in-out infinite; }
+
+/* ---- Hover transitions (use on any element) ---- */
+.hover-lift {
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast);
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+}
+.hover-scale {
+  transition: transform var(--transition-fast);
+}
+.hover-scale:hover {
+  transform: scale(1.02);
+}
