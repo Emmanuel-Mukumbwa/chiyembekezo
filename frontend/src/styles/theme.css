@@ -1,0 +1,145 @@
+/* ============================================
+   Chiyembekezo Global Theme v2.1 – Light Only
+   ============================================ */
+
+@import './variables.css';
+
+/* ---- Reset & Base ---- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+  font-size: var(--fs-md);
+  line-height: var(--line-height-normal);
+  font-weight: var(--font-weight-regular);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* ---- Typography ---- */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-family-headings);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+  margin-bottom: 0.5em;
+}
+h1 { font-size: var(--fs-5xl); }
+h2 { font-size: var(--fs-4xl); }
+h3 { font-size: var(--fs-3xl); }
+h4 { font-size: var(--fs-2xl); }
+h5 { font-size: var(--fs-xl); }
+h6 { font-size: var(--fs-lg); }
+
+p { margin-bottom: 1rem; }
+
+a {
+  color: var(--color-primary-500);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+a:hover {
+  color: var(--color-primary-700);
+  text-decoration: underline;
+}
+
+/* ---- Focus Ring (accessibility) ---- */
+*:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* ---- Selection ---- */
+::selection {
+  background: var(--color-primary-200);
+  color: var(--color-text);
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-primary-300);
+  border-radius: var(--radius-full);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary-500);
+}
+
+/* ---- Dark Mode (manual – not auto) ---- */
+/* We keep this so you can add a toggle later */
+[data-theme="dark"] {
+  --color-bg: #1a1a24;
+  --color-surface: #242433;
+  --color-text: #e8e8f0;
+  --color-text-muted: #9a9ab0;
+  --color-border: #3a3a4e;
+  --color-border-light: #2e2e40;
+
+  --color-primary-50: #0a4537;
+  --color-primary-100: #165748;
+  --color-primary-200: #226959;
+  --color-primary-300: #2e7b6a;
+  --color-primary-400: #3a8d7b;
+  --color-primary-500: #5cad9b;
+  --color-primary-600: #7fbfb1;
+  --color-primary-700: #a2d1c7;
+  --color-primary-800: #c5e3dd;
+  --color-primary-900: #e8f5f3;
+
+  --color-secondary-50: #955412;
+  --color-secondary-100: #aa7022;
+  --color-secondary-200: #bf8c32;
+  --color-secondary-300: #d4a84a;
+  --color-secondary-400: #e9c46a;
+  --color-secondary-500: #f4cc82;
+  --color-secondary-600: #f7daa3;
+  --color-secondary-700: #fae8c4;
+  --color-secondary-800: #fdf6e5;
+
+  --shadow-xs: 0 1px 4px rgba(0,0,0,0.4);
+  --shadow-sm: 0 2px 8px rgba(0,0,0,0.5);
+  --shadow-md: 0 8px 24px rgba(0,0,0,0.6);
+  --shadow-lg: 0 16px 40px rgba(0,0,0,0.7);
+  --shadow-xl: 0 24px 56px rgba(0,0,0,0.8);
+
+  --color-success-bg: #1a3a30;
+  --color-danger-bg: #3a1a18;
+  --color-warning-bg: #3a2a18;
+  --color-info-bg: #1a2a3a;
+}
+
+/* ---- Remove automatic dark mode based on system preference ---- */
+/* The following block is commented out to prevent auto-dark */
+/*
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    // dark overrides
+  }
+}
+*/
+
+/* ---- Accessibility: Reduced Motion ---- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
