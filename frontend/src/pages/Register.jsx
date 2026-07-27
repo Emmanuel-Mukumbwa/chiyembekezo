@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Alert, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/ui/Button';
 import api from '../services/api';
 
 const Register = () => {
@@ -23,18 +24,14 @@ const Register = () => {
   const { register } = useAuth();
   const navigate = useNavigate();
 
-  // Validate invitation token if present
   useEffect(() => {
     if (inviteToken) {
       api.get(`/invitations/validate?token=${inviteToken}`)
         .then(res => {
           setInviteData(res.data);
-          // Pre-fill email
           setFormData(prev => ({ ...prev, email: res.data.email }));
         })
-        .catch(() => {
-          setError('Invalid or expired invitation token.');
-        });
+        .catch(() => setError('Invalid or expired invitation token.'));
     }
   }, [inviteToken]);
 
@@ -59,20 +56,22 @@ const Register = () => {
     setLoading(true);
     try {
       const { confirmPassword, ...registerData } = formData;
-      // If invitation, include organizationId? Not needed for invite flow, role will be set after acceptance.
       const userData = await register(registerData);
 
-      // If there is an invitation token, accept it
       if (inviteToken) {
         await api.post('/invitations/accept', { token: inviteToken, userId: userData.id });
       }
 
-      // Redirect based on role
-      if (userData.isAdmin) {
-        navigate('/admin');
-      } else {
-        navigate('/dashboard');
-      }
+      const roleDashboards = {
+        admin: '/admin',
+        professional: '/professional',
+        volunteer: '/volunteer/dashboard',
+        org_admin: '/organization',
+        listener: '/listener/dashboard',
+        user: '/dashboard',
+      };
+      const dashboardPath = roleDashboards[userData.role] || '/dashboard';
+      navigate(dashboardPath);
     } catch (err) {
       setError(err.response?.data?.error || 'Registration failed. Please try again.');
     } finally {
@@ -88,11 +87,14 @@ const Register = () => {
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
-          <Card className="feature-card p-4">
-            <h3 className="text-center">Create Account</h3>
-            <p className="text-muted text-center">
-              {inviteData ? `Join as ${inviteData.role}` : 'Start your wellness journey today.'}
-            </p>
+          <Card className="bg-surface border-0 shadow-sm rounded-lg p-4">
+            <div className="text-center mb-3">
+              <div style={{ fontSize: '3rem' }}>🌱</div>
+              <h3 className="fw-bold" style={{ color: 'var(--color-text)' }}>Create Account</h3>
+              <p className="text-muted">
+                {inviteData ? `Join as ${inviteData.role}` : 'Start your wellness journey today.'}
+              </p>
+            </div>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Row>
@@ -147,6 +149,7 @@ const Register = () => {
                     variant="outline-secondary"
                     onClick={togglePasswordVisibility}
                     tabIndex="-1"
+                    style={{ borderColor: 'var(--color-border)' }}
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </Button>
@@ -167,6 +170,7 @@ const Register = () => {
                     variant="outline-secondary"
                     onClick={togglePasswordVisibility}
                     tabIndex="-1"
+                    style={{ borderColor: 'var(--color-border)' }}
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </Button>
@@ -184,19 +188,19 @@ const Register = () => {
               </Form.Group>
 
               {inviteData && (
-                <Form.Text className="text-muted">
+                <Form.Text className="text-muted d-block mb-2">
                   You are registering as a <strong>{inviteData.role}</strong>.
                 </Form.Text>
               )}
 
-              <Button variant="primary" type="submit" className="w-100 mt-3" disabled={loading}>
+              <Button variant="primary" size="lg" type="submit" className="w-100 mt-2" disabled={loading}>
                 {loading ? 'Creating Account...' : 'Sign Up'}
               </Button>
             </Form>
 
             <div className="text-center mt-3">
               <span className="text-muted">Already have an account? </span>
-              <Link to="/login">Sign In</Link>
+              <Link to="/login" className="fw-semibold">Sign In</Link>
             </div>
           </Card>
         </Col>
