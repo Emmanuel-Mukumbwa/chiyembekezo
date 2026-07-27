@@ -2,6 +2,7 @@ import React from 'react';
 import { Container } from 'react-bootstrap';
 import Navbar from './Navbar';
 import Footer from './Footer';
+import ScrollToTop from '../ScrollToTop';
 import { useAuth } from '../../context/AuthContext';
 
 const AppLayout = ({ children, maxWidth = 'xl', className = '' }) => {
@@ -18,6 +19,7 @@ const AppLayout = ({ children, maxWidth = 'xl', className = '' }) => {
 
   return (
     <div className="d-flex flex-column min-vh-100">
+      <ScrollToTop />
       <Navbar />
       <main className={`flex-grow-1 py-4 ${className}`}>
         <Container className={containerClass}>
