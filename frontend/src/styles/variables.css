@@ -1,0 +1,149 @@
+/* ============================================
+   Chiyembekezo Design Tokens v2.0
+   ============================================ */
+
+:root {
+  /* ----- Color Palette (softened, semantic) ----- */
+  --color-primary-50: #E8F5F3;
+  --color-primary-100: #C5E3DD;
+  --color-primary-200: #A2D1C7;
+  --color-primary-300: #7FBFB1;
+  --color-primary-400: #5CAD9B;
+  --color-primary-500: #3A8D7B;   /* Main brand */
+  --color-primary-600: #2E7B6A;
+  --color-primary-700: #226959;
+  --color-primary-800: #165748;
+  --color-primary-900: #0A4537;
+
+  --color-secondary-50: #FDF6E5;
+  --color-secondary-100: #FAE8C4;
+  --color-secondary-200: #F7DAA3;
+  --color-secondary-300: #F4CC82;
+  --color-secondary-400: #F1BE61;
+  --color-secondary-500: #E9C46A; /* warm gold */
+  --color-secondary-600: #D4A84A;
+  --color-secondary-700: #BF8C32;
+  --color-secondary-800: #AA7022;
+  --color-secondary-900: #955412;
+
+  --color-accent-50: #FDF3E8;
+  --color-accent-100: #F9DFC4;
+  --color-accent-200: #F5CBA0;
+  --color-accent-300: #F1B77C;
+  --color-accent-400: #EDA358;
+  --color-accent-500: #F4A261; /* warm orange */
+  --color-accent-600: #D98B4A;
+  --color-accent-700: #BE7433;
+  --color-accent-800: #A35D1C;
+  --color-accent-900: #884605;
+
+  --color-calm-50: #E8EDF0;
+  --color-calm-100: #C5D0D8;
+  --color-calm-200: #A2B3C0;
+  --color-calm-300: #7F96A8;
+  --color-calm-400: #5C7990;
+  --color-calm-500: #264653; /* deep navy */
+  --color-calm-600: #1E3A47;
+  --color-calm-700: #162E3A;
+  --color-calm-800: #0E222E;
+  --color-calm-900: #061622;
+
+  /* Neutral & Backgrounds (warm, not sterile) */
+  --color-bg: #F7F4EF;
+  --color-surface: #FEFCF8;
+  --color-text: #2B2D42;
+  --color-text-muted: #8D99AE;
+  --color-border: #E5E0D8;
+  --color-border-light: #F0ECE6;
+
+  /* Functional (soft) */
+  --color-success: #5D9B84;
+  --color-success-bg: #EAF5F0;
+  --color-danger: #E07A5F;
+  --color-danger-bg: #FDF0ED;
+  --color-warning: #F4A261;
+  --color-warning-bg: #FDF3E8;
+  --color-info: #264653;
+  --color-info-bg: #E8EDF0;
+
+  /* ----- Shadows ----- */
+  --shadow-xs: 0 1px 4px rgba(42, 157, 143, 0.04);
+  --shadow-sm: 0 2px 8px rgba(42, 157, 143, 0.06);
+  --shadow-md: 0 8px 24px rgba(42, 157, 143, 0.10);
+  --shadow-lg: 0 16px 40px rgba(38, 70, 83, 0.12);
+  --shadow-xl: 0 24px 56px rgba(38, 70, 83, 0.18);
+
+  /* ----- Border Radius ----- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-2xl: 36px;
+  --radius-full: 9999px;
+
+  /* ----- Spacing (8px base) ----- */
+  --space-0: 0px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 32px;
+  --space-5: 48px;
+  --space-6: 64px;
+  --space-7: 80px;
+  --space-8: 96px;
+  --space-9: 128px;
+
+  /* ----- Typography Scale ----- */
+  --font-family-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-family-headings: 'Poppins', system-ui, -apple-system, sans-serif;
+  --font-family-mono: 'JetBrains Mono', monospace;
+
+  --fs-xs: 0.75rem;    /* 12px */
+  --fs-sm: 0.875rem;   /* 14px */
+  --fs-md: 1rem;       /* 16px */
+  --fs-lg: 1.125rem;   /* 18px */
+  --fs-xl: 1.25rem;    /* 20px */
+  --fs-2xl: 1.5rem;    /* 24px */
+  --fs-3xl: 1.875rem;  /* 30px */
+  --fs-4xl: 2.25rem;   /* 36px */
+  --fs-5xl: 3rem;      /* 48px */
+
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+
+  --line-height-tight: 1.2;
+  --line-height-normal: 1.6;
+  --line-height-loose: 1.8;
+
+  /* ----- Transitions ----- */
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+  --transition-slow: 400ms ease;
+
+  /* ----- Z-index scale ----- */
+  --z-dropdown: 1000;
+  --z-sticky: 1020;
+  --z-fixed: 1030;
+  --z-modal-backdrop: 1040;
+  --z-modal: 1050;
+  --z-popover: 1060;
+  --z-tooltip: 1070;
+  --z-toast: 1080;
+
+  /* ----- Layout ----- */
+  --navbar-height: 72px;
+  --footer-height: 280px;
+  --container-width: 1200px;
+  --content-width: 800px;
+
+  /* ----- Breakpoints ----- */
+  --bp-sm: 576px;
+  --bp-md: 768px;
+  --bp-lg: 992px;
+  --bp-xl: 1200px;
+  --bp-xxl: 1400px;
+}
