@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Alert, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/ui/Button';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,7 +19,6 @@ const Login = () => {
     setLoading(true);
     try {
       const user = await login(email, password);
-      // Role-based dashboard mapping
       const roleDashboards = {
         admin: '/admin',
         professional: '/professional',
@@ -40,9 +40,12 @@ const Login = () => {
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
-          <Card className="feature-card p-4">
-            <h3 className="text-center">Welcome Back</h3>
-            <p className="text-muted text-center">Sign in to continue your wellness journey.</p>
+          <Card className="bg-surface border-0 shadow-sm rounded-lg p-4">
+            <div className="text-center mb-3">
+              <div style={{ fontSize: '3rem' }}>🌿</div>
+              <h3 className="fw-bold" style={{ color: 'var(--color-text)' }}>Welcome Back</h3>
+              <p className="text-muted">Sign in to continue your wellness journey.</p>
+            </div>
             {error && <Alert variant="danger">{error}</Alert>}
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
@@ -52,6 +55,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
+                  className="form-control-lg"
                 />
               </Form.Group>
               <Form.Group className="mb-3">
@@ -63,11 +67,14 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     minLength="6"
+                    className="form-control-lg"
                   />
                   <Button
                     variant="outline-secondary"
+                    size="lg"
                     onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
+                    style={{ borderColor: 'var(--color-border)' }}
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </Button>
@@ -76,13 +83,19 @@ const Login = () => {
               <div className="d-flex justify-content-between align-items-center mb-3">
                 <Link to="/forgot-password" className="small">Forgot password?</Link>
               </div>
-              <Button variant="primary" type="submit" className="w-100" disabled={loading}>
+              <Button
+                variant="primary"
+                size="lg"
+                type="submit"
+                className="w-100"
+                disabled={loading}
+              >
                 {loading ? 'Signing in...' : 'Sign In'}
               </Button>
             </Form>
             <div className="text-center mt-3">
               <span className="text-muted">Don't have an account? </span>
-              <Link to="/register">Sign Up</Link>
+              <Link to="/register" className="fw-semibold">Sign Up</Link>
             </div>
           </Card>
         </Col>
