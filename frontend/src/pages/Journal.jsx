@@ -1,8 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Table, Spinner, Modal, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Container, Row, Col, Modal, Form, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import {
+  Button,
+  Input,
+  Select,
+  Textarea,
+  DataTable,
+  EmptyState,
+  ErrorState,
+} from '../components/ui';
 import api from '../services/api';
 
 const Journal = () => {
@@ -10,6 +18,7 @@ const Journal = () => {
   const { showModal } = useModal();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editingEntry, setEditingEntry] = useState(null);
   const [formData, setFormData] = useState({
@@ -19,6 +28,7 @@ const Journal = () => {
     entry_type: 'free',
     is_favorite: false,
   });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (user) fetchEntries();
@@ -26,11 +36,13 @@ const Journal = () => {
 
   const fetchEntries = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/journal');
       setEntries(res.data);
     } catch (err) {
-      showModal('Error', 'Failed to load journal entries.');
+      setError('Failed to load journal entries.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -38,6 +50,7 @@ const Journal = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingEntry) {
         await api.put(`/journal/${editingEntry.id}`, formData);
@@ -51,19 +64,19 @@ const Journal = () => {
       setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false });
       fetchEntries();
     } catch (err) {
-      showModal('Error', 'Failed to save entry.');
+      showModal('Error', err.response?.data?.error || 'Failed to save entry.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this entry?')) {
-      try {
-        await api.delete(`/journal/${id}`);
-        fetchEntries();
-        showModal('Success', 'Entry deleted.');
-      } catch (err) {
-        showModal('Error', 'Failed to delete.');
-      }
+    try {
+      await api.delete(`/journal/${id}`);
+      fetchEntries();
+      showModal('Success', 'Entry deleted.');
+    } catch (err) {
+      showModal('Error', 'Failed to delete.');
     }
   };
 
@@ -88,159 +101,149 @@ const Journal = () => {
     }
   };
 
-  const entryTypeLabel = (type) => {
-    const labels = { free: 'Free', guided: 'Guided', gratitude: 'Gratitude' };
-    return labels[type] || type;
-  };
+  const columns = [
+    { field: 'created_at', label: 'Date', render: (val) => new Date(val).toLocaleDateString() },
+    { field: 'title', label: 'Title', render: (val) => val || '(no title)' },
+    {
+      field: 'mood_at_entry',
+      label: 'Mood',
+      render: (val) => {
+        const emojis = { 1: '😭', 2: '😔', 3: '😐', 4: '🙂', 5: '😊' };
+        return emojis[val] || '-';
+      },
+    },
+    { field: 'entry_type', label: 'Type' },
+    { field: 'word_count', label: 'Words' },
+    {
+      field: 'is_favorite',
+      label: '⭐',
+      render: (val, row) => (
+        <Button
+          variant="link"
+          onClick={() => toggleFavorite(row.id, val)}
+          className="p-0 text-decoration-none"
+        >
+          {val ? '⭐' : '☆'}
+        </Button>
+      ),
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="d-flex gap-1">
+          <Button variant="outline-primary" size="sm" onClick={() => openEdit(row)}>Edit</Button>
+          <Button variant="outline-danger" size="sm" onClick={() => handleDelete(row.id)}>Delete</Button>
+        </div>
+      ),
+    },
+  ];
 
   if (!user) {
-    return (
-      <Container className="my-5 text-center">
-        <h3>Please log in to access your journal.</h3>
-        <Button as={Link} to="/login" variant="primary">Login</Button>
-      </Container>
-    );
+    return <div className="text-center mt-5">Please log in to access your journal.</div>;
   }
 
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
+        <Spinner animation="border" variant="primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
     );
   }
 
+  if (error) {
+    return <ErrorState title="Error loading journal" description={error} onRetry={fetchEntries} />;
+  }
+
   return (
-    <Container className="my-5">
+    <Container fluid className="px-3 px-sm-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>My Journal</h2>
-        <div>
-          <Button variant="primary" onClick={() => { setEditingEntry(null); setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false }); setShowEditModal(true); }}>
-            + New Entry
-          </Button>
-          <Button as={Link} to="/dashboard" variant="outline-secondary" className="ms-2">
-            ← Back to Dashboard
-          </Button>
-        </div>
+        <Button variant="primary" onClick={() => { setEditingEntry(null); setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false }); setShowEditModal(true); }}>
+          + New Entry
+        </Button>
       </div>
 
-      <Card className="feature-card p-3">
-        <Table striped hover responsive>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Title</th>
-              <th>Mood</th>
-              <th>Type</th>
-              <th>Words</th>
-              <th>⭐</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {entries.length === 0 ? (
-              <tr><td colSpan="7" className="text-center">No journal entries yet. Start writing!</td></tr>
-            ) : (
-              entries.map(entry => (
-                <tr key={entry.id}>
-                  <td>{new Date(entry.created_at).toLocaleDateString()}</td>
-                  <td>{entry.title || '(no title)'}</td>
-                  <td>{entry.mood_at_entry ? ['😭','😔','😐','🙂','😊'][entry.mood_at_entry-1] : '-'}</td>
-                  <td><Badge bg="secondary">{entryTypeLabel(entry.entry_type)}</Badge></td>
-                  <td>{entry.word_count || 0}</td>
-                  <td>
-                    <Button
-                      variant="link"
-                      onClick={() => toggleFavorite(entry.id, entry.is_favorite)}
-                      className="p-0"
-                    >
-                      {entry.is_favorite ? '⭐' : '☆'}
-                    </Button>
-                  </td>
-                  <td>
-                    <Button variant="outline-primary" size="sm" onClick={() => openEdit(entry)}>Edit</Button>
-                    <Button variant="outline-danger" size="sm" className="ms-1" onClick={() => handleDelete(entry.id)}>Delete</Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
-      </Card>
+      {entries.length === 0 ? (
+        <EmptyState
+          icon="📝"
+          title="No journal entries yet"
+          description="Start writing to reflect and grow."
+          actionText="Write Entry"
+          onAction={() => {}}
+        />
+      ) : (
+        <DataTable columns={columns} data={entries} keyField="id" />
+      )}
 
-      {/* Edit/Create Modal */}
+      {/* Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editingEntry ? 'Edit Entry' : 'New Entry'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave}>
           <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Content</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={5}
-                value={formData.content}
-                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                required
-              />
-            </Form.Group>
+            <Input
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            />
+            <Textarea
+              label="Content"
+              name="content"
+              rows={5}
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              required
+            />
             <Row>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Mood</Form.Label>
-                  <Form.Select
-                    value={formData.mood_at_entry}
-                    onChange={(e) => setFormData({ ...formData, mood_at_entry: e.target.value })}
-                  >
-                    <option value="">Select mood</option>
-                    <option value="5">😊 Happy</option>
-                    <option value="4">🙂 Okay</option>
-                    <option value="3">😐 Neutral</option>
-                    <option value="2">😔 Sad</option>
-                    <option value="1">😭 Overwhelmed</option>
-                  </Form.Select>
-                </Form.Group>
+              <Col sm={4}>
+                <Select
+                  label="Mood"
+                  name="mood_at_entry"
+                  value={formData.mood_at_entry}
+                  options={[
+                    { value: '', label: 'Select mood' },
+                    { value: '5', label: '😊 Happy' },
+                    { value: '4', label: '🙂 Okay' },
+                    { value: '3', label: '😐 Neutral' },
+                    { value: '2', label: '😔 Sad' },
+                    { value: '1', label: '😭 Overwhelmed' },
+                  ]}
+                  onChange={(e) => setFormData({ ...formData, mood_at_entry: e.target.value })}
+                />
               </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Entry Type</Form.Label>
-                  <Form.Select
-                    value={formData.entry_type}
-                    onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })}
-                  >
-                    <option value="free">Free Writing</option>
-                    <option value="guided">Guided Prompt</option>
-                    <option value="gratitude">Gratitude</option>
-                  </Form.Select>
-                </Form.Group>
+              <Col sm={4}>
+                <Select
+                  label="Entry Type"
+                  name="entry_type"
+                  value={formData.entry_type}
+                  options={[
+                    { value: 'free', label: 'Free Writing' },
+                    { value: 'guided', label: 'Guided Prompt' },
+                    { value: 'gratitude', label: 'Gratitude' },
+                  ]}
+                  onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })}
+                />
               </Col>
-              <Col md={4}>
-                <Form.Group className="mb-3">
-                  <Form.Label>Favorite</Form.Label>
-                  <Form.Check
-                    type="checkbox"
-                    label="⭐ Mark as favorite"
-                    checked={formData.is_favorite}
-                    onChange={(e) => setFormData({ ...formData, is_favorite: e.target.checked })}
-                  />
-                </Form.Group>
+              <Col sm={4} className="d-flex align-items-center">
+                <Form.Check
+                  type="checkbox"
+                  label="⭐ Favorite"
+                  checked={formData.is_favorite}
+                  onChange={(e) => setFormData({ ...formData, is_favorite: e.target.checked })}
+                />
               </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">Save</Button>
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? 'Saving...' : 'Save'}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
