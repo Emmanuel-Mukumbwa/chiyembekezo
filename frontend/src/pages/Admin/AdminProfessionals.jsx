@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Badge, Spinner, Form } from 'react-bootstrap';
+import { Container, Spinner, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Button, DataTable, ErrorState } from '../../components/ui';
 
 const AdminProfessionals = () => {
   const { showModal } = useModal();
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchProfessionals();
@@ -14,10 +16,12 @@ const AdminProfessionals = () => {
 
   const fetchProfessionals = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/admin/professionals');
       setProfessionals(res.data);
     } catch (err) {
+      setError('Failed to load professionals.');
       showModal('Error', 'Failed to load professionals.');
     } finally {
       setLoading(false);
@@ -27,58 +31,47 @@ const AdminProfessionals = () => {
   const toggleVerify = async (id, current) => {
     try {
       await api.put(`/admin/professionals/${id}/verify`, { is_verified: !current });
+      showModal('Success', 'Professional updated.');
       fetchProfessionals();
     } catch (err) {
       showModal('Error', 'Failed to update professional.');
     }
   };
 
-  if (loading) return <Spinner animation="border" />;
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'first_name', label: 'Name', render: (val, row) => `${row.first_name} ${row.last_name}` },
+    { field: 'email', label: 'Email' },
+    { field: 'specialization', label: 'Specialization' },
+    { field: 'district', label: 'District' },
+    {
+      field: 'is_verified',
+      label: 'Verified',
+      render: (val) => <Badge bg={val ? 'success' : 'warning'}>{val ? 'Verified' : 'Pending'}</Badge>,
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <Button
+          variant={row.is_verified ? 'outline-secondary' : 'outline-primary'}
+          size="sm"
+          onClick={() => toggleVerify(row.id, row.is_verified)}
+        >
+          {row.is_verified ? 'Unverify' : 'Verify'}
+        </Button>
+      ),
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading professionals" description={error} onRetry={fetchProfessionals} />;
 
   return (
-    <div>
-      <h4>Professionals</h4>
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Specialization</th>
-            <th>District</th>
-            <th>Verified</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {professionals.map(p => (
-            <tr key={p.id}>
-              <td>{p.id}</td>
-              <td>{p.first_name} {p.last_name}</td>
-              <td>{p.email}</td>
-              <td>{p.specialization}</td>
-              <td>{p.district}</td>
-              <td>
-                {p.is_verified ? (
-                  <Badge bg="success">Verified</Badge>
-                ) : (
-                  <Badge bg="warning">Pending</Badge>
-                )}
-              </td>
-              <td>
-                <Button
-                  variant={p.is_verified ? 'outline-secondary' : 'outline-primary'}
-                  size="sm"
-                  onClick={() => toggleVerify(p.id, p.is_verified)}
-                >
-                  {p.is_verified ? 'Unverify' : 'Verify'}
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Professionals</h4>
+      <DataTable columns={columns} data={professionals} keyField="id" />
+    </Container>
   );
 };
 
