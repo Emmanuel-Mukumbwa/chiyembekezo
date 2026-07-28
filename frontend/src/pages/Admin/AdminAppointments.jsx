@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Badge, Spinner, Form } from 'react-bootstrap';
+import { Container, Spinner, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Select, DataTable, ErrorState } from '../../components/ui';
 
 const AdminAppointments = () => {
   const { showModal } = useModal();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -14,10 +16,12 @@ const AdminAppointments = () => {
 
   const fetchAppointments = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/admin/appointments');
       setAppointments(res.data);
     } catch (err) {
+      setError('Failed to load appointments.');
       showModal('Error', 'Failed to load appointments.');
     } finally {
       setLoading(false);
@@ -28,6 +32,7 @@ const AdminAppointments = () => {
     try {
       await api.put(`/admin/appointments/${id}`, { status });
       fetchAppointments();
+      showModal('Success', 'Appointment updated.');
     } catch (err) {
       showModal('Error', 'Failed to update appointment.');
     }
@@ -41,55 +46,46 @@ const AdminAppointments = () => {
     no_show: 'danger',
   };
 
-  if (loading) return <Spinner animation="border" />;
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'user_email', label: 'User' },
+    { field: 'professional_first', label: 'Professional', render: (val, row) => `${row.professional_first} ${row.professional_last}` },
+    { field: 'scheduled_time', label: 'Scheduled', render: (val) => new Date(val).toLocaleString() },
+    { field: 'meeting_type', label: 'Type', render: (val) => val || '-' },
+    {
+      field: 'status',
+      label: 'Status',
+      render: (val) => <Badge bg={statusVariant[val] || 'secondary'}>{val}</Badge>,
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <Select
+          name="status"
+          value={row.status}
+          options={[
+            { value: 'pending', label: 'Pending' },
+            { value: 'confirmed', label: 'Confirm' },
+            { value: 'completed', label: 'Complete' },
+            { value: 'cancelled', label: 'Cancel' },
+            { value: 'no_show', label: 'No Show' },
+          ]}
+          onChange={(e) => updateStatus(row.id, e.target.value)}
+          className="mb-0"
+        />
+      ),
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading appointments" description={error} onRetry={fetchAppointments} />;
 
   return (
-    <div>
-      <h4>Appointments</h4>
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Professional</th>
-            <th>Scheduled</th>
-            <th>Type</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {appointments.map(a => (
-            <tr key={a.id}>
-              <td>{a.id}</td>
-              <td>{a.user_email}</td>
-              <td>{a.professional_first} {a.professional_last}</td>
-              <td>{new Date(a.scheduled_time).toLocaleString()}</td>
-              <td>{a.meeting_type || '-'}</td>
-              <td>
-                <Badge bg={statusVariant[a.status] || 'secondary'}>
-                  {a.status}
-                </Badge>
-              </td>
-              <td>
-                <Form.Select
-                  size="sm"
-                  value={a.status}
-                  onChange={(e) => updateStatus(a.id, e.target.value)}
-                  style={{ width: '120px' }}
-                >
-                  <option value="pending">Pending</option>
-                  <option value="confirmed">Confirm</option>
-                  <option value="completed">Complete</option>
-                  <option value="cancelled">Cancel</option>
-                  <option value="no_show">No Show</option>
-                </Form.Select>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Appointments</h4>
+      <DataTable columns={columns} data={appointments} keyField="id" />
+    </Container>
   );
 };
 
