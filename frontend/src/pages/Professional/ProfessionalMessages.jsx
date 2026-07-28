@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, ListGroup, Form, Button, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, ListGroup, Spinner, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Button, Input, EmptyState } from '../../components/ui';
 
 const ProfessionalMessages = () => {
   const { showModal } = useModal();
@@ -61,9 +62,7 @@ const ProfessionalMessages = () => {
         content: messageText,
       });
       setMessageText('');
-      // Refresh messages
       await fetchMessages(selectedPatient.user_id);
-      // Update conversations (optional)
       fetchConversations();
     } catch (err) {
       showModal('Error', 'Failed to send message.');
@@ -76,14 +75,14 @@ const ProfessionalMessages = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  if (loading) return <Spinner animation="border" />;
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
 
   return (
-    <Container>
+    <Container fluid className="px-4">
       <h4>Messages</h4>
       <Row>
         <Col md={4}>
-          <Card className="feature-card p-2">
+          <Card className="p-2">
             <h6>Conversations</h6>
             <ListGroup variant="flush">
               {conversations.length === 0 ? (
@@ -105,7 +104,7 @@ const ProfessionalMessages = () => {
           </Card>
         </Col>
         <Col md={8}>
-          <Card className="feature-card p-3" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
+          <Card className="p-3" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
             {selectedPatient ? (
               <>
                 <h6>Chat with {selectedPatient.first_name} {selectedPatient.last_name}</h6>
@@ -120,18 +119,19 @@ const ProfessionalMessages = () => {
                   ))}
                   <div ref={messagesEndRef} />
                 </div>
-                <Form onSubmit={sendMessage} className="d-flex">
-                  <Form.Control
-                    type="text"
-                    placeholder="Type a message..."
+                <form onSubmit={sendMessage} className="d-flex">
+                  <Input
+                    name="message"
                     value={messageText}
                     onChange={(e) => setMessageText(e.target.value)}
+                    placeholder="Type a message..."
                     disabled={sending}
+                    className="flex-grow-1"
                   />
                   <Button variant="primary" type="submit" disabled={sending} className="ms-2">
                     {sending ? 'Sending...' : 'Send'}
                   </Button>
-                </Form>
+                </form>
               </>
             ) : (
               <p className="text-muted">Select a conversation to start chatting.</p>
