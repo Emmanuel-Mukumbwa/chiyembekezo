@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Card, StatCard, ErrorState } from '../../components/ui';
 
 const OrganizationInsights = () => {
   const { showModal } = useModal();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchInsights();
@@ -14,51 +16,55 @@ const OrganizationInsights = () => {
 
   const fetchInsights = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/organization/insights');
       setStats(res.data);
     } catch (err) {
+      setError('Failed to load insights.');
       showModal('Error', 'Failed to load insights.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
-  if (!stats) return <p>No data available.</p>;
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading insights" description={error} onRetry={fetchInsights} />;
+  if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
   return (
-    <Container>
-      <h4>Organization Insights</h4>
-      <Row>
-        <Col md={3}>
-          <Card className="text-center p-2"><h6>Total Members</h6><h3>{stats.total_members}</h3></Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center p-2"><h6>Avg Mood</h6><h3>{stats.mood_avg}</h3></Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center p-2"><h6>Avg Stress</h6><h3>{stats.stress_avg}</h3></Card>
-        </Col>
-        <Col md={3}>
-          <Card className="text-center p-2"><h6>Engagement</h6><h3>{stats.engagement_rate}%</h3></Card>
-        </Col>
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Organization Insights</h4>
+      <Row className="g-3 mb-4">
+        <Col md={3} sm={6}><StatCard icon="👥" value={stats.total_members} label="Total Members" variant="info" /></Col>
+        <Col md={3} sm={6}><StatCard icon="😊" value={stats.mood_avg} label="Avg Mood" variant="primary" /></Col>
+        <Col md={3} sm={6}><StatCard icon="😰" value={stats.stress_avg} label="Avg Stress" variant="warning" /></Col>
+        <Col md={3} sm={6}><StatCard icon="📊" value={`${stats.engagement_rate}%`} label="Engagement" variant="success" /></Col>
       </Row>
-      <Row className="mt-3">
+
+      <Row>
         <Col md={6}>
           <Card className="p-3">
-            <h6>Mood Distribution</h6>
+            <h6 className="fw-bold">Mood Distribution</h6>
             {stats.mood_distribution && stats.mood_distribution.map(d => (
-              <div key={d.mood_score}>Mood {d.mood_score}: {d.count}</div>
+              <div key={d.mood_score} className="d-flex justify-content-between border-bottom py-1">
+                <span>Mood {d.mood_score}</span>
+                <span>{d.count}</span>
+              </div>
             ))}
           </Card>
         </Col>
         <Col md={6}>
           <Card className="p-3">
-            <h6>Top Wellness Activities</h6>
+            <h6 className="fw-bold">Top Wellness Activities</h6>
             {stats.top_wellness_types && stats.top_wellness_types.length > 0 ? (
-              stats.top_wellness_types.map(w => <div key={w.type}>{w.type}: {w.count}</div>)
-            ) : <span>None</span>}
+              stats.top_wellness_types.map(w => (
+                <div key={w.type} className="d-flex justify-content-between border-bottom py-1">
+                  <span>{w.type}</span>
+                  <span>{w.count}</span>
+                </div>
+              ))
+            ) : <span className="text-muted">None</span>}
           </Card>
         </Col>
       </Row>
