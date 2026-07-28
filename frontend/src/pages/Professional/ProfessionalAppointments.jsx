@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Table, Button, Badge, Spinner, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  Input,
+  Select,
+  DataTable,
+  StatCard,
+  EmptyState,
+  ErrorState,
+} from '../../components/ui';
 
 const ProfessionalAppointments = () => {
   const { showModal } = useModal();
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState('');
@@ -19,6 +29,7 @@ const ProfessionalAppointments = () => {
 
   const fetchAppointments = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [upcomingRes, pastRes] = await Promise.all([
         api.get('/professional/appointments/upcoming'),
@@ -27,6 +38,7 @@ const ProfessionalAppointments = () => {
       setUpcoming(upcomingRes.data);
       setPast(pastRes.data);
     } catch (err) {
+      setError('Failed to load appointments.');
       showModal('Error', 'Failed to load appointments.');
     } finally {
       setLoading(false);
@@ -72,95 +84,84 @@ const ProfessionalAppointments = () => {
     return <Badge bg={variants[status] || 'secondary'}>{status}</Badge>;
   };
 
-  if (loading) return <Spinner animation="border" />;
+  const upcomingColumns = [
+    { field: 'first_name', label: 'Patient', render: (val, row) => (
+        <Link to={`/professional/patients/${row.user_id}`}>{row.first_name} {row.last_name}</Link>
+      ) },
+    { field: 'scheduled_time', label: 'Time', render: (val) => new Date(val).toLocaleString() },
+    { field: 'status', label: 'Status', render: (val) => statusBadge(val) },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="d-flex gap-1 align-items-center">
+          <Button variant="outline-primary" size="sm" onClick={() => openNoteModal(row)}>Add Note</Button>
+          <Select
+            name="status"
+            value={row.status}
+            options={[
+              { value: 'pending', label: 'Pending' },
+              { value: 'confirmed', label: 'Confirm' },
+              { value: 'completed', label: 'Complete' },
+              { value: 'cancelled', label: 'Cancel' },
+              { value: 'no_show', label: 'No Show' },
+            ]}
+            onChange={(e) => updateStatus(row.id, e.target.value)}
+            className="mb-0"
+            style={{ width: '120px' }}
+          />
+        </div>
+      ),
+    },
+  ];
+
+  const pastColumns = [
+    { field: 'first_name', label: 'Patient', render: (val, row) => (
+        <Link to={`/professional/patients/${row.user_id}`}>{row.first_name} {row.last_name}</Link>
+      ) },
+    { field: 'scheduled_time', label: 'Time', render: (val) => new Date(val).toLocaleString() },
+    { field: 'status', label: 'Status', render: (val) => statusBadge(val) },
+    { field: 'rating', label: 'Rating', render: (val) => val ? `${val}⭐` : '-' },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading appointments" description={error} onRetry={fetchAppointments} />;
 
   return (
-    <Container>
-      <h4>Appointments</h4>
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Appointments</h4>
       <Row>
         <Col lg={6}>
-          <Card className="feature-card p-3 mb-3">
-            <h5>Upcoming</h5>
-            <Table striped hover responsive>
-              <thead>
-                <tr><th>Patient</th><th>Time</th><th>Status</th><th>Actions</th></tr>
-              </thead>
-              <tbody>
-                {upcoming.length === 0 ? (
-                  <tr><td colSpan="4" className="text-center">No upcoming appointments</td></tr>
-                ) : (
-                  upcoming.map(a => (
-                    <tr key={a.id}>
-                      <td>
-                        <Link to={`/professional/patients/${a.user_id}`}>
-                          {a.first_name} {a.last_name}
-                        </Link>
-                      </td>
-                      <td>{new Date(a.scheduled_time).toLocaleString()}</td>
-                      <td>{statusBadge(a.status)}</td>
-                      <td>
-                        <Button variant="outline-primary" size="sm" onClick={() => openNoteModal(a)}>Add Note</Button>
-                        <Form.Select size="sm" className="d-inline-block w-auto ms-1" onChange={(e) => updateStatus(a.id, e.target.value)} value={a.status}>
-                          <option value="pending">Pending</option>
-                          <option value="confirmed">Confirm</option>
-                          <option value="completed">Complete</option>
-                          <option value="cancelled">Cancel</option>
-                          <option value="no_show">No Show</option>
-                        </Form.Select>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </Card>
+          <h6>Upcoming</h6>
+          {upcoming.length === 0 ? (
+            <EmptyState icon="📅" title="No upcoming appointments" description="You have no upcoming appointments." />
+          ) : (
+            <DataTable columns={upcomingColumns} data={upcoming} keyField="id" />
+          )}
         </Col>
         <Col lg={6}>
-          <Card className="feature-card p-3 mb-3">
-            <h5>Past (Last 50)</h5>
-            <Table striped hover responsive>
-              <thead>
-                <tr><th>Patient</th><th>Time</th><th>Status</th><th>Rating</th></tr>
-              </thead>
-              <tbody>
-                {past.length === 0 ? (
-                  <tr><td colSpan="4" className="text-center">No past appointments</td></tr>
-                ) : (
-                  past.map(a => (
-                    <tr key={a.id}>
-                      <td>
-                        <Link to={`/professional/patients/${a.user_id}`}>
-                          {a.first_name} {a.last_name}
-                        </Link>
-                      </td>
-                      <td>{new Date(a.scheduled_time).toLocaleString()}</td>
-                      <td>{statusBadge(a.status)}</td>
-                      <td>{a.rating ? `${a.rating}⭐` : '-'}</td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          </Card>
+          <h6>Past (Last 50)</h6>
+          {past.length === 0 ? (
+            <EmptyState icon="📋" title="No past appointments" description="No past appointments found." />
+          ) : (
+            <DataTable columns={pastColumns} data={past} keyField="id" />
+          )}
         </Col>
       </Row>
 
       {/* Add Note Modal */}
       <Modal show={showNoteModal} onHide={() => setShowNoteModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>Add Professional Note</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Add Professional Note</Modal.Title></Modal.Header>
         <Modal.Body>
-          <Form.Group>
-            <Form.Label>Note</Form.Label>
-            <Form.Control
-              as="textarea"
-              rows={4}
-              value={noteText}
-              onChange={(e) => setNoteText(e.target.value)}
-              placeholder="Enter clinical note..."
-            />
-          </Form.Group>
+          <Input
+            label="Note"
+            name="note"
+            as="textarea"
+            rows={4}
+            value={noteText}
+            onChange={(e) => setNoteText(e.target.value)}
+            placeholder="Enter clinical note..."
+          />
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowNoteModal(false)}>Cancel</Button>
