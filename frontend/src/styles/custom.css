@@ -133,4 +133,4 @@ body {
 .footer a:hover {
   color: white;
   text-decoration: underline;
-}
+}.overflow-x-hidden { overflow-x: hidden !important; }
