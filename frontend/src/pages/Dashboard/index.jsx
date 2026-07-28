@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Badge, Spinner } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
@@ -37,9 +37,8 @@ const computeStreak = (history) => {
 };
 
 const Dashboard = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { showModal } = useModal();
-  const navigate = useNavigate();
   const [moodHistory, setMoodHistory] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
@@ -48,15 +47,9 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
 
-  // Block navigation to /login with confirmation
   usePrompt(
-    () => {
-      logout();
-      navigate('/login');
-    },
-    () => {
-      // User cancelled – stay on dashboard
-    }
+    () => {},
+    () => {}
   );
 
   useEffect(() => {
@@ -85,17 +78,6 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    showModal(
-      'Confirm Logout',
-      'Are you sure you want to logout?',
-      () => {
-        logout();
-        navigate('/login');
-      }
-    );
   };
 
   const last7 = moodHistory.slice(0, 7).reverse();
@@ -142,25 +124,20 @@ const Dashboard = () => {
   }
 
   return (
-    <Container fluid className="px-4">
-      {/* Header with Logout button */}
+    <Container fluid className="px-3 px-sm-4">
       <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
         <div>
           <h2 className="fw-bold mb-0">Welcome back, {displayName}!</h2>
           <p className="text-muted">Let's check in on your wellness today.</p>
         </div>
-        <div className="d-flex align-items-center gap-2">
-          {streak > 0 && <Badge bg="success" className="p-2">🔥 {streak}-day streak!</Badge>}
-          <Button variant="outline-danger" size="sm" onClick={handleLogout}>Logout</Button>
-        </div>
+        {streak > 0 && <Badge bg="success" className="p-2">🔥 {streak}-day streak!</Badge>}
       </div>
 
-      {/* Stats row */}
-      <Row className="g-3 mb-4">
-        <Col md={3} sm={6}><StatCard icon="😊" value={moodHistory.length} label="Mood Entries" /></Col>
-        <Col md={3} sm={6}><StatCard icon="📝" value={journalEntries.length} label="Journal Entries" /></Col>
-        <Col md={3} sm={6}><StatCard icon="🎯" value={goals.filter(g => g.status === 'completed').length} label="Goals Completed" /></Col>
-        <Col md={3} sm={6}><StatCard icon="🔥" value={streak} label="Day Streak" /></Col>
+      <Row className="g-2 g-md-3 mb-4">
+        <Col xs={6} md={3}><StatCard icon="😊" value={moodHistory.length} label="Mood Entries" /></Col>
+        <Col xs={6} md={3}><StatCard icon="📝" value={journalEntries.length} label="Journal Entries" /></Col>
+        <Col xs={6} md={3}><StatCard icon="🎯" value={goals.filter(g => g.status === 'completed').length} label="Goals Completed" /></Col>
+        <Col xs={6} md={3}><StatCard icon="🔥" value={streak} label="Day Streak" /></Col>
       </Row>
 
       <Row>
@@ -170,7 +147,7 @@ const Dashboard = () => {
               <h6 className="fw-bold mb-0">Your Mood Trend</h6>
               <Button as={Link} to="/mood-history" variant="outline-primary" size="sm">View History</Button>
             </div>
-            <div style={{ height: '250px' }} className="mt-2">
+            <div style={{ height: '200px', minHeight: '180px' }} className="mt-2">
               <Line data={chartData} options={{ maintainAspectRatio: false }} />
             </div>
           </Card>
@@ -242,7 +219,6 @@ const Dashboard = () => {
               <Button as={Link} to="/safety-plan" variant="outline-primary">Safety Plan</Button>
               <Button as={Link} to="/mood-history" variant="outline-primary">View History</Button>
               <Button as={Link} to="/wellness" variant="outline-primary">Wellness Toolkit</Button>
-              <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
             </div>
           </Card>
 
