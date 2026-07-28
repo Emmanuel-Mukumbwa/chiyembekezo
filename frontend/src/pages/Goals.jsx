@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Badge, Modal, ProgressBar, Accordion } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Form, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import {
+  Button,
+  Card,
+  Input,
+  Select,
+  DatePicker,
+  Textarea,
+  DataTable,
+  EmptyState,
+  ErrorState,
+  SectionTitle,
+} from '../components/ui';
 import api from '../services/api';
 
 const Goals = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
   const [goals, setGoals] = useState([]);
-  const [habits, setHabits] = useState([]);
-  const [templates, setTemplates] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [showModalGoal, setShowModalGoal] = useState(false);
-  const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [editingGoal, setEditingGoal] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
@@ -22,25 +32,21 @@ const Goals = () => {
     status: 'active',
     progress: 0,
   });
-  const [selectedTemplate, setSelectedTemplate] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (user) fetchAllData();
+    if (user) fetchGoals();
   }, [user]);
 
-  const fetchAllData = async () => {
+  const fetchGoals = async () => {
     setLoading(true);
+    setError(null);
     try {
-      const [goalsRes, habitsRes, templatesRes] = await Promise.all([
-        api.get('/goals'),
-        api.get('/habits'),
-        api.get('/habits/templates'),
-      ]);
-      setGoals(goalsRes.data);
-      setHabits(habitsRes.data || []);
-      setTemplates(templatesRes.data || []);
+      const res = await api.get('/goals');
+      setGoals(res.data);
     } catch (err) {
-      showModal('Error', 'Failed to load data.');
+      setError('Failed to load goals. Please try again.');
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -48,6 +54,7 @@ const Goals = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       if (editingGoal) {
         await api.put(`/goals/${editingGoal.id}`, formData);
@@ -59,21 +66,21 @@ const Goals = () => {
       setShowModalGoal(false);
       setEditingGoal(null);
       setFormData({ title: '', description: '', target_date: '', status: 'active', progress: 0 });
-      fetchAllData();
+      fetchGoals();
     } catch (err) {
-      showModal('Error', 'Failed to save goal.');
+      showModal('Error', err.response?.data?.error || 'Failed to save goal.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Delete this goal?')) {
-      try {
-        await api.delete(`/goals/${id}`);
-        fetchAllData();
-        showModal('Success', 'Goal deleted.');
-      } catch (err) {
-        showModal('Error', 'Failed to delete.');
-      }
+    try {
+      await api.delete(`/goals/${id}`);
+      fetchGoals();
+      showModal('Success', 'Goal deleted.');
+    } catch (err) {
+      showModal('Error', 'Failed to delete.');
     }
   };
 
@@ -89,213 +96,124 @@ const Goals = () => {
     setShowModalGoal(true);
   };
 
-  const applyTemplate = (template) => {
-    setSelectedTemplate(template);
-    setFormData({
-      title: template.title,
-      description: template.description || '',
-      target_date: '',
-      status: 'active',
-      progress: 0,
-    });
-    setShowTemplateModal(false);
+  const openCreate = () => {
+    setEditingGoal(null);
+    setFormData({ title: '', description: '', target_date: '', status: 'active', progress: 0 });
     setShowModalGoal(true);
   };
 
-  const statusBadge = (status) => {
-    const variants = { active: 'primary', completed: 'success', archived: 'secondary' };
-    return <Badge bg={variants[status] || 'secondary'}>{status}</Badge>;
-  };
-
-  // Count habits linked to each goal
-  const getHabitCount = (goalId) => {
-    return habits.filter(h => h.goal_id === goalId).length;
-  };
-
-  // Progress bar variant
-  const progressVariant = (progress) => {
-    if (progress >= 80) return 'success';
-    if (progress >= 50) return 'info';
-    if (progress >= 25) return 'warning';
-    return 'danger';
-  };
+  const columns = [
+    { field: 'title', label: 'Title' },
+    { field: 'description', label: 'Description' },
+    { field: 'target_date', label: 'Target Date', render: (val) => val ? new Date(val).toLocaleDateString() : '-' },
+    { field: 'status', label: 'Status' },
+    { field: 'progress', label: 'Progress', render: (val) => `${val}%` },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="d-flex gap-1">
+          <Button variant="outline-primary" size="sm" onClick={() => openEdit(row)}>Edit</Button>
+          <Button variant="outline-danger" size="sm" onClick={() => handleDelete(row.id)}>Delete</Button>
+        </div>
+      ),
+    },
+  ];
 
   if (!user) {
-    return (
-      <Container className="my-5 text-center">
-        <h3>Please log in to manage your goals.</h3>
-        <Button as={Link} to="/login" variant="primary">Login</Button>
-      </Container>
-    );
+    return <div className="text-center mt-5">Please log in to manage your goals.</div>;
   }
 
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
+        <Spinner animation="border" variant="primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
     );
   }
 
+  if (error) {
+    return <ErrorState title="Error loading goals" description={error} onRetry={fetchGoals} />;
+  }
+
   return (
-    <Container className="my-5">
+    <Container fluid className="px-3 px-sm-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>My Goals</h2>
-        <div className="d-flex gap-2">
-          <Button variant="outline-primary" onClick={() => setShowTemplateModal(true)}>
-            📋 Templates
-          </Button>
-          <Button variant="primary" onClick={() => { setEditingGoal(null); setFormData({ title: '', description: '', target_date: '', status: 'active', progress: 0 }); setShowModalGoal(true); }}>
-            + New Goal
-          </Button>
-          <Button as={Link} to="/dashboard" variant="outline-secondary">
-            ← Back
-          </Button>
-        </div>
+        <Button variant="primary" onClick={openCreate}>+ New Goal</Button>
       </div>
 
-      <Row>
-        {goals.length === 0 ? (
-          <p className="text-muted text-center">No goals yet. Create one or use a template!</p>
-        ) : (
-          goals.map(goal => (
-            <Col md={6} lg={4} key={goal.id} className="mb-3">
-              <Card className="feature-card h-100">
-                <Card.Body>
-                  <div className="d-flex justify-content-between">
-                    <Card.Title className="h5">{goal.title}</Card.Title>
-                    {statusBadge(goal.status)}
-                  </div>
-                  <Card.Text className="text-muted small">{goal.description || 'No description'}</Card.Text>
+      {goals.length === 0 ? (
+        <EmptyState
+          icon="🎯"
+          title="No goals yet"
+          description="Start by creating your first wellness goal."
+          actionText="Create Goal"
+          onAction={openCreate}
+        />
+      ) : (
+        <DataTable
+          columns={columns}
+          data={goals}
+          keyField="id"
+          onRowClick={(row) => openEdit(row)}
+        />
+      )}
 
-                  <div className="mb-2">
-                    <div className="d-flex justify-content-between small mb-1">
-                      <span>Progress</span>
-                      <span>{goal.progress}%</span>
-                    </div>
-                    <ProgressBar
-                      now={goal.progress}
-                      variant={progressVariant(goal.progress)}
-                      style={{ height: '8px' }}
-                    />
-                  </div>
-
-                  <div className="d-flex justify-content-between small text-muted">
-                    <span>🧩 {getHabitCount(goal.id)} habits</span>
-                    {goal.target_date && <span>📅 {new Date(goal.target_date).toLocaleDateString()}</span>}
-                  </div>
-
-                  <div className="mt-3">
-                    <Button variant="outline-primary" size="sm" onClick={() => openEdit(goal)}>Edit</Button>
-                    <Button variant="outline-danger" size="sm" className="ms-1" onClick={() => handleDelete(goal.id)}>Delete</Button>
-                  </div>
-                </Card.Body>
-              </Card>
-            </Col>
-          ))
-        )}
-      </Row>
-
-      {/* Template Modal */}
-      <Modal show={showTemplateModal} onHide={() => setShowTemplateModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Choose a Goal Template</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          {templates.length === 0 ? (
-            <p className="text-muted">No templates available.</p>
-          ) : (
-            <Row>
-              {templates.map(template => (
-                <Col md={6} key={template.id} className="mb-3">
-                  <Card className="feature-card h-100">
-                    <Card.Body>
-                      <Card.Title className="h6">{template.title}</Card.Title>
-                      <Card.Text className="small text-muted">{template.description}</Card.Text>
-                      {template.suggested_habits && (
-                        <div className="small">
-                          <strong>Suggested habits:</strong>
-                          <ul className="list-unstyled">
-                            {JSON.parse(template.suggested_habits).map((h, i) => (
-                              <li key={i}>• {h}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      <Button variant="outline-primary" size="sm" onClick={() => applyTemplate(template)}>
-                        Use Template
-                      </Button>
-                    </Card.Body>
-                  </Card>
-                </Col>
-              ))}
-            </Row>
-          )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowTemplateModal(false)}>Close</Button>
-        </Modal.Footer>
-      </Modal>
-
-      {/* Create/Edit Modal */}
+      {/* Modal for create/edit */}
       <Modal show={showModalGoal} onHide={() => setShowModalGoal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{editingGoal ? 'Edit Goal' : 'New Goal'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave}>
           <Modal.Body>
-            <Form.Group className="mb-3">
-              <Form.Label>Title</Form.Label>
-              <Form.Control
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                required
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Target Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={formData.target_date}
-                onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
-              />
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Status</Form.Label>
-              <Form.Select
-                value={formData.status}
-                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-              >
-                <option value="active">Active</option>
-                <option value="completed">Completed</option>
-                <option value="archived">Archived</option>
-              </Form.Select>
-            </Form.Group>
-            <Form.Group className="mb-3">
-              <Form.Label>Progress (0-100)</Form.Label>
-              <Form.Control
-                type="number"
-                min="0" max="100"
-                value={formData.progress}
-                onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
-              />
-            </Form.Group>
+            <Input
+              label="Title"
+              name="title"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              required
+            />
+            <Textarea
+              label="Description"
+              name="description"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+            />
+            <DatePicker
+              label="Target Date"
+              name="target_date"
+              value={formData.target_date}
+              onChange={(e) => setFormData({ ...formData, target_date: e.target.value })}
+            />
+            <Select
+              label="Status"
+              name="status"
+              value={formData.status}
+              options={[
+                { value: 'active', label: 'Active' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'archived', label: 'Archived' },
+              ]}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+            />
+            <Input
+              label="Progress (0-100)"
+              name="progress"
+              type="number"
+              min="0"
+              max="100"
+              value={formData.progress}
+              onChange={(e) => setFormData({ ...formData, progress: parseInt(e.target.value) || 0 })}
+            />
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModalGoal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit">Save</Button>
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? 'Saving...' : 'Save'}
+            </Button>
           </Modal.Footer>
         </Form>
       </Modal>
