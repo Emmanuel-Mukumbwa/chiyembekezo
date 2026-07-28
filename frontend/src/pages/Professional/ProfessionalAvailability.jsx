@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Table, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  Input,
+  Select,
+  DataTable,
+  EmptyState,
+  ErrorState,
+} from '../../components/ui';
 
 const daysOfWeek = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'];
 
@@ -12,6 +20,7 @@ const ProfessionalAvailability = () => {
   const { showModal } = useModal();
   const [availability, setAvailability] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [slotForm, setSlotForm] = useState({
     day_of_week: 'monday',
     start_time: '09:00',
@@ -28,10 +37,12 @@ const ProfessionalAvailability = () => {
 
   const fetchAvailability = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/professional/availability');
       setAvailability(res.data);
     } catch (err) {
+      setError('Failed to load availability.');
       showModal('Error', 'Failed to load availability.');
     } finally {
       setLoading(false);
@@ -55,9 +66,9 @@ const ProfessionalAvailability = () => {
   };
 
   const deleteSlot = async (id) => {
-    if (!window.confirm('Delete this slot?')) return;
     try {
       await api.delete(`/professional/availability/${id}`);
+      showModal('Success', 'Slot deleted.');
       fetchAvailability();
     } catch (err) {
       showModal('Error', 'Failed to delete slot.');
@@ -68,85 +79,92 @@ const ProfessionalAvailability = () => {
     return <Container className="my-5"><h3>You are not a professional.</h3></Container>;
   }
 
-  if (loading) return <Spinner animation="border" className="my-5" />;
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading availability" description={error} onRetry={fetchAvailability} />;
+
+  const columns = [
+    { field: 'day_of_week', label: 'Day' },
+    { field: 'start_time', label: 'Start' },
+    { field: 'end_time', label: 'End' },
+    { field: 'is_recurring', label: 'Type', render: (val) => val ? 'Recurring' : 'Specific Date' },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <Button variant="danger" size="sm" onClick={() => deleteSlot(row.id)}>Delete</Button>
+      ),
+    },
+  ];
 
   return (
-    <Container className="my-5">
+    <Container fluid className="px-4">
       <h2>Manage Your Availability</h2>
-      <Card className="feature-card p-3 mb-4">
-        <h5>Add Time Slot</h5>
-        <Form onSubmit={addSlot}>
-          <Row className="g-3 align-items-end">
-            <Col md={3}>
-              <Form.Group>
-                <Form.Label>Day</Form.Label>
-                <Form.Select name="day_of_week" value={slotForm.day_of_week} onChange={handleSlotChange}>
-                  {daysOfWeek.map(day => <option key={day} value={day}>{day}</option>)}
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={2}>
-              <Form.Group>
-                <Form.Label>Start</Form.Label>
-                <Form.Control type="time" name="start_time" value={slotForm.start_time} onChange={handleSlotChange} />
-              </Form.Group>
-            </Col>
-            <Col md={2}>
-              <Form.Group>
-                <Form.Label>End</Form.Label>
-                <Form.Control type="time" name="end_time" value={slotForm.end_time} onChange={handleSlotChange} />
-              </Form.Group>
-            </Col>
-            <Col md={2}>
-              <Form.Group>
-                <Form.Label>Recurring?</Form.Label>
-                <Form.Select name="is_recurring" value={slotForm.is_recurring} onChange={handleSlotChange}>
-                  <option value="true">Yes (weekly)</option>
-                  <option value="false">Specific date</option>
-                </Form.Select>
-              </Form.Group>
-            </Col>
-            <Col md={2}>
-              {slotForm.is_recurring === 'false' && (
-                <Form.Group>
-                  <Form.Label>Date</Form.Label>
-                  <Form.Control type="date" name="specific_date" value={slotForm.specific_date} onChange={handleSlotChange} />
-                </Form.Group>
-              )}
-            </Col>
-            <Col md={1}>
-              <Button type="submit" variant="primary">Add</Button>
-            </Col>
-          </Row>
-        </Form>
-      </Card>
-
-      <Card className="feature-card p-3">
-        <h5>Current Availability</h5>
-        <Table striped hover responsive>
-          <thead>
-            <tr><th>Day</th><th>Start</th><th>End</th><th>Type</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {availability.length === 0 ? (
-              <tr><td colSpan="5" className="text-center">No slots set.</td></tr>
-            ) : (
-              availability.map(slot => (
-                <tr key={slot.id}>
-                  <td>{slot.day_of_week}</td>
-                  <td>{slot.start_time}</td>
-                  <td>{slot.end_time}</td>
-                  <td>{slot.is_recurring ? 'Recurring' : slot.specific_date}</td>
-                  <td><Button variant="danger" size="sm" onClick={() => deleteSlot(slot.id)}>Delete</Button></td>
-                </tr>
-              ))
+      <form onSubmit={addSlot} className="bg-light p-3 rounded mb-4">
+        <Row className="g-3 align-items-end">
+          <Col md={3}>
+            <Select
+              label="Day"
+              name="day_of_week"
+              value={slotForm.day_of_week}
+              options={daysOfWeek.map(day => ({ value: day, label: day }))}
+              onChange={handleSlotChange}
+            />
+          </Col>
+          <Col md={2}>
+            <Input
+              label="Start"
+              name="start_time"
+              type="time"
+              value={slotForm.start_time}
+              onChange={handleSlotChange}
+            />
+          </Col>
+          <Col md={2}>
+            <Input
+              label="End"
+              name="end_time"
+              type="time"
+              value={slotForm.end_time}
+              onChange={handleSlotChange}
+            />
+          </Col>
+          <Col md={2}>
+            <Select
+              label="Recurring?"
+              name="is_recurring"
+              value={slotForm.is_recurring}
+              options={[
+                { value: true, label: 'Yes (weekly)' },
+                { value: false, label: 'Specific date' },
+              ]}
+              onChange={handleSlotChange}
+            />
+          </Col>
+          <Col md={2}>
+            {slotForm.is_recurring === 'false' && (
+              <Input
+                label="Date"
+                name="specific_date"
+                type="date"
+                value={slotForm.specific_date}
+                onChange={handleSlotChange}
+              />
             )}
-          </tbody>
-        </Table>
-      </Card>
-      <div className="mt-3">
-        <Button as={Link} to="/professional" variant="outline-secondary">Back to Professional Dashboard</Button>
-      </div>
+          </Col>
+          <Col md={1}>
+            <Button type="submit" variant="primary">Add</Button>
+          </Col>
+        </Row>
+      </form>
+
+      {availability.length === 0 ? (
+        <EmptyState icon="🕒" title="No slots set" description="Add your first availability slot." />
+      ) : (
+        <DataTable columns={columns} data={availability} keyField="id" />
+      )}
+      <Button as={Link} to="/professional" variant="outline-secondary" className="mt-3">
+        Back to Dashboard
+      </Button>
     </Container>
   );
 };
