@@ -1,13 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Badge, Spinner, Button, Form, Row, Col } from 'react-bootstrap';
+import { Container, Spinner, Badge, Row, Col } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  Select,
+  DataTable,
+  ErrorState,
+} from '../../components/ui';
 
 const AdminPeerSupport = () => {
   const { showModal } = useModal();
   const [requests, setRequests] = useState([]);
   const [volunteers, setVolunteers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
 
   useEffect(() => {
@@ -16,14 +23,16 @@ const AdminPeerSupport = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [reqRes, volRes] = await Promise.all([
         api.get(`/admin/peer-support/requests?status=${filterStatus}`),
-        api.get('/admin/volunteers'), // we already have this endpoint
+        api.get('/admin/volunteers'),
       ]);
       setRequests(reqRes.data);
       setVolunteers(volRes.data);
     } catch (err) {
+      setError('Failed to load data.');
       showModal('Error', 'Failed to load data.');
     } finally {
       setLoading(false);
@@ -41,7 +50,6 @@ const AdminPeerSupport = () => {
   };
 
   const unassignVolunteer = async (requestId) => {
-    if (!window.confirm('Unassign volunteer?')) return;
     try {
       await api.put(`/admin/peer-support/requests/${requestId}/unassign`);
       showModal('Success', 'Volunteer unassigned.');
@@ -51,101 +59,76 @@ const AdminPeerSupport = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'user_first', label: 'User', render: (val, row) => `${row.user_first} ${row.user_last}` },
+    { field: 'message', label: 'Message' },
+    {
+      field: 'status',
+      label: 'Status',
+      render: (val) => {
+        const colors = { pending: 'warning', accepted: 'info', completed: 'success', cancelled: 'secondary' };
+        return <Badge bg={colors[val] || 'secondary'}>{val}</Badge>;
+      },
+    },
+    { field: 'volunteer_id', label: 'Volunteer', render: (val, row) => val ? `${row.vol_first} ${row.vol_last}` : 'Not assigned' },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="d-flex gap-1 align-items-center">
+          {row.status === 'pending' && (
+            <Select
+              name="assign"
+              value=""
+              options={[
+                { value: '', label: 'Assign volunteer' },
+                ...volunteers.filter(v => v.is_verified).map(v => ({ value: v.id, label: `${v.first_name} ${v.last_name}` })),
+              ]}
+              onChange={(e) => {
+                if (e.target.value) {
+                  assignVolunteer(row.id, parseInt(e.target.value));
+                }
+              }}
+              className="mb-0"
+              style={{ width: '150px' }}
+            />
+          )}
+          {row.volunteer_id && (
+            <Button variant="outline-danger" size="sm" onClick={() => unassignVolunteer(row.id)}>Unassign</Button>
+          )}
+        </div>
+      ),
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchData} />;
 
   return (
-    <Container>
-      <h4>Peer Support Requests</h4>
-      <Row className="mb-3">
-        <Col md={4}>
-          <Form.Select
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Peer Support Requests</h4>
+      <Row className="mb-3 g-2">
+        <Col md={3}>
+          <Select
+            label="Filter by Status"
+            name="status"
             value={filterStatus}
+            options={[
+              { value: '', label: 'All Statuses' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'accepted', label: 'Accepted' },
+              { value: 'completed', label: 'Completed' },
+              { value: 'cancelled', label: 'Cancelled' },
+            ]}
             onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="">All Statuses</option>
-            <option value="pending">Pending</option>
-            <option value="accepted">Accepted</option>
-            <option value="completed">Completed</option>
-            <option value="cancelled">Cancelled</option>
-          </Form.Select>
+          />
         </Col>
-        <Col md={2}>
-          <Button variant="primary" onClick={fetchData}>Filter</Button>
+        <Col md={2} className="d-flex align-items-end">
+          <Button variant="primary" onClick={fetchData}>Apply</Button>
         </Col>
       </Row>
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Message</th>
-            <th>Status</th>
-            <th>Volunteer</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {requests.length === 0 ? (
-            <tr><td colSpan="6" className="text-center">No requests found.</td></tr>
-          ) : (
-            requests.map(req => (
-              <tr key={req.id}>
-                <td>{req.id}</td>
-                <td>{req.user_first} {req.user_last}</td>
-                <td>{req.message}</td>
-                <td>
-                  <Badge bg={
-                    req.status === 'pending' ? 'warning' :
-                    req.status === 'accepted' ? 'info' :
-                    req.status === 'completed' ? 'success' : 'secondary'
-                  }>
-                    {req.status}
-                  </Badge>
-                </td>
-                <td>
-                  {req.volunteer_id ? (
-                    <span>{req.vol_first} {req.vol_last}</span>
-                  ) : (
-                    <span className="text-muted">Not assigned</span>
-                  )}
-                </td>
-                <td>
-                  {req.status === 'pending' && (
-                    <Form.Select
-                      size="sm"
-                      style={{ width: '150px', display: 'inline-block' }}
-                      onChange={(e) => {
-                        if (e.target.value) {
-                          assignVolunteer(req.id, parseInt(e.target.value));
-                        }
-                      }}
-                    >
-                      <option value="">Assign volunteer</option>
-                      {volunteers
-                        .filter(v => v.is_verified)
-                        .map(v => (
-                          <option key={v.id} value={v.id}>
-                            {v.first_name} {v.last_name}
-                          </option>
-                        ))}
-                    </Form.Select>
-                  )}
-                  {req.volunteer_id && (
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      className="ms-1"
-                      onClick={() => unassignVolunteer(req.id)}
-                    >
-                      Unassign
-                    </Button>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+      <DataTable columns={columns} data={requests} keyField="id" />
     </Container>
   );
 };
