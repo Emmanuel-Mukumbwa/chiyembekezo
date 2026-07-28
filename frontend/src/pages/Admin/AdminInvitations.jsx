@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { Container, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Card, Alert } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Button, Input, Select } from '../../components/ui';
 
 const AdminInvitations = () => {
   const { showModal } = useModal();
@@ -26,27 +27,34 @@ const AdminInvitations = () => {
   };
 
   return (
-    <Container>
-      <h4>Send Invitation</h4>
-      <Card className="feature-card p-4">
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Send Invitation</h4>
+      <Card className="p-4">
         {error && <Alert variant="danger">{error}</Alert>}
-        <Form onSubmit={handleSubmit}>
-          <Form.Group className="mb-3">
-            <Form.Label>Email Address</Form.Label>
-            <Form.Control type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-          </Form.Group>
-          <Form.Group className="mb-3">
-            <Form.Label>Role</Form.Label>
-            <Form.Select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="professional">Professional</option>
-              <option value="volunteer">Volunteer</option>
-              <option value="org_admin">Organization Admin</option>
-            </Form.Select>
-          </Form.Group>
+        <form onSubmit={handleSubmit}>
+          <Input
+            label="Email Address"
+            name="email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Select
+            label="Role"
+            name="role"
+            value={role}
+            options={[
+              { value: 'professional', label: 'Professional' },
+              { value: 'volunteer', label: 'Volunteer' },
+              { value: 'org_admin', label: 'Organization Admin' },
+            ]}
+            onChange={(e) => setRole(e.target.value)}
+          />
           <Button variant="primary" type="submit" disabled={loading}>
             {loading ? 'Sending...' : 'Send Invitation'}
           </Button>
-        </Form>
+        </form>
       </Card>
     </Container>
   );
