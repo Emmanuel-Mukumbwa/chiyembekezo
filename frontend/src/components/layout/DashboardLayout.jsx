@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Button } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -18,8 +18,8 @@ const DashboardLayout = ({ children }) => {
     <div className="d-flex flex-column min-vh-100">
       <ScrollToTop />
       <Navbar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      <div className="d-flex flex-grow-1">
-        {/* Desktop sidebar (always visible) */}
+      <div className="d-flex flex-grow-1" style={{ overflow: 'hidden' }}>
+        {/* Desktop sidebar */}
         <div
           className="d-none d-md-block bg-surface border-end"
           style={{
@@ -71,8 +71,19 @@ const DashboardLayout = ({ children }) => {
         </div>
 
         {/* Main content */}
-        <div className="flex-grow-1 p-3 p-md-4 bg-warm">
-          <Container fluid>{children}</Container>
+        <div className="flex-grow-1 p-3 p-md-4 bg-warm" style={{ overflowX: 'hidden', minWidth: 0 }}>
+          {/* Hamburger button – only on mobile */}
+          <Button
+            variant="outline-primary"
+            size="sm"
+            className="d-md-none mb-3"
+            onClick={toggleSidebar}
+          >
+            {sidebarOpen ? '✕' : '☰'} Menu
+          </Button>
+          <Container fluid className="px-0" style={{ overflowX: 'hidden' }}>
+            {children}
+          </Container>
         </div>
       </div>
     </div>
