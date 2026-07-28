@@ -3,21 +3,16 @@ import { Navbar, Nav, Container, Button, Modal, Dropdown, Badge } from 'react-bo
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import ThemeToggle from '../ThemeToggle';
+import LogoutButton from '../LogoutButton';
 
-const Navigation = () => {
+const Navigation = ({ sidebarOpen, toggleSidebar }) => {
   const [showEmergency, setShowEmergency] = useState(false);
   const [expanded, setExpanded] = useState(false);
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleEmergencyOpen = () => setShowEmergency(true);
   const handleEmergencyClose = () => setShowEmergency(false);
-
-  const handleLogout = () => {
-    logout();
-    navigate('/');
-    setExpanded(false);
-  };
 
   const handleNavClick = () => {
     setExpanded(false);
@@ -49,6 +44,18 @@ const Navigation = () => {
         style={{ borderBottom: '1px solid var(--color-border)' }}
       >
         <Container>
+          {/* Hamburger button – only on mobile */}
+          {user && (
+            <Button
+              variant="outline-secondary"
+              size="sm"
+              className="d-md-none me-2"
+              onClick={toggleSidebar}
+              style={{ border: 'none', fontSize: '1.5rem' }}
+            >
+              {sidebarOpen ? '✕' : '☰'}
+            </Button>
+          )}
           <Navbar.Brand
             as={NavLink}
             to="/"
@@ -167,8 +174,8 @@ const Navigation = () => {
                         </Dropdown.Item>
                       )}
                       <Dropdown.Divider />
-                      <Dropdown.Item onClick={handleLogout} className="text-danger">
-                        Logout
+                      <Dropdown.Item className="p-0">
+                        <LogoutButton variant="link" className="text-danger w-100 text-start px-3 py-2" />
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
