@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Button, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
+import {
+  Button,
+  Input,
+  Select,
+  Textarea,
+  DatePicker,
+  SectionTitle,
+} from '../components/ui';
+import LogoutButton from '../components/LogoutButton';
 
 const Profile = () => {
   const { user, updateProfile, loading: authLoading } = useAuth();
+  const { showModal } = useModal();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -55,170 +66,162 @@ const Profile = () => {
     try {
       await updateProfile(formData);
       setMessage('Profile updated successfully!');
+      showModal('Success', 'Profile updated successfully!');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update profile.');
+      showModal('Error', 'Failed to update profile.');
     } finally {
       setSaving(false);
     }
   };
 
-  if (authLoading) {
-    return <div className="text-center mt-5">Loading...</div>;
-  }
-
-  if (!user) {
-    return <div className="text-center mt-5">Please log in to view your profile.</div>;
-  }
+  if (authLoading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (!user) return <div className="text-center mt-5">Please log in to view your profile.</div>;
 
   return (
-    <Container className="my-5">
-      <Row className="justify-content-center">
-        <Col md={8} lg={6}>
-          <Card className="feature-card p-4">
-            <h3 className="text-center">Your Profile</h3>
-            {message && <Alert variant="success">{message}</Alert>}
-            {error && <Alert variant="danger">{error}</Alert>}
-            <Form onSubmit={handleSubmit}>
-              <Row>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>First Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Last Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Form.Group className="mb-3">
-                <Form.Label>Email</Form.Label>
-                <Form.Control type="email" value={user.email} disabled />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Phone</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Date of Birth</Form.Label>
-                <Form.Control
-                  type="date"
-                  name="dateOfBirth"
-                  value={formData.dateOfBirth}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Gender</Form.Label>
-                <Form.Select name="gender" value={formData.gender} onChange={handleChange}>
-                  <option value="">Prefer not to say</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Non-binary">Non-binary</option>
-                  <option value="Other">Other</option>
-                </Form.Select>
-              </Form.Group>
-              <Form.Group className="mb-3">
-                <Form.Label>Bio</Form.Label>
-                <Form.Control
-                  as="textarea"
-                  rows={2}
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Row>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>District</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="district"
-                      value={formData.district}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>City</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="city"
-                      value={formData.city}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Form.Group className="mb-3">
-                <Form.Label>Occupation</Form.Label>
-                <Form.Control
-                  type="text"
-                  name="occupation"
-                  value={formData.occupation}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <h6 className="mt-3">Emergency Contact</h6>
-              <Row>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Name</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="emergencyContactName"
-                      value={formData.emergencyContactName}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-                <Col sm={6}>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Phone</Form.Label>
-                    <Form.Control
-                      type="text"
-                      name="emergencyContactPhone"
-                      value={formData.emergencyContactPhone}
-                      onChange={handleChange}
-                    />
-                  </Form.Group>
-                </Col>
-              </Row>
-              <Form.Group className="mb-3">
-                <Form.Label>Preferred Language</Form.Label>
-                <Form.Select name="preferredLanguage" value={formData.preferredLanguage} onChange={handleChange}>
-                  <option value="en">English</option>
-                  <option value="ch">Chichewa</option>
-                  <option value="tu">Tumbuka</option>
-                  <option value="ya">Yao</option>
-                </Form.Select>
-              </Form.Group>
-              <Button variant="primary" type="submit" className="w-100" disabled={saving}>
-                {saving ? 'Saving...' : 'Save Profile'}
-              </Button>
-            </Form>
-          </Card>
-        </Col>
-      </Row>
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold">My Profile</h2>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
+      <Card className="p-4">
+        {message && <Alert variant="success">{message}</Alert>}
+        {error && <Alert variant="danger">{error}</Alert>}
+        <form onSubmit={handleSubmit}>
+          <Row>
+            <Col md={6}>
+              <Input
+                label="First Name"
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Input
+                label="Last Name"
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <Input
+            label="Email"
+            name="email"
+            value={user.email}
+            disabled
+          />
+          <Input
+            label="Phone"
+            name="phone"
+            value={formData.phone}
+            onChange={handleChange}
+          />
+          <Row>
+            <Col md={6}>
+              <DatePicker
+                label="Date of Birth"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Select
+                label="Gender"
+                name="gender"
+                value={formData.gender}
+                options={[
+                  { value: '', label: 'Prefer not to say' },
+                  { value: 'Male', label: 'Male' },
+                  { value: 'Female', label: 'Female' },
+                  { value: 'Non-binary', label: 'Non-binary' },
+                  { value: 'Other', label: 'Other' },
+                ]}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <Textarea
+            label="Bio"
+            name="bio"
+            rows={3}
+            value={formData.bio}
+            onChange={handleChange}
+          />
+          <Row>
+            <Col md={6}>
+              <Input
+                label="Location"
+                name="location"
+                value={formData.location}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Input
+                label="District"
+                name="district"
+                value={formData.district}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <Row>
+            <Col md={6}>
+              <Input
+                label="City"
+                name="city"
+                value={formData.city}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Input
+                label="Occupation"
+                name="occupation"
+                value={formData.occupation}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <h6 className="mt-3">Emergency Contact</h6>
+          <Row>
+            <Col md={6}>
+              <Input
+                label="Name"
+                name="emergencyContactName"
+                value={formData.emergencyContactName}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Input
+                label="Phone"
+                name="emergencyContactPhone"
+                value={formData.emergencyContactPhone}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <Select
+            label="Preferred Language"
+            name="preferredLanguage"
+            value={formData.preferredLanguage}
+            options={[
+              { value: 'en', label: 'English' },
+              { value: 'ch', label: 'Chichewa' },
+              { value: 'tu', label: 'Tumbuka' },
+              { value: 'ya', label: 'Yao' },
+            ]}
+            onChange={handleChange}
+          />
+          <Button variant="primary" type="submit" className="mt-3" disabled={saving}>
+            {saving ? 'Saving...' : 'Save Profile'}
+          </Button>
+        </form>
+      </Card>
     </Container>
   );
 };
