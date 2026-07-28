@@ -1,12 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Badge, Button, Spinner, Modal, Form } from 'react-bootstrap';
+import { Container, Spinner, Row, Col, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  Select,
+  DataTable,
+  EmptyState,
+  ErrorState,
+} from '../../components/ui';
 
 const AdminApplications = () => {
   const { showModal } = useModal();
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filter, setFilter] = useState({ status: '', type: '' });
 
   useEffect(() => {
@@ -15,6 +23,7 @@ const AdminApplications = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (filter.status) params.append('status', filter.status);
@@ -22,6 +31,7 @@ const AdminApplications = () => {
       const res = await api.get(`/admin/applications?${params}`);
       setApplications(res.data);
     } catch (err) {
+      setError('Failed to load applications.');
       showModal('Error', 'Failed to load applications.');
     } finally {
       setLoading(false);
@@ -38,67 +48,76 @@ const AdminApplications = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'first_name', label: 'User', render: (val, row) => `${row.first_name} ${row.last_name} (${row.email})` },
+    { field: 'type', label: 'Type' },
+    { field: 'specialization', label: 'Specialization', render: (val) => val || '-' },
+    {
+      field: 'status',
+      label: 'Status',
+      render: (val) => {
+        const color = val === 'pending' ? 'warning' : val === 'approved' ? 'success' : 'danger';
+        return <Badge bg={color}>{val}</Badge>;
+      },
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) =>
+        row.status === 'pending' ? (
+          <div className="d-flex gap-1">
+            <Button variant="success" size="sm" onClick={() => review(row.id, 'approved')}>Approve</Button>
+            <Button variant="danger" size="sm" onClick={() => review(row.id, 'rejected')}>Reject</Button>
+          </div>
+        ) : null,
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading applications" description={error} onRetry={fetchData} />;
 
   return (
-    <Container>
-      <h4>Applications</h4>
-      <div className="mb-3 d-flex gap-2">
-        <Form.Select value={filter.status} onChange={(e) => setFilter({ ...filter, status: e.target.value })} style={{ width: '150px' }}>
-          <option value="">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="approved">Approved</option>
-          <option value="rejected">Rejected</option>
-        </Form.Select>
-        <Form.Select value={filter.type} onChange={(e) => setFilter({ ...filter, type: e.target.value })} style={{ width: '150px' }}>
-          <option value="">All Types</option>
-          <option value="professional">Professional</option>
-          <option value="volunteer">Volunteer</option>
-        </Form.Select>
-        <Button variant="primary" onClick={fetchData}>Filter</Button>
-      </div>
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>User</th>
-            <th>Type</th>
-            <th>Specialization</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applications.length === 0 ? (
-            <tr><td colSpan="6" className="text-center">No applications.</td></tr>
-          ) : (
-            applications.map(a => (
-              <tr key={a.id}>
-                <td>{a.id}</td>
-                <td>{a.first_name} {a.last_name} ({a.email})</td>
-                <td>{a.type}</td>
-                <td>{a.specialization || '-'}</td>
-                <td>
-                  <Badge bg={
-                    a.status === 'pending' ? 'warning' :
-                    a.status === 'approved' ? 'success' : 'danger'
-                  }>
-                    {a.status}
-                  </Badge>
-                </td>
-                <td>
-                  {a.status === 'pending' && (
-                    <>
-                      <Button variant="success" size="sm" onClick={() => review(a.id, 'approved')}>Approve</Button>
-                      <Button variant="danger" size="sm" className="ms-1" onClick={() => review(a.id, 'rejected')}>Reject</Button>
-                    </>
-                  )}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Applications</h4>
+      <Row className="mb-3 g-2">
+        <Col md={3}>
+          <Select
+            label="Status"
+            name="status"
+            value={filter.status}
+            options={[
+              { value: '', label: 'All Status' },
+              { value: 'pending', label: 'Pending' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'rejected', label: 'Rejected' },
+            ]}
+            onChange={(e) => setFilter({ ...filter, status: e.target.value })}
+          />
+        </Col>
+        <Col md={3}>
+          <Select
+            label="Type"
+            name="type"
+            value={filter.type}
+            options={[
+              { value: '', label: 'All Types' },
+              { value: 'professional', label: 'Professional' },
+              { value: 'volunteer', label: 'Volunteer' },
+            ]}
+            onChange={(e) => setFilter({ ...filter, type: e.target.value })}
+          />
+        </Col>
+        <Col md={2} className="d-flex align-items-end">
+          <Button variant="primary" onClick={fetchData}>Apply</Button>
+        </Col>
+      </Row>
+
+      {applications.length === 0 ? (
+        <EmptyState icon="📋" title="No applications" description="No applications match your filters." />
+      ) : (
+        <DataTable columns={columns} data={applications} keyField="id" />
+      )}
     </Container>
   );
 };
