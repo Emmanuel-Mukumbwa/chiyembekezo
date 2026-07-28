@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Badge, Spinner, Button } from 'react-bootstrap';
+import { Container, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  DataTable,
+  EmptyState,
+  ErrorState,
+} from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const VolunteerRequests = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchRequests();
@@ -17,10 +25,12 @@ const VolunteerRequests = () => {
 
   const fetchRequests = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/peer-support/volunteer/requests');
       setRequests(res.data);
     } catch (err) {
+      setError('Failed to load requests.');
       showModal('Error', 'Failed to load requests.');
     } finally {
       setLoading(false);
@@ -37,71 +47,64 @@ const VolunteerRequests = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  const statusColors = {
+    pending: 'warning',
+    accepted: 'info',
+    completed: 'success',
+    cancelled: 'secondary',
+  };
+
+  const columns = [
+    { field: 'created_at', label: 'Date', render: (val) => new Date(val).toLocaleString() },
+    { field: 'first_name', label: 'User', render: (val, row) => `${row.first_name} ${row.last_name}` },
+    { field: 'message', label: 'Message' },
+    {
+      field: 'status',
+      label: 'Status',
+      render: (val) => <Badge bg={statusColors[val] || 'secondary'}>{val}</Badge>,
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => {
+        if (row.status === 'pending') {
+          return (
+            <Button variant="success" size="sm" onClick={() => updateStatus(row.id, 'accepted')}>
+              Accept
+            </Button>
+          );
+        }
+        if (row.status === 'accepted') {
+          return (
+            <Button variant="secondary" size="sm" onClick={() => updateStatus(row.id, 'completed')}>
+              Mark Complete
+            </Button>
+          );
+        }
+        return null;
+      },
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading requests" description={error} onRetry={fetchRequests} />;
 
   return (
-    <Container className="my-5">
+    <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2>My Support Requests</h2>
-        <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">
-          ← Back to Dashboard
-        </Button>
+        <h4>My Support Requests</h4>
+        <div className="d-flex gap-2">
+          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">
+            ← Back to Dashboard
+          </Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
       </div>
-      <Card className="feature-card p-3">
-        {requests.length === 0 ? (
-          <p className="text-muted">No requests assigned to you yet.</p>
-        ) : (
-          <Table striped hover responsive>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>User</th>
-                <th>Message</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map(req => (
-                <tr key={req.id}>
-                  <td>{new Date(req.created_at).toLocaleString()}</td>
-                  <td>{req.first_name} {req.last_name}</td>
-                  <td>{req.message}</td>
-                  <td>
-                    <Badge bg={
-                      req.status === 'pending' ? 'warning' :
-                      req.status === 'accepted' ? 'info' :
-                      req.status === 'completed' ? 'success' : 'secondary'
-                    }>
-                      {req.status}
-                    </Badge>
-                  </td>
-                  <td>
-                    {req.status === 'pending' && (
-                      <Button
-                        size="sm"
-                        variant="success"
-                        onClick={() => updateStatus(req.id, 'accepted')}
-                      >
-                        Accept
-                      </Button>
-                    )}
-                    {req.status === 'accepted' && (
-                      <Button
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => updateStatus(req.id, 'completed')}
-                      >
-                        Mark Complete
-                      </Button>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card>
+      {requests.length === 0 ? (
+        <EmptyState icon="📋" title="No requests assigned" description="No requests have been assigned to you yet." />
+      ) : (
+        <DataTable columns={columns} data={requests} keyField="id" />
+      )}
     </Container>
   );
 };
