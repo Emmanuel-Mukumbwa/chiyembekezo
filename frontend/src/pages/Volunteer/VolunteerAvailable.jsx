@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Table, Badge, Spinner, Button } from 'react-bootstrap';
+import { Container, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import {
+  Button,
+  DataTable,
+  EmptyState,
+  ErrorState,
+} from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const VolunteerAvailable = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchAvailable();
@@ -17,10 +25,12 @@ const VolunteerAvailable = () => {
 
   const fetchAvailable = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/peer-support/available');
       setRequests(res.data);
     } catch (err) {
+      setError('Failed to load available requests.');
       showModal('Error', 'Failed to load available requests.');
     } finally {
       setLoading(false);
@@ -28,7 +38,6 @@ const VolunteerAvailable = () => {
   };
 
   const claimRequest = async (id) => {
-    if (!window.confirm('Claim this request?')) return;
     try {
       await api.post(`/peer-support/requests/${id}/claim`);
       showModal('Success', 'Request claimed.');
@@ -38,45 +47,41 @@ const VolunteerAvailable = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  const columns = [
+    { field: 'first_name', label: 'User', render: (val, row) => `${row.first_name} ${row.last_name}` },
+    { field: 'message', label: 'Message' },
+    { field: 'created_at', label: 'Date', render: (val) => new Date(val).toLocaleString() },
+    {
+      field: 'actions',
+      label: 'Action',
+      render: (_, row) => (
+        <Button variant="primary" size="sm" onClick={() => claimRequest(row.id)}>
+          Claim
+        </Button>
+      ),
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading requests" description={error} onRetry={fetchAvailable} />;
 
   return (
-    <Container className="my-5">
-      <h2>Available Requests</h2>
-      <p className="text-muted">Find a request to support</p>
-      <Card className="feature-card p-3">
-        {requests.length === 0 ? (
-          <p className="text-muted">No available requests.</p>
-        ) : (
-          <Table striped hover responsive>
-            <thead>
-              <tr>
-                <th>User</th>
-                <th>Message</th>
-                <th>Date</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {requests.map(req => (
-                <tr key={req.id}>
-                  <td>{req.first_name} {req.last_name}</td>
-                  <td>{req.message}</td>
-                  <td>{new Date(req.created_at).toLocaleString()}</td>
-                  <td>
-                    <Button variant="primary" size="sm" onClick={() => claimRequest(req.id)}>
-                      Claim
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        )}
-      </Card>
-      <div className="mt-3">
-        <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">← Back</Button>
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Available Requests</h4>
+        <div className="d-flex gap-2">
+          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">
+            ← Back to Dashboard
+          </Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
       </div>
+      <p className="text-muted">Find a request to support</p>
+      {requests.length === 0 ? (
+        <EmptyState icon="🤝" title="No available requests" description="All requests have been claimed." />
+      ) : (
+        <DataTable columns={columns} data={requests} keyField="id" />
+      )}
     </Container>
   );
 };
