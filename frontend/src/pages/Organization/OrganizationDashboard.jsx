@@ -1,25 +1,23 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Spinner } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import { Card, Button, StatCard } from '../../components/ui';
+import { Card, StatCard } from '../../components/ui';
 
 const OrganizationDashboard = () => {
   const { logout } = useAuth();
   const { showModal } = useModal();
-  const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [org, setOrg] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Block navigation to /login with confirmation
   usePrompt(
     () => {
       logout();
-      navigate('/login');
+      window.location.href = '/login';
     },
     () => {}
   );
@@ -30,6 +28,7 @@ const OrganizationDashboard = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [orgRes, statsRes] = await Promise.all([
         api.get('/organization/me'),
@@ -38,32 +37,20 @@ const OrganizationDashboard = () => {
       setOrg(orgRes.data);
       setStats(statsRes.data);
     } catch (err) {
+      setError('Failed to load organization data.');
       showModal('Error', 'Failed to load organization data.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleLogout = () => {
-    showModal(
-      'Confirm Logout',
-      'Are you sure you want to logout?',
-      () => {
-        logout();
-        navigate('/login');
-      }
-    );
-  };
-
   if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
   if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
   return (
     <Container fluid className="px-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h2 className="fw-bold">{org?.name || 'Organization'} Dashboard</h2>
-        <Button variant="outline-danger" size="sm" onClick={handleLogout}>Logout</Button>
-      </div>
+      <h2 className="fw-bold mb-4">{org?.name || 'Organization'} Dashboard</h2>
       <Row className="g-3 mb-4">
         <Col md={3} sm={6}><StatCard icon="👥" value={stats.total_members} label="Total Members" variant="info" /></Col>
         <Col md={3} sm={6}><StatCard icon="😊" value={stats.mood_avg} label="Avg Mood" variant="primary" /></Col>
