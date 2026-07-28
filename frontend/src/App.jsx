@@ -52,6 +52,7 @@ import CommunityGuidelines from './pages/CommunityGuidelines';
 import PeerSupport from './pages/PeerSupport';
 import VolunteerDashboard from './pages/Volunteer/VolunteerDashboard';
 import ListenerDashboard from './pages/Listener/ListenerDashboard';
+import Settings from './pages/Settings';
 import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
 import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
 
@@ -154,12 +155,12 @@ const router = createBrowserRouter([
   { path: '/wellness/sounds', element: <ProtectedLayout><Sounds /></ProtectedLayout> },
   { path: '/wellness/timers', element: <ProtectedLayout><Timers /></ProtectedLayout> },
   { path: '/wellness/daily', element: <ProtectedLayout><DailyWellness /></ProtectedLayout> },
-  { path: '/professional/availability', element: <ProtectedLayout><ProfessionalAvailability /></ProtectedLayout> },
   { path: '/peer-support', element: <ProtectedLayout><PeerSupport /></ProtectedLayout> },
   { path: '/volunteer/dashboard', element: <ProtectedLayout><VolunteerDashboard /></ProtectedLayout> },
   { path: '/volunteer/requests', element: <ProtectedLayout><VolunteerRequests /></ProtectedLayout> },
   { path: '/volunteer/available', element: <ProtectedLayout><VolunteerAvailable /></ProtectedLayout> },
   { path: '/listener/dashboard', element: <ProtectedLayout><ListenerDashboard /></ProtectedLayout> },
+  { path: 'settings', element: <ProtectedLayout><Settings /></ProtectedLayout> },
 
   // Admin Panel (nested)
   {
@@ -182,7 +183,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Professional Portal (nested)
+  // Professional Portal (nested) – ALL professional pages under /professional
   {
     path: '/professional',
     element: <ProtectedRoute><ProfessionalLayout /></ProtectedRoute>,
