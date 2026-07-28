@@ -3,7 +3,7 @@ import { Nav } from 'react-bootstrap';
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
-const Sidebar = () => {
+const Sidebar = ({ onClose }) => {
   const { user } = useAuth();
 
   const menuItems = [
@@ -22,7 +22,6 @@ const Sidebar = () => {
     { icon: '🤝', label: 'Peer Support', path: '/peer-support' },
   ];
 
-  // Role-specific items
   const roleItems = {
     admin: [{ icon: '⚙️', label: 'Admin Panel', path: '/admin' }],
     professional: [{ icon: '👨‍⚕️', label: 'Professional Portal', path: '/professional' }],
@@ -34,6 +33,10 @@ const Sidebar = () => {
   const extraItems = user?.role ? roleItems[user.role] || [] : [];
 
   const allItems = [...menuItems, ...extraItems];
+
+  const handleLinkClick = () => {
+    if (onClose) onClose();
+  };
 
   return (
     <Nav className="flex-column p-3">
@@ -51,6 +54,7 @@ const Sidebar = () => {
             backgroundColor: isActive ? 'var(--color-primary-50)' : 'transparent',
             fontWeight: isActive ? '600' : '400',
           })}
+          onClick={handleLinkClick}
         >
           <span style={{ fontSize: '1.2rem' }}>{item.icon}</span>
           {item.label}
@@ -61,6 +65,7 @@ const Sidebar = () => {
         as={NavLink}
         to="/profile"
         className="d-flex align-items-center gap-2 py-2 px-3 rounded-md"
+        onClick={handleLinkClick}
       >
         <span style={{ fontSize: '1.2rem' }}>👤</span> Profile
       </Nav.Link>
@@ -68,6 +73,7 @@ const Sidebar = () => {
         as={NavLink}
         to="/settings"
         className="d-flex align-items-center gap-2 py-2 px-3 rounded-md"
+        onClick={handleLinkClick}
       >
         <span style={{ fontSize: '1.2rem' }}>⚙️</span> Settings
       </Nav.Link>
