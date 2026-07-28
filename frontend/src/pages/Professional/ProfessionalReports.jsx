@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Table } from 'react-bootstrap';
+import { Container, Row, Col, Spinner } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Bar, Line } from 'react-chartjs-2';
+import { Card, StatCard, ErrorState } from '../../components/ui';
+import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend);
@@ -12,6 +13,7 @@ const ProfessionalReports = () => {
   const [stats, setStats] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     fetchData();
@@ -19,6 +21,7 @@ const ProfessionalReports = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [statsRes, appointmentsRes] = await Promise.all([
         api.get('/professional/reports/stats'),
@@ -27,14 +30,16 @@ const ProfessionalReports = () => {
       setStats(statsRes.data);
       setAppointments(appointmentsRes.data);
     } catch (err) {
+      setError('Failed to load reports.');
       showModal('Error', 'Failed to load reports.');
     } finally {
       setLoading(false);
     }
   };
 
-  if (loading) return <Spinner animation="border" />;
-  if (!stats) return <p>No data.</p>;
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading reports" description={error} onRetry={fetchData} />;
+  if (!stats) return <p className="text-center mt-5">No data.</p>;
 
   // Chart: appointments per month (last 6 months)
   const months = [];
@@ -61,15 +66,15 @@ const ProfessionalReports = () => {
   };
 
   return (
-    <Container>
+    <Container fluid className="px-4">
       <h4>Reports</h4>
-      <Row>
-        <Col md={3}><Card className="text-center p-2"><h6>Total Patients</h6><h3>{stats.total_patients}</h3></Card></Col>
-        <Col md={3}><Card className="text-center p-2"><h6>Total Appointments</h6><h3>{stats.total_appointments}</h3></Card></Col>
-        <Col md={3}><Card className="text-center p-2"><h6>Avg Rating</h6><h3>{stats.avg_rating || 'N/A'}</h3></Card></Col>
-        <Col md={3}><Card className="text-center p-2"><h6>Upcoming</h6><h3>{stats.upcoming}</h3></Card></Col>
+      <Row className="g-3 mb-4">
+        <Col md={3}><StatCard icon="👤" value={stats.total_patients} label="Total Patients" variant="primary" /></Col>
+        <Col md={3}><StatCard icon="📅" value={stats.total_appointments} label="Total Appointments" variant="info" /></Col>
+        <Col md={3}><StatCard icon="⭐" value={stats.avg_rating || 'N/A'} label="Avg Rating" variant="warning" /></Col>
+        <Col md={3}><StatCard icon="⏳" value={stats.upcoming} label="Upcoming" variant="success" /></Col>
       </Row>
-      <Card className="feature-card p-3 mt-3">
+      <Card className="p-3">
         <h6>Appointment Trend (Last 6 Months)</h6>
         <div style={{ height: '250px' }}>
           <Bar data={chartData} options={{ maintainAspectRatio: false }} />
