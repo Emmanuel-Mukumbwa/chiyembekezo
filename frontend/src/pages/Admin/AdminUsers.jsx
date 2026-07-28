@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Table, Button, Badge, Spinner, Form } from 'react-bootstrap';
+import { Container, Spinner, Form } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
+import { Button, Input, DataTable, ErrorState } from '../../components/ui';
 
 const AdminUsers = () => {
   const { showModal } = useModal();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [search]);
 
   const fetchUsers = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/admin/users?search=${search}`);
-      setUsers(res.data.users);
+      setUsers(res.data.users || []);
     } catch (err) {
+      setError('Failed to load users.');
       showModal('Error', 'Failed to load users.');
     } finally {
       setLoading(false);
@@ -28,6 +32,7 @@ const AdminUsers = () => {
   const updateStatus = async (id, field, value) => {
     try {
       await api.put(`/admin/users/${id}`, { [field]: value });
+      showModal('Success', 'User updated.');
       fetchUsers();
     } catch (err) {
       showModal('Error', 'Failed to update user.');
@@ -38,72 +43,76 @@ const AdminUsers = () => {
     if (!window.confirm('Delete this user?')) return;
     try {
       await api.delete(`/admin/users/${id}`);
+      showModal('Success', 'User deleted.');
       fetchUsers();
     } catch (err) {
       showModal('Error', 'Failed to delete user.');
     }
   };
 
-  if (loading) return <Spinner animation="border" />;
+  const columns = [
+    { field: 'id', label: 'ID' },
+    { field: 'email', label: 'Email' },
+    { field: 'first_name', label: 'Name', render: (val, row) => `${row.first_name || ''} ${row.last_name || ''}` },
+    {
+      field: 'is_admin',
+      label: 'Admin',
+      render: (val, row) => (
+        <Form.Check
+          type="checkbox"
+          checked={row.is_admin}
+          onChange={(e) => updateStatus(row.id, 'is_admin', e.target.checked)}
+        />
+      ),
+    },
+    {
+      field: 'is_professional',
+      label: 'Professional',
+      render: (val, row) => (
+        <Form.Check
+          type="checkbox"
+          checked={row.is_professional}
+          onChange={(e) => updateStatus(row.id, 'is_professional', e.target.checked)}
+        />
+      ),
+    },
+    {
+      field: 'is_active',
+      label: 'Active',
+      render: (val, row) => (
+        <Form.Check
+          type="checkbox"
+          checked={row.is_active}
+          onChange={(e) => updateStatus(row.id, 'is_active', e.target.checked)}
+        />
+      ),
+    },
+    {
+      field: 'actions',
+      label: 'Actions',
+      render: (_, row) => (
+        <Button variant="danger" size="sm" onClick={() => deleteUser(row.id)}>Delete</Button>
+      ),
+    },
+  ];
+
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading users" description={error} onRetry={fetchUsers} />;
 
   return (
-    <div>
-      <h4>Users</h4>
-      <Form className="mb-3">
-        <Form.Control
-          placeholder="Search users..."
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Users</h4>
+      <div className="mb-3" style={{ maxWidth: '300px' }}>
+        <Input
+          label="Search Users"
+          name="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && fetchUsers()}
+          placeholder="Search by name or email..."
         />
-      </Form>
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Email</th>
-            <th>Name</th>
-            <th>Admin</th>
-            <th>Professional</th>
-            <th>Active</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {users.map(u => (
-            <tr key={u.id}>
-              <td>{u.id}</td>
-              <td>{u.email}</td>
-              <td>{u.first_name} {u.last_name}</td>
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={u.is_admin}
-                  onChange={(e) => updateStatus(u.id, 'is_admin', e.target.checked)}
-                />
-              </td>
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={u.is_professional}
-                  onChange={(e) => updateStatus(u.id, 'is_professional', e.target.checked)}
-                />
-              </td>
-              <td>
-                <Form.Check
-                  type="checkbox"
-                  checked={u.is_active}
-                  onChange={(e) => updateStatus(u.id, 'is_active', e.target.checked)}
-                />
-              </td>
-              <td>
-                <Button variant="danger" size="sm" onClick={() => deleteUser(u.id)}>Delete</Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
-    </div>
+      </div>
+      <DataTable columns={columns} data={users} keyField="id" />
+    </Container>
   );
 };
 
