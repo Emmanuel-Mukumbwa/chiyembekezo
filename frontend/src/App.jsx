@@ -60,14 +60,16 @@ import AdminLayout from './pages/Admin/AdminLayout';
 import AdminDashboard from './pages/Admin/AdminDashboard';
 import AdminUsers from './pages/Admin/AdminUsers';
 import AdminProfessionals from './pages/Admin/AdminProfessionals';
+import AdminVolunteers from './pages/Admin/AdminVolunteers';
+import AdminOrganizations from './pages/Admin/AdminOrganizations';
+import AdminApplications from './pages/Admin/AdminApplications';
+import AdminInvitations from './pages/Admin/AdminInvitations';
 import AdminArticles from './pages/Admin/AdminArticles';
 import AdminResources from './pages/Admin/AdminResources';
 import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
-import AdminAnalytics from './pages/Admin/AdminAnalytics';
-import AdminVolunteers from './pages/Admin/AdminVolunteers';
-import AdminOrganizations from './pages/Admin/AdminOrganizations';
 import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
+import AdminAnalytics from './pages/Admin/AdminAnalytics';
 
 // Professional Portal
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -101,7 +103,6 @@ const ProtectedLayout = ({ children }) => (
   </ProtectedRoute>
 );
 
-// ---- Create router ----
 const router = createBrowserRouter([
   // Public routes
   { path: '/', element: <PublicLayout><Home /></PublicLayout> },
@@ -170,6 +171,8 @@ const router = createBrowserRouter([
       { path: 'professionals', element: <AdminProfessionals /> },
       { path: 'volunteers', element: <AdminVolunteers /> },
       { path: 'organizations', element: <AdminOrganizations /> },
+      { path: 'applications', element: <AdminApplications /> },
+      { path: 'invitations', element: <AdminInvitations /> },
       { path: 'articles', element: <AdminArticles /> },
       { path: 'resources', element: <AdminResources /> },
       { path: 'appointments', element: <AdminAppointments /> },
