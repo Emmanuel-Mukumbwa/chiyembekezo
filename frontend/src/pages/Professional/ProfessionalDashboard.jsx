@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Container, Row, Col, Badge, Spinner, Table } from 'react-bootstrap';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
@@ -10,15 +10,14 @@ import { Card, Button, StatCard } from '../../components/ui';
 const ProfessionalDashboard = () => {
   const { logout } = useAuth();
   const { showModal } = useModal();
-  const navigate = useNavigate();
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Block navigation to /login with confirmation
   usePrompt(
     () => {
       logout();
-      navigate('/login');
+      window.location.href = '/login';
     },
     () => {}
   );
@@ -29,26 +28,17 @@ const ProfessionalDashboard = () => {
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/professional/dashboard');
       setDashboardData(res.data);
     } catch (err) {
       const msg = err.response?.data?.error || 'Failed to load dashboard.';
+      setError(msg);
       showModal('Error', msg);
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    showModal(
-      'Confirm Logout',
-      'Are you sure you want to logout?',
-      () => {
-        logout();
-        navigate('/login');
-      }
-    );
   };
 
   if (loading) {
@@ -59,10 +49,10 @@ const ProfessionalDashboard = () => {
     );
   }
 
-  if (!dashboardData) {
+  if (error || !dashboardData) {
     return (
       <Container className="my-5 text-center">
-        <p>No professional data found.</p>
+        <p>{error || 'No professional data found.'}</p>
         <Button as={Link} to="/profile" variant="primary">Update Profile</Button>
       </Container>
     );
@@ -77,7 +67,6 @@ const ProfessionalDashboard = () => {
           <h2 className="fw-bold">Professional Dashboard</h2>
           {!professional.isVerified && <Badge bg="warning" className="mt-1">⚠️ Not Verified</Badge>}
         </div>
-        <Button variant="outline-danger" size="sm" onClick={handleLogout}>Logout</Button>
       </div>
 
       <Row className="g-3 mb-4">
@@ -136,7 +125,6 @@ const ProfessionalDashboard = () => {
               <Button as={Link} to="/professional/availability" variant="outline-primary">Manage Availability</Button>
               <Button as={Link} to="/profile" variant="outline-secondary">Edit Profile</Button>
               <Button as={Link} to="/professional/patients" variant="outline-secondary">View Patients</Button>
-              <Button variant="outline-danger" onClick={handleLogout}>Logout</Button>
             </div>
           </Card>
         </Col>
