@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Spinner, Badge } from 'react-bootstrap';
+import { Container, Spinner, Badge, Button } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Button, DataTable, ErrorState } from '../../components/ui';
+import { DataTable, ErrorState } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminCommunity = () => {
   const { showModal } = useModal();
@@ -79,7 +80,10 @@ const AdminCommunity = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Community Posts</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Community Posts</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <DataTable columns={columns} data={posts} keyField="id" />
     </Container>
   );
