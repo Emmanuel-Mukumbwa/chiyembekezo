@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button, Card, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, ProgressBar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button } from '../../components/ui';
 
 const Burnout = () => {
   const navigate = useNavigate();
@@ -46,7 +47,7 @@ const Burnout = () => {
     try {
       const payload = {
         userId: user?.id || null,
-        type: 'cbi',  // note: type is 'cbi' for backend
+        type: 'cbi',
         answers: finalAnswers,
       };
       const res = await api.post('/assessments/submit', payload);
