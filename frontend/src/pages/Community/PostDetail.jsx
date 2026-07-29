@@ -1,21 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Button, Form, Spinner, Badge, Row, Col } from 'react-bootstrap';
+import { Container, Card, Form, Spinner, Badge, Row, Col } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button, Input, Textarea, ErrorState } from '../../components/ui';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
 const PostDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const { showModal } = useModal();
+  const { showModal } = useModal(); 
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
   const [reactions, setReactions] = useState({});
   const [userReaction, setUserReaction] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [commentText, setCommentText] = useState('');
   const [commentAnonymous, setCommentAnonymous] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -23,6 +25,7 @@ const PostDetail = () => {
 
   const fetchPost = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/community/posts/${id}`);
       setPost(res.data.post);
@@ -30,6 +33,7 @@ const PostDetail = () => {
       setReactions(res.data.reaction_counts || {});
       setUserReaction(res.data.user_reaction || null);
     } catch (err) {
+      setError('Post not found.');
       showModal('Error', 'Post not found.');
       navigate('/community');
     } finally {
@@ -39,10 +43,6 @@ const PostDetail = () => {
 
   useEffect(() => {
     fetchPost();
-    // Check bookmark status if logged in
-    if (user) {
-      // We'll have a separate endpoint or we can check from a list
-    }
   }, [id, user]);
 
   const handleReaction = async (type) => {
@@ -52,7 +52,7 @@ const PostDetail = () => {
     }
     try {
       await api.post(`/community/posts/${id}/reactions`, { reaction: type });
-      fetchPost(); // refresh
+      fetchPost();
     } catch (err) {
       showModal('Error', 'Failed to react.');
     }
@@ -66,6 +66,7 @@ const PostDetail = () => {
     try {
       await api.post(`/community/posts/${id}/bookmark`);
       setIsBookmarked(!isBookmarked);
+      showModal('Success', isBookmarked ? 'Bookmark removed.' : 'Bookmark added.');
     } catch (err) {
       showModal('Error', 'Failed to toggle bookmark.');
     }
@@ -86,6 +87,7 @@ const PostDetail = () => {
       });
       setCommentText('');
       fetchPost();
+      showModal('Success', 'Comment added.');
     } catch (err) {
       showModal('Error', 'Failed to post comment.');
     } finally {
@@ -93,12 +95,15 @@ const PostDetail = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading post" description={error} onRetry={fetchPost} />;
   if (!post) return <p>Post not found.</p>;
 
   return (
     <Container className="my-5">
-      <Button as={Link} to="/community" variant="outline-secondary" className="mb-3">← Back to Community</Button>
+      <Button as={Link} to="/community" variant="outline-secondary" className="mb-3">
+        ← Back to Community
+      </Button>
 
       <Card className="feature-card p-4 mb-4">
         <div className="d-flex justify-content-between align-items-start">
@@ -133,32 +138,29 @@ const PostDetail = () => {
         </div>
       </Card>
 
-      {/* Comments */}
       <h5>Comments ({comments.length})</h5>
       {user && (
         <Card className="feature-card p-3 mb-3">
-          <Form onSubmit={handleCommentSubmit}>
-            <Form.Group className="mb-2">
-              <Form.Control
-                as="textarea"
-                rows={3}
-                placeholder="Write a comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-            </Form.Group>
-            <Form.Group className="mb-2">
-              <Form.Check
-                type="checkbox"
-                label="Comment anonymously"
-                checked={commentAnonymous}
-                onChange={(e) => setCommentAnonymous(e.target.checked)}
-              />
-            </Form.Group>
+          <form onSubmit={handleCommentSubmit}>
+            <Textarea
+              label="Write a comment"
+              name="comment"
+              rows={3}
+              value={commentText}
+              onChange={(e) => setCommentText(e.target.value)}
+              placeholder="Share your thoughts..."
+            />
+            <Form.Check
+              type="checkbox"
+              label="Comment anonymously"
+              checked={commentAnonymous}
+              onChange={(e) => setCommentAnonymous(e.target.checked)}
+              className="mb-2"
+            />
             <Button type="submit" variant="primary" disabled={submitting}>
               {submitting ? 'Posting...' : 'Post Comment'}
             </Button>
-          </Form>
+          </form>
         </Card>
       )}
       {comments.length === 0 ? (
