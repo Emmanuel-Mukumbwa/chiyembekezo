@@ -1493,3 +1493,168 @@ CREATE TABLE IF NOT EXISTS invitations (
 
 -- Add listener flag to volunteer_listeners
 ALTER TABLE volunteer_listeners ADD COLUMN is_listener BOOLEAN DEFAULT FALSE;
+
+-- =============================================
+-- Wellness Admin Tables
+-- =============================================
+
+-- Meditations table
+CREATE TABLE IF NOT EXISTS meditations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    duration INT NOT NULL, -- in minutes
+    description TEXT,
+    audio_url VARCHAR(500),
+    image_url VARCHAR(500),
+    narrator VARCHAR(100),
+    background_sound VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Relaxation Sounds table
+CREATE TABLE IF NOT EXISTS relaxation_sounds (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(10),
+    color VARCHAR(20),
+    audio_url VARCHAR(500),
+    image_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert sample meditation data
+INSERT INTO meditations (title, category, duration, description, narrator) VALUES
+('Quick Calm', 'Quick', 2, 'A fast reset for when you need immediate calm.', 'Female'),
+('Relax', 'Relax', 5, 'Gentle guidance to release tension.', 'Male'),
+('Sleep', 'Sleep', 10, 'Wind down for deep, restful sleep.', 'Female'),
+('Stress Relief', 'Stress Relief', 15, 'Release stress and find your centre.', 'Male'),
+('Anxiety Release', 'Anxiety', 15, 'Calm anxious thoughts with soothing guidance.', 'Female'),
+('Gratitude', 'Gratitude', 10, 'Cultivate appreciation and positivity.', 'Male');
+
+-- Insert sample relaxation sounds
+INSERT INTO relaxation_sounds (name, icon, color) VALUES
+('Rain', '🌧', '#4a90d9'),
+('Forest', '🌲', '#2d7d2d'),
+('Ocean', '🌊', '#1e6f8f'),
+('Fireplace', '🔥', '#b85a1a'),
+('Night', '🌙', '#2c3e50'),
+('Birds', '🐦', '#6a9fb5'),
+('Piano', '🎹', '#8b6b4d'),
+('White Noise', '🤍', '#a0a0a0');
+
+-- Verify data
+SELECT 'Meditations table:' as '';
+SELECT * FROM meditations;
+
+SELECT 'Relaxation Sounds table:' as '';
+SELECT * FROM relaxation_sounds;-- =============================================
+-- Wellness Admin Tables
+-- =============================================
+
+-- Meditations table
+CREATE TABLE IF NOT EXISTS meditations (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    category VARCHAR(100) NOT NULL,
+    duration INT NOT NULL, -- in minutes
+    description TEXT,
+    audio_url VARCHAR(500),
+    image_url VARCHAR(500),
+    narrator VARCHAR(100),
+    background_sound VARCHAR(100),
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Relaxation Sounds table
+CREATE TABLE IF NOT EXISTS relaxation_sounds (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    icon VARCHAR(10),
+    color VARCHAR(20),
+    audio_url VARCHAR(500),
+    image_url VARCHAR(500),
+    is_active BOOLEAN DEFAULT TRUE,
+    sort_order INT DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Insert sample meditation data
+INSERT INTO meditations (title, category, duration, description, narrator) VALUES
+('Quick Calm', 'Quick', 2, 'A fast reset for when you need immediate calm.', 'Female'),
+('Relax', 'Relax', 5, 'Gentle guidance to release tension.', 'Male'),
+('Sleep', 'Sleep', 10, 'Wind down for deep, restful sleep.', 'Female'),
+('Stress Relief', 'Stress Relief', 15, 'Release stress and find your centre.', 'Male'),
+('Anxiety Release', 'Anxiety', 15, 'Calm anxious thoughts with soothing guidance.', 'Female'),
+('Gratitude', 'Gratitude', 10, 'Cultivate appreciation and positivity.', 'Male');
+
+-- Insert sample relaxation sounds
+INSERT INTO relaxation_sounds (name, icon, color) VALUES
+('Rain', '🌧', '#4a90d9'),
+('Forest', '🌲', '#2d7d2d'),
+('Ocean', '🌊', '#1e6f8f'),
+('Fireplace', '🔥', '#b85a1a'),
+('Night', '🌙', '#2c3e50'),
+('Birds', '🐦', '#6a9fb5'),
+('Piano', '🎹', '#8b6b4d'),
+('White Noise', '🤍', '#a0a0a0'); 
+
+-- Verify data
+SELECT 'Meditations table:' as '';
+SELECT * FROM meditations;
+
+SELECT 'Relaxation Sounds table:' as '';
+SELECT * FROM relaxation_sounds;
+
+
+
+
+
+
+
+-- Insert sample categories
+INSERT INTO categories (name, slug, description) VALUES
+('Anxiety', 'anxiety', 'Resources for managing anxiety and worry.'),
+('Depression', 'depression', 'Resources for understanding and coping with depression.'),
+('Sleep', 'sleep', 'Improve your sleep hygiene and rest.'),
+('Stress', 'stress', 'Techniques to reduce and manage stress.'),
+('Parenting', 'parenting', 'Support for parents and caregivers.'),
+('Students', 'students', 'Mental wellness for students and exam stress.'),
+('Self Care', 'self-care', 'Practices for self-care and wellbeing.'),
+('Workplace', 'workplace', 'Mental health at work and burnout prevention.'),
+('Financial Stress', 'financial-stress', 'Managing financial anxiety and pressure.')
+ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+-- Insert sample resources
+INSERT INTO resources (title, slug, type, description, category_id, is_published, view_count) VALUES
+('Managing Anxiety', 'managing-anxiety', 'article', 'Learn practical techniques to reduce anxiety and regain calm.', (SELECT id FROM categories WHERE slug='anxiety' LIMIT 1), 1, 0),
+('Understanding Depression', 'understanding-depression', 'article', 'What depression looks like and how to get help.', (SELECT id FROM categories WHERE slug='depression' LIMIT 1), 1, 0),
+('Better Sleep Habits', 'better-sleep-habits', 'video', 'A guided meditation for restful sleep.', (SELECT id FROM categories WHERE slug='sleep' LIMIT 1), 1, 0),
+('Stress Management Workbook', 'stress-management-workbook', 'pdf', 'Downloadable PDF with exercises to manage stress.', (SELECT id FROM categories WHERE slug='stress' LIMIT 1), 1, 0),
+('Parenting Teens with Anxiety', 'parenting-teens-anxiety', 'article', 'Tips for supporting your teenager through anxiety.', (SELECT id FROM categories WHERE slug='parenting' LIMIT 1), 1, 0),
+('Exam Stress Relief', 'exam-stress-relief', 'video', 'Quick breathing exercise for students during exams.', (SELECT id FROM categories WHERE slug='students' LIMIT 1), 1, 0)
+ON DUPLICATE KEY UPDATE title = VALUES(title);
+
+-- =============================================
+-- Add organization support to resources
+-- =============================================
+
+-- 1. Add organization_id column for future org-owned content
+ALTER TABLE resources ADD COLUMN organization_id INT NULL;
+ALTER TABLE resources ADD FOREIGN KEY (organization_id) REFERENCES organizations(id) ON DELETE SET NULL;
+
+-- 2. Ensure tags column is JSON
+ALTER TABLE resources MODIFY tags JSON NULL;
+
+-- 3. Verify
+SHOW COLUMNS FROM resources;
