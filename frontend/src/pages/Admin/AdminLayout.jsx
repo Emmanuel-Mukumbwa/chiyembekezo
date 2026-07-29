@@ -31,13 +31,14 @@ const AdminLayout = () => {
     { path: '/appointments', label: 'Appointments', icon: '📅' },
     { path: '/community', label: 'Community', icon: '💬' },
     { path: '/peer-support', label: 'Peer Support', icon: '🤝' },
+    { path: '/emergency-contacts', label: 'Emergency Contacts', icon: '🚨' },
     { path: '/analytics', label: 'Analytics', icon: '📈' },
   ];
 
   return (
     <Container fluid className="my-4">
       <Row>
-        {/* Desktop sidebar – always visible */}
+        {/* Desktop sidebar */}
         <Col md={3} lg={2} className="d-none d-md-block bg-light p-3" style={{ minHeight: '80vh' }}>
           <div className="d-flex justify-content-between align-items-center mb-3">
             <h5 className="mb-0">Admin Panel</h5>
@@ -80,7 +81,7 @@ const AdminLayout = () => {
           />
         )}
 
-        {/* Mobile sidebar (slide-in) */}
+        {/* Mobile sidebar */}
         <div
           className="d-md-none bg-light p-3"
           style={{
@@ -122,7 +123,6 @@ const AdminLayout = () => {
 
         {/* Main content */}
         <Col md={9} lg={10} className="p-3 p-md-4">
-          {/* Hamburger button – only on mobile */}
           <Button
             variant="outline-primary"
             size="sm"
