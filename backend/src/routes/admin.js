@@ -14,6 +14,7 @@ const appointmentController = require('../controllers/admin/appointmentControlle
 const communityController = require('../controllers/admin/communityController');
 const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
+const emergencyController = require('../controllers/admin/emergencyController');
 
 // Application and Invitation controllers
 const applicationController = require('../controllers/applicationController');
@@ -42,6 +43,7 @@ router.delete('/users/:id', userController.deleteUser);
 // ===== Professionals =====
 router.get('/professionals', professionalController.getProfessionals);
 router.put('/professionals/:id/verify', professionalController.verifyProfessional);
+router.delete('/professionals/:id', professionalController.deleteProfessional);
 
 // ===== Volunteers =====
 router.get('/volunteers', volunteerController.getVolunteers);
@@ -101,5 +103,11 @@ router.get('/wellness/sounds', wellnessController.getSounds);
 router.post('/wellness/sounds', wellnessController.createSound);
 router.put('/wellness/sounds/:id', wellnessController.updateSound);
 router.delete('/wellness/sounds/:id', wellnessController.deleteSound);
+
+// ===== Emergency Contacts =====
+router.get('/emergency-contacts', emergencyController.getAll);
+router.post('/emergency-contacts', emergencyController.create);
+router.put('/emergency-contacts/:id', emergencyController.update);
+router.delete('/emergency-contacts/:id', emergencyController.delete);
 
 module.exports = router;
