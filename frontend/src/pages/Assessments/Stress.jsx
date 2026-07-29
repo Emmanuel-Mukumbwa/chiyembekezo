@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Button, Card, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, ProgressBar } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
+import { Button } from '../../components/ui';
 
 const Stress = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showModal } = useModal();
   const [currentQ, setCurrentQ] = useState(0);
   const [answers, setAnswers] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -54,7 +57,7 @@ const Stress = () => {
       const res = await api.post('/assessments/submit', payload);
       navigate('/assessments/result', { state: res.data });
     } catch (err) {
-      alert('Error submitting assessment. Please try again.');
+      showModal('Error', 'Error submitting assessment. Please try again.');
       setLoading(false);
     }
   };
