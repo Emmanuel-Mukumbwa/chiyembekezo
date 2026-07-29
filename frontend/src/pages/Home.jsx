@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Row, Col, Accordion, Carousel } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useModal } from '../context/ModalContext';
 import {
   Button,
   Card,
@@ -10,10 +11,26 @@ import {
   FeatureCard,
   EmergencyCard,
 } from '../components/ui';
+import api from '../services/api';
 import '../styles/custom.css';
 
 const Home = () => {
   const { user } = useAuth();
+  const { showModal } = useModal();
+  const [featuredContacts, setFeaturedContacts] = useState([]);
+
+  // Fetch featured emergency contacts
+  useEffect(() => {
+    const fetchEmergencyContacts = async () => {
+      try {
+        const res = await api.get('/professionals/emergency/contacts');
+        setFeaturedContacts(res.data.featured || []);
+      } catch (err) {
+        console.error('Failed to fetch emergency contacts:', err);
+      }
+    };
+    fetchEmergencyContacts();
+  }, []);
 
   // Breathing exercise
   const [isBreathing, setIsBreathing] = useState(false);
@@ -47,8 +64,6 @@ const Home = () => {
     if (breathPhase === 'exhale' || breathPhase === 'hold2') return 'exhale';
     return '';
   };
-
-  const [showEmergencyBannerModal, setShowEmergencyBannerModal] = useState(false);
 
   const faqs = [
     { question: "What is Chiyembekezo?", answer: "Chiyembekezo is a digital platform that provides mental wellness resources, self-assessments, and support for people in Malawi. Our goal is to make mental health help accessible and reduce stigma." },
@@ -93,15 +108,12 @@ const Home = () => {
 
   return (
     <main>
-      {/* Emergency Banner */}
+      {/* Emergency Banner – fully DB-driven */}
       <Container className="my-4">
         <EmergencyCard
           title="Need immediate help?"
           description="If you're in crisis, don't face it alone."
-          helplines={[
-            { name: 'Police', phone: '999' },
-            { name: 'Child Helpline', phone: '116' },
-          ]}
+          helplines={featuredContacts.map(c => ({ name: c.name, phone: c.phone }))}
           onCall={(phone) => window.location.href = `tel:${phone}`}
           onOpenEmergency={() => window.location.href = '/emergency'}
         />
@@ -327,36 +339,6 @@ const Home = () => {
           Create Free Account
         </Button>
       </Container>
-
-      {/* Emergency Modal */}
-      <div
-        className="modal fade show"
-        style={{ display: showEmergencyBannerModal ? 'block' : 'none', background: 'rgba(0,0,0,0.5)' }}
-        onClick={() => setShowEmergencyBannerModal(false)}
-      >
-        <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
-          <div className="modal-content">
-            <div className="modal-header">
-              <h5 className="modal-title">🚨 Immediate Help</h5>
-              <button type="button" className="btn-close" onClick={() => setShowEmergencyBannerModal(false)}></button>
-            </div>
-            <div className="modal-body">
-              <p className="fw-bold">If you are in immediate danger, call <span className="text-danger">999</span> (Police) or go to your nearest hospital.</p>
-              <hr />
-              <h6>Trusted Helplines in Malawi</h6>
-              <ul className="list-unstyled">
-                <li><strong>Mental Health Helpline:</strong> +265 999 123 456</li>
-                <li><strong>Child Helpline:</strong> 116 (toll-free)</li>
-                <li><strong>Domestic Violence Support:</strong> +265 888 123 456</li>
-              </ul>
-              <p className="mb-0">Talk to someone you trust. You are not alone.</p>
-            </div>
-            <div className="modal-footer">
-              <Button variant="secondary" onClick={() => setShowEmergencyBannerModal(false)}>Close</Button>
-            </div>
-          </div>
-        </div>
-      </div>
     </main>
   );
 };
