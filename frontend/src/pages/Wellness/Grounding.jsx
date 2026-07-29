@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Container, Card, Button, Form, ProgressBar, Row, Col } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button } from '../../components/ui';
 import api from '../../services/api';
 
 const exercises = {
@@ -103,7 +104,7 @@ const Grounding = () => {
     try {
       await api.post('/wellness/grounding/complete', {
         session_name: exercises[selected].name,
-        duration_seconds: 120 + step * 30, // approximate
+        duration_seconds: 120 + step * 30,
         mood_before: moodBefore,
         mood_after: moodAfter,
       });
