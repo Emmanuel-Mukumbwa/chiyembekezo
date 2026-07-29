@@ -11,7 +11,7 @@ process.on('unhandledRejection', (reason) => {
 require('dotenv').config();
 
 const express = require('express');
-const cors = require('cors'); 
+const cors = require('cors');
 const helmet = require('helmet');
 
 // Import custom logger and middlewares
@@ -40,6 +40,7 @@ const adminRoutes = require('./routes/admin');
 const organizationRoutes = require('./routes/organization');
 const peerSupportRoutes = require('./routes/peerSupport');
 const publicOrgRoutes = require('./routes/organizations');
+const orgResourceRoutes = require('./routes/organizationResources');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -76,7 +77,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/organization', organizationRoutes);
 app.use('/api/peer-support', peerSupportRoutes);
 app.use('/api/organizations', publicOrgRoutes);
- 
+app.use('/api/organization/resources', orgResourceRoutes);
+
 // ---- Error handling ----
 app.use(errorLogger);
 
