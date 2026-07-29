@@ -73,6 +73,7 @@ import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
+import AdminEmergencyContacts from './pages/Admin/AdminEmergencyContacts';
 
 // Professional Portal
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -186,11 +187,12 @@ const router = createBrowserRouter([
       { path: 'appointments', element: <AdminAppointments /> },
       { path: 'community', element: <AdminCommunity /> },
       { path: 'peer-support', element: <AdminPeerSupport /> },
+      { path: 'emergency-contacts', element: <AdminEmergencyContacts /> },
       { path: 'analytics', element: <AdminAnalytics /> },
     ],
   },
 
-  // Professional Portal (nested) – ALL professional pages under /professional
+  // Professional Portal (nested)
   {
     path: '/professional',
     element: <ProtectedRoute><ProfessionalLayout /></ProtectedRoute>,
