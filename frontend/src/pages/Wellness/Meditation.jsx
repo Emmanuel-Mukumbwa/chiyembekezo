@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button } from '../../components/ui';
 import api from '../../services/api';
 
 const Meditation = () => {
@@ -118,7 +119,7 @@ const Meditation = () => {
                       <div
                         className="progress-bar bg-primary"
                         style={{ width: `${progress}%` }}
-                      ></div>
+                      />
                     </div>
                   </div>
                   <Button variant="danger" onClick={stopMeditation}>Stop</Button>
