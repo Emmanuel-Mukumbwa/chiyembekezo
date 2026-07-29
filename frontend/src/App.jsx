@@ -67,6 +67,8 @@ import AdminApplications from './pages/Admin/AdminApplications';
 import AdminInvitations from './pages/Admin/AdminInvitations';
 import AdminArticles from './pages/Admin/AdminArticles';
 import AdminResources from './pages/Admin/AdminResources';
+import AdminResourcesCreate from './pages/Admin/AdminResourcesCreate';
+import AdminResourcesEdit from './pages/Admin/AdminResourcesEdit';
 import AdminAppointments from './pages/Admin/AdminAppointments';
 import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
@@ -85,6 +87,9 @@ import OrganizationLayout from './pages/Organization/OrganizationLayout';
 import OrganizationDashboard from './pages/Organization/OrganizationDashboard';
 import OrganizationMembers from './pages/Organization/OrganizationMembers';
 import OrganizationInsights from './pages/Organization/OrganizationInsights';
+import OrganizationResources from './pages/Organization/OrganizationResources';
+import OrganizationResourceCreate from './pages/Organization/OrganizationResourceCreate';
+import OrganizationResourceEdit from './pages/Organization/OrganizationResourceEdit';
 
 // Context & Providers
 import ProtectedRoute from './components/ProtectedRoute';
@@ -176,6 +181,8 @@ const router = createBrowserRouter([
       { path: 'invitations', element: <AdminInvitations /> },
       { path: 'articles', element: <AdminArticles /> },
       { path: 'resources', element: <AdminResources /> },
+      { path: 'resources/create', element: <AdminResourcesCreate /> },
+      { path: 'resources/edit/:id', element: <AdminResourcesEdit /> },
       { path: 'appointments', element: <AdminAppointments /> },
       { path: 'community', element: <AdminCommunity /> },
       { path: 'peer-support', element: <AdminPeerSupport /> },
@@ -206,6 +213,9 @@ const router = createBrowserRouter([
       { index: true, element: <OrganizationDashboard /> },
       { path: 'members', element: <OrganizationMembers /> },
       { path: 'insights', element: <OrganizationInsights /> },
+      { path: 'resources', element: <OrganizationResources /> },
+      { path: 'resources/create', element: <OrganizationResourceCreate /> },
+      { path: 'resources/edit/:id', element: <OrganizationResourceEdit /> },
     ],
   },
 ]);
