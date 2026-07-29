@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Badge, Dropdown } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Spinner, Badge, Modal } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button, Input, Select, Textarea, EmptyState, ErrorState } from '../../components/ui';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -14,9 +15,11 @@ const CommunityHome = () => {
   const [pinnedPosts, setPinnedPosts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ category: '', sort: 'recent' });
   const [showNewPost, setShowNewPost] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', content: '', categoryId: '', isAnonymous: true });
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     fetchCategories();
@@ -28,18 +31,20 @@ const CommunityHome = () => {
       const res = await api.get('/community/categories');
       setCategories(res.data);
     } catch (err) {
-      console.error(err);
+      console.error('Failed to fetch categories:', err);
     }
   };
 
   const fetchPosts = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams(filters);
       const res = await api.get(`/community/posts?${params}`);
       setPinnedPosts(res.data.pinned || []);
       setPosts(res.data.posts || []);
     } catch (err) {
+      setError('Failed to load posts.');
       showModal('Error', 'Failed to load posts.');
     } finally {
       setLoading(false);
@@ -48,6 +53,7 @@ const CommunityHome = () => {
 
   const handleCreatePost = async (e) => {
     e.preventDefault();
+    setSubmitting(true);
     try {
       await api.post('/community/posts', newPost);
       showModal('Success', 'Post created!');
@@ -56,13 +62,16 @@ const CommunityHome = () => {
       fetchPosts();
     } catch (err) {
       showModal('Error', err.response?.data?.error || 'Failed to create post.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  if (loading && posts.length === 0) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  if (loading && posts.length === 0) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (error) return <ErrorState title="Error loading community" description={error} onRetry={fetchPosts} />;
 
   return (
-    <Container className="my-5">
+    <Container fluid className="px-4 my-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Community</h2>
         {user && (
@@ -76,27 +85,29 @@ const CommunityHome = () => {
       <Card className="feature-card p-3 mb-4">
         <Row className="g-3 align-items-end">
           <Col md={4}>
-            <Form.Label>Category</Form.Label>
-            <Form.Select
+            <Select
+              label="Category"
+              name="category"
               value={filters.category}
+              options={[
+                { value: '', label: 'All Categories' },
+                ...categories.map(cat => ({ value: cat.id, label: cat.name })),
+              ]}
               onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            >
-              <option value="">All Categories</option>
-              {categories.map(cat => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </Form.Select>
+            />
           </Col>
           <Col md={3}>
-            <Form.Label>Sort By</Form.Label>
-            <Form.Select
+            <Select
+              label="Sort By"
+              name="sort"
               value={filters.sort}
+              options={[
+                { value: 'recent', label: 'Most Recent' },
+                { value: 'popular', label: 'Most Popular' },
+                { value: 'most_commented', label: 'Most Discussed' },
+              ]}
               onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
-            >
-              <option value="recent">Most Recent</option>
-              <option value="popular">Most Popular</option>
-              <option value="most_commented">Most Discussed</option>
-            </Form.Select>
+            />
           </Col>
           <Col md={2}>
             <Button variant="primary" onClick={fetchPosts}>Apply</Button>
@@ -111,7 +122,7 @@ const CommunityHome = () => {
           {pinnedPosts.map(post => (
             <Card key={post.id} className="feature-card mb-2">
               <Card.Body>
-                <Link to={`/community/post/${post.id}`} style={{ textDecoration: 'none' }}>
+                <Link to={`/community/post/${post.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <h6>{post.title}</h6>
                   <div className="small text-muted">
                     {post.author_name} · {formatDistanceToNow(new Date(post.created_at))} ago
@@ -126,7 +137,13 @@ const CommunityHome = () => {
 
       {/* Posts List */}
       {posts.length === 0 ? (
-        <p className="text-muted">No posts yet. Be the first!</p>
+        <EmptyState
+          icon="💬"
+          title="No posts yet"
+          description="Be the first to start a conversation."
+          actionText={user ? 'Create Post' : 'Login to Post'}
+          onAction={() => user ? setShowNewPost(true) : navigate('/login')}
+        />
       ) : (
         posts.map(post => (
           <Card key={post.id} className="feature-card mb-3">
@@ -148,63 +165,50 @@ const CommunityHome = () => {
       )}
 
       {/* New Post Modal */}
-      {showNewPost && (
-        <div className="modal show d-block" style={{ background: 'rgba(0,0,0,0.5)' }} onClick={() => setShowNewPost(false)}>
-          <div className="modal-dialog modal-dialog-centered" onClick={e => e.stopPropagation()}>
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">Create New Post</h5>
-                <button className="btn-close" onClick={() => setShowNewPost(false)}></button>
-              </div>
-              <form onSubmit={handleCreatePost}>
-                <div className="modal-body">
-                  <Form.Group className="mb-3">
-                    <Form.Label>Title</Form.Label>
-                    <Form.Control
-                      required
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Category</Form.Label>
-                    <Form.Select
-                      required
-                      value={newPost.categoryId}
-                      onChange={(e) => setNewPost({ ...newPost, categoryId: e.target.value })}
-                    >
-                      <option value="">Select category</option>
-                      {categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}
-                    </Form.Select>
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Label>Content</Form.Label>
-                    <Form.Control
-                      as="textarea"
-                      rows={5}
-                      required
-                      value={newPost.content}
-                      onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                    />
-                  </Form.Group>
-                  <Form.Group className="mb-3">
-                    <Form.Check
-                      type="checkbox"
-                      label="Post anonymously"
-                      checked={newPost.isAnonymous}
-                      onChange={(e) => setNewPost({ ...newPost, isAnonymous: e.target.checked })}
-                    />
-                  </Form.Group>
-                </div>
-                <div className="modal-footer">
-                  <Button variant="secondary" onClick={() => setShowNewPost(false)}>Cancel</Button>
-                  <Button variant="primary" type="submit">Post</Button>
-                </div>
-              </form>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal show={showNewPost} onHide={() => setShowNewPost(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Create New Post</Modal.Title>
+        </Modal.Header>
+        <form onSubmit={handleCreatePost}>
+          <Modal.Body>
+            <Input
+              label="Title"
+              name="title"
+              value={newPost.title}
+              onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+              required
+            />
+            <Select
+              label="Category"
+              name="categoryId"
+              value={newPost.categoryId}
+              options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
+              onChange={(e) => setNewPost({ ...newPost, categoryId: e.target.value })}
+              required
+            />
+            <Textarea
+              label="Content"
+              name="content"
+              rows={5}
+              value={newPost.content}
+              onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
+              required
+            />
+            <Form.Check
+              type="checkbox"
+              label="Post anonymously"
+              checked={newPost.isAnonymous}
+              onChange={(e) => setNewPost({ ...newPost, isAnonymous: e.target.checked })}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowNewPost(false)}>Cancel</Button>
+            <Button variant="primary" type="submit" disabled={submitting}>
+              {submitting ? 'Posting...' : 'Post'}
+            </Button>
+          </Modal.Footer>
+        </form>
+      </Modal>
     </Container>
   );
 };
