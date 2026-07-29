@@ -15,14 +15,17 @@ const communityController = require('../controllers/admin/communityController');
 const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
 
-// NEW: Application and Invitation controllers
+// Application and Invitation controllers
 const applicationController = require('../controllers/applicationController');
 const invitationController = require('../controllers/invitationController');
+
+// Wellness controllers
+const wellnessController = require('../controllers/admin/wellnessController');
 
 // Apply authentication and admin check to ALL routes
 router.use(auth, isAdmin);
 
-// Test endpoint – returns user admin status
+// Test endpoint
 router.get('/check', (req, res) => {
   res.json({
     message: 'Admin access confirmed',
@@ -58,6 +61,9 @@ router.delete('/articles/:id', articleController.deleteArticle);
 
 // ===== Resources =====
 router.get('/resources', resourceController.getResources);
+router.get('/resources/:id', resourceController.getResourceById);
+router.post('/resources', resourceController.createResource);
+router.put('/resources/:id', resourceController.updateResource);
 router.put('/resources/:id/publish', resourceController.publishResource);
 router.delete('/resources/:id', resourceController.deleteResource);
 
@@ -84,5 +90,16 @@ router.post('/invitations', invitationController.sendInvitation);
 
 // ===== Analytics =====
 router.get('/analytics', analyticsController.getStats);
+
+// ===== Wellness Content =====
+router.get('/wellness/meditations', wellnessController.getMeditations);
+router.post('/wellness/meditations', wellnessController.createMeditation);
+router.put('/wellness/meditations/:id', wellnessController.updateMeditation);
+router.delete('/wellness/meditations/:id', wellnessController.deleteMeditation);
+
+router.get('/wellness/sounds', wellnessController.getSounds);
+router.post('/wellness/sounds', wellnessController.createSound);
+router.put('/wellness/sounds/:id', wellnessController.updateSound);
+router.delete('/wellness/sounds/:id', wellnessController.deleteSound);
 
 module.exports = router;
