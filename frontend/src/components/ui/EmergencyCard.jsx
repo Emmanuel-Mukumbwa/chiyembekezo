@@ -27,26 +27,20 @@ const EmergencyCard = ({
         </div>
       </div>
       <div className="d-flex flex-wrap gap-2 mt-2 mt-md-0">
-        {helplines.map((h, idx) => (
-          <Button
-            key={idx}
-            variant="danger"
-            size="sm"
-            onClick={() => onCall?.(h.phone)}
-            className="shadow-sm"
-          >
-            📞 {h.name}
-          </Button>
-        ))}
-        {helplines.length === 0 && (
-          <>
-            <Button variant="danger" size="sm" onClick={() => onCall?.('999')} className="shadow-sm">
-              📞 Police
+        {helplines.length > 0 ? (
+          helplines.map((h, idx) => (
+            <Button
+              key={idx}
+              variant="danger"
+              size="sm"
+              onClick={() => onCall?.(h.phone)}
+              className="shadow-sm"
+            >
+              📞 {h.name}
             </Button>
-            <Button variant="outline-danger" size="sm" onClick={() => onCall?.('116')} className="shadow-sm">
-              📞 Child Helpline
-            </Button>
-          </>
+          ))
+        ) : (
+          <span className="text-muted small me-2">No emergency contacts configured</span>
         )}
         <Button
           variant="danger"
