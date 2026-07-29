@@ -18,6 +18,7 @@ const OrganizationLayout = () => {
     { path: '', label: 'Dashboard', icon: '📊' },
     { path: '/members', label: 'Members', icon: '👥' },
     { path: '/insights', label: 'Insights', icon: '📈' },
+    { path: '/resources', label: 'Resources', icon: '📁' },
   ];
 
   return (
