@@ -1,24 +1,28 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Spinner, Badge } from 'react-bootstrap';
+import { Container, Spinner, Badge, Button } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Button, DataTable, ErrorState } from '../../components/ui';
+import { DataTable, ErrorState, SearchBar } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminResources = () => {
   const { showModal } = useModal();
+  const navigate = useNavigate();
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     fetchResources();
-  }, []);
+  }, [search]);
 
   const fetchResources = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get('/admin/resources');
+      const res = await api.get(`/admin/resources?search=${search}`);
       setResources(res.data);
     } catch (err) {
       setError('Failed to load resources.');
@@ -66,6 +70,13 @@ const AdminResources = () => {
       render: (_, row) => (
         <div className="d-flex gap-1">
           <Button
+            variant="outline-primary"
+            size="sm"
+            onClick={() => navigate(`/admin/resources/edit/${row.id}`)}
+          >
+            Edit
+          </Button>
+          <Button
             variant={row.is_published ? 'outline-secondary' : 'outline-primary'}
             size="sm"
             onClick={() => togglePublish(row.id, row.is_published)}
@@ -83,7 +94,21 @@ const AdminResources = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Resources</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Resources</h4>
+        <div className="d-flex gap-2">
+          <Button variant="primary" onClick={() => navigate('/admin/resources/create')}>+ New Resource</Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
+      </div>
+      <div className="mb-3" style={{ maxWidth: '300px' }}>
+        <SearchBar
+          value={search}
+          onChange={(val) => setSearch(val)}
+          onSearch={fetchResources}
+          placeholder="Search resources..."
+        />
+      </div>
       <DataTable columns={columns} data={resources} keyField="id" />
     </Container>
   );
