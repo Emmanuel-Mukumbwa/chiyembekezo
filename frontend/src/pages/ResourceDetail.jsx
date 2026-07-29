@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Spinner, Badge } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { Button, ErrorState } from '../components/ui';
 import api from '../services/api';
 
 const ResourceDetail = () => {
@@ -11,6 +12,7 @@ const ResourceDetail = () => {
   const { showModal } = useModal();
   const [resource, setResource] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [courseProgress, setCourseProgress] = useState(0);
   const [isLiked, setIsLiked] = useState(false);
 
@@ -23,10 +25,12 @@ const ResourceDetail = () => {
 
   const fetchResource = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get(`/resources/${id}`);
       setResource(res.data);
     } catch (err) {
+      setError('Resource not found.');
       showModal('Error', 'Resource not found.');
     } finally {
       setLoading(false);
@@ -70,19 +74,20 @@ const ResourceDetail = () => {
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
+        <Spinner animation="border" variant="primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
     );
   }
 
-  if (!resource) {
+  if (error || !resource) {
     return (
-      <Container className="my-5 text-center">
-        <h3>Resource not found</h3>
-        <Button as={Link} to="/resources">Back to Resources</Button>
-      </Container>
+      <ErrorState
+        title="Resource not found"
+        description="The resource you are looking for does not exist or has been removed."
+        onRetry={() => window.location.reload()}
+      />
     );
   }
 
@@ -98,9 +103,7 @@ const ResourceDetail = () => {
 
   return (
     <Container className="my-5">
-      <Button as={Link} to="/resources" variant="outline-secondary" className="mb-3">
-        ← Back to Resources
-      </Button>
+      <Button as={Link} to="/resources" variant="outline-secondary" className="mb-3">← Back to Resources</Button>
 
       <Row>
         <Col md={8}>
@@ -113,10 +116,7 @@ const ResourceDetail = () => {
             </div>
             {resource.author && <p><strong>Author:</strong> {resource.author}</p>}
             {resource.duration_minutes && <p><strong>Duration:</strong> {resource.duration_minutes} minutes</p>}
-            <div className="mb-3">
-              <strong>Description:</strong>
-              <p>{resource.description}</p>
-            </div>
+            <div className="mb-3"><strong>Description:</strong><p>{resource.description}</p></div>
             {resource.content && (
               <div className="mb-3">
                 <strong>Content:</strong>
@@ -132,33 +132,21 @@ const ResourceDetail = () => {
               </Button>
             )}
 
-            {/* Course Progress */}
             {resource.type === 'course' && user && (
               <div className="mt-4">
                 <h6>Your Progress</h6>
                 <div className="progress">
-                  <div
-                    className="progress-bar bg-success"
-                    style={{ width: `${courseProgress}%` }}
-                  >
-                    {courseProgress}%
-                  </div>
+                  <div className="progress-bar bg-success" style={{ width: `${courseProgress}%` }}>{courseProgress}%</div>
                 </div>
                 <div className="d-flex gap-2 mt-2">
-                  <Button variant="outline-primary" size="sm" onClick={() => updateProgress(Math.min(courseProgress + 10, 100))}>
-                    +10% Progress
-                  </Button>
-                  <Button variant="outline-success" size="sm" onClick={() => updateProgress(100)}>
-                    Mark Complete
-                  </Button>
+                  <Button variant="outline-primary" size="sm" onClick={() => updateProgress(Math.min(courseProgress + 10, 100))}>+10% Progress</Button>
+                  <Button variant="outline-success" size="sm" onClick={() => updateProgress(100)}>Mark Complete</Button>
                 </div>
               </div>
             )}
 
             <div className="mt-3 d-flex gap-3">
-              <Button variant="outline-primary" size="sm" onClick={toggleLike}>
-                ❤️ {resource.like_count || 0} Likes
-              </Button>
+              <Button variant="outline-primary" size="sm" onClick={toggleLike}>❤️ {resource.like_count || 0} Likes</Button>
               <span className="text-muted small">👁 {resource.view_count} views</span>
             </div>
           </Card>
@@ -175,9 +163,7 @@ const ResourceDetail = () => {
                 <li>
                   <strong>Tags:</strong>
                   <div className="d-flex flex-wrap gap-1 mt-1">
-                    {resource.tags.map((tag, idx) => (
-                      <Badge key={idx} bg="secondary">{tag}</Badge>
-                    ))}
+                    {resource.tags.map((tag, idx) => <Badge key={idx} bg="secondary">{tag}</Badge>)}
                   </div>
                 </li>
               )}
