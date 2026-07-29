@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, ListGroup, Spinner, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, ListGroup, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { Card, Button, ErrorState } from '../components/ui';
 import api from '../services/api';
 
 const Emergency = () => {
@@ -11,7 +12,9 @@ const Emergency = () => {
   const [profileContacts, setProfileContacts] = useState(null);
   const [safetyContacts, setSafetyContacts] = useState(null);
   const [systemContacts, setSystemContacts] = useState({});
+  const [featuredContacts, setFeaturedContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userDistrict, setUserDistrict] = useState('');
 
   useEffect(() => {
@@ -19,19 +22,21 @@ const Emergency = () => {
       fetchEmergencyData();
       fetchUserProfile();
     } else {
-      // If not logged in, still show system contacts
       fetchSystemContactsOnly();
     }
   }, [user]);
 
   const fetchEmergencyData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/emergency/data');
       setProfileContacts(res.data.profileContacts);
       setSafetyContacts(res.data.safetyContacts);
       setSystemContacts(res.data.systemContacts || {});
+      setFeaturedContacts(res.data.featured || []);
     } catch (err) {
+      setError('Failed to load emergency data.');
       showModal('Error', 'Failed to load emergency data.');
     } finally {
       setLoading(false);
@@ -40,10 +45,13 @@ const Emergency = () => {
 
   const fetchSystemContactsOnly = async () => {
     setLoading(true);
+    setError(null);
     try {
       const res = await api.get('/professionals/emergency/contacts');
-      setSystemContacts(res.data || {});
+      setSystemContacts(res.data.grouped || {});
+      setFeaturedContacts(res.data.featured || []);
     } catch (err) {
+      setError('Failed to load emergency contacts.');
       showModal('Error', 'Failed to load emergency contacts.');
     } finally {
       setLoading(false);
@@ -73,68 +81,109 @@ const Emergency = () => {
   if (loading) {
     return (
       <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
+        <Spinner animation="border" variant="primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </Spinner>
       </Container>
     );
   }
 
+  if (error) {
+    return (
+      <Container className="my-5">
+        <ErrorState
+          title="Error loading emergency resources"
+          description={error}
+          onRetry={() => window.location.reload()}
+        />
+      </Container>
+    );
+  }
+
   return (
-    <Container className="my-5">
+    <Container fluid className="px-4 my-4">
       <h1 className="text-center text-danger mb-4">🚨 Emergency Help</h1>
 
       <Row>
-        <Col md={10} className="mx-auto">
-          {/* BIG RED BUTTON */}
-          <Card className="border-danger text-center p-4 mb-4" style={{ backgroundColor: '#fff5f5' }}>
+        <Col lg={10} className="mx-auto">
+          {/* Emergency Banner – only from featured contacts */}
+          <Card
+            className="p-4 mb-4 text-center border-danger"
+            style={{ backgroundColor: 'var(--color-danger-bg)' }}
+          >
             <h2 className="text-danger display-4">Need Immediate Help?</h2>
-            <p className="lead">If you are in immediate danger, call <strong>999</strong> (Police) or go to your nearest hospital.</p>
-            <div className="d-flex flex-wrap gap-3 justify-content-center">
-              <Button variant="danger" size="lg" onClick={() => callNumber('999')}>
-                📞 Call 999 – Emergency Services
-              </Button>
-              <Button variant="outline-danger" size="lg" onClick={() => callNumber('116')}>
-                📞 Child Helpline (116)
-              </Button>
-              <Button variant="outline-secondary" size="lg" as="a" href={getMapLink()} target="_blank">
-                📍 Find Nearest Hospital
-              </Button>
-            </div>
+            <p className="lead">
+              If you are in immediate danger, call one of the numbers below or go to your nearest hospital.
+            </p>
+            {featuredContacts.length > 0 ? (
+              <div className="d-flex flex-wrap gap-3 justify-content-center">
+                {featuredContacts.map((contact) => (
+                  <Button
+                    key={contact.id}
+                    variant="danger"
+                    size="lg"
+                    onClick={() => callNumber(contact.phone)}
+                  >
+                    📞 {contact.name}
+                  </Button>
+                ))}
+                <Button variant="outline-secondary" size="lg" as="a" href={getMapLink()} target="_blank">
+                  📍 Find Nearest Hospital
+                </Button>
+              </div>
+            ) : (
+              <div>
+                <p className="text-muted">No emergency contacts have been configured.</p>
+                <Button variant="outline-secondary" size="lg" as="a" href={getMapLink()} target="_blank">
+                  📍 Find Nearest Hospital
+                </Button>
+              </div>
+            )}
           </Card>
 
-          {/* Quick Help Numbers */}
-          <Card className="feature-card p-3 mb-3">
-            <h5>📞 Quick Help Numbers</h5>
-            <div className="d-flex flex-wrap gap-2">
-              <Button variant="outline-primary" onClick={() => callNumber('+265 999 123 456')}>
-                Mental Health Helpline
-              </Button>
-              <Button variant="outline-primary" onClick={() => callNumber('116')}>
-                Child Helpline 116
-              </Button>
-              <Button variant="outline-primary" onClick={() => callNumber('+265 888 123 456')}>
-                Domestic Violence Support
-              </Button>
-            </div>
-          </Card>
+          {/* Quick Help Numbers – featured contacts (small buttons) */}
+          {featuredContacts.length > 0 && (
+            <Card className="p-3 mb-3">
+              <h5>📞 Quick Help Numbers</h5>
+              <div className="d-flex flex-wrap gap-2">
+                {featuredContacts.map((contact) => (
+                  <Button
+                    key={contact.id}
+                    variant="outline-primary"
+                    onClick={() => callNumber(contact.phone)}
+                  >
+                    {contact.name}
+                  </Button>
+                ))}
+              </div>
+            </Card>
+          )}
 
-          {/* System Emergency Contacts */}
+          {/* System Emergency Contacts (all contacts by type) */}
           {Object.keys(systemContacts).length > 0 && (
             <div className="mb-4">
               <h4>Support Services</h4>
-              {Object.keys(systemContacts).map(type => (
-                <Card key={type} className="feature-card p-3 mb-3">
+              {Object.keys(systemContacts).map((type) => (
+                <Card key={type} className="p-3 mb-3">
                   <h5 className="text-uppercase text-muted">{type}</h5>
                   <ListGroup variant="flush">
-                    {systemContacts[type].map((contact, idx) => (
-                      <ListGroup.Item key={idx} className="d-flex justify-content-between align-items-center">
+                    {systemContacts[type].map((contact) => (
+                      <ListGroup.Item
+                        key={contact.id}
+                        className="d-flex flex-wrap justify-content-between align-items-center"
+                      >
                         <div>
                           <strong>{contact.name}</strong>
-                          {contact.organization && <span className="text-muted"> ({contact.organization})</span>}
+                          {contact.organization && (
+                            <span className="text-muted"> ({contact.organization})</span>
+                          )}
                           {contact.district && <div className="small">{contact.district}</div>}
                         </div>
-                        <Button variant="outline-primary" size="sm" onClick={() => callNumber(contact.phone)}>
+                        <Button
+                          variant="outline-primary"
+                          size="sm"
+                          onClick={() => callNumber(contact.phone)}
+                        >
                           Call {contact.phone}
                         </Button>
                       </ListGroup.Item>
@@ -145,16 +194,20 @@ const Emergency = () => {
             </div>
           )}
 
-          {/* User's Trusted Contacts (from Profile) */}
+          {/* User's Trusted Contact */}
           {user && profileContacts && profileContacts.name && (
-            <Card className="feature-card p-3 mb-3">
+            <Card className="p-3 mb-3">
               <h5>👤 Your Trusted Contact</h5>
-              <div className="d-flex justify-content-between align-items-center">
+              <div className="d-flex flex-wrap justify-content-between align-items-center">
                 <div>
                   <strong>{profileContacts.name}</strong>
                   <div className="small text-muted">{profileContacts.phone}</div>
                 </div>
-                <Button variant="outline-primary" size="sm" onClick={() => callNumber(profileContacts.phone)}>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => callNumber(profileContacts.phone)}
+                >
                   Call
                 </Button>
               </div>
@@ -165,13 +218,13 @@ const Emergency = () => {
           {user && safetyContacts && (
             <>
               {safetyContacts.trusted_people && (
-                <Card className="feature-card p-3 mb-3">
+                <Card className="p-3 mb-3">
                   <h5>👥 People I Trust</h5>
                   <p className="small">{safetyContacts.trusted_people}</p>
                 </Card>
               )}
               {safetyContacts.emergency_numbers && (
-                <Card className="feature-card p-3 mb-3">
+                <Card className="p-3 mb-3">
                   <h5>📞 Emergency Numbers from Safety Plan</h5>
                   <p className="small">{safetyContacts.emergency_numbers}</p>
                 </Card>
@@ -180,14 +233,16 @@ const Emergency = () => {
           )}
 
           {/* Location Directions */}
-          <Card className="feature-card p-3 mb-3">
+          <Card className="p-3 mb-3">
             <h5>📍 Location Directions</h5>
             <p>Find the nearest hospital or clinic in your area.</p>
             <Button variant="primary" as="a" href={getMapLink()} target="_blank">
               Open Maps
             </Button>
             {userDistrict && (
-              <div className="mt-2 text-muted small">📍 Your district: <strong>{userDistrict}</strong></div>
+              <div className="mt-2 text-muted small">
+                📍 Your district: <strong>{userDistrict}</strong>
+              </div>
             )}
           </Card>
 
