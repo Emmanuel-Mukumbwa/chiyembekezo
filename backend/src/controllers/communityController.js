@@ -12,7 +12,7 @@ exports.getCategories = async (req, res) => {
     res.status(500).json({ error: 'Server error' });
   }
 };
-
+ 
 // ===== Posts =====
 exports.getPosts = async (req, res) => {
   try {
