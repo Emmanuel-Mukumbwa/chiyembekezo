@@ -1,6 +1,7 @@
 import React from 'react';
-import { Container, Row, Col, Card, Button, ListGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, ListGroup } from 'react-bootstrap';
 import { useLocation, Link } from 'react-router-dom';
+import { Button } from '../../components/ui';
 
 const Result = () => {
   const location = useLocation();
@@ -17,7 +18,6 @@ const Result = () => {
 
   const { score, level, description, recommendations } = data;
 
-  // Emoji based on level
   const getEmoji = (lvl) => {
     const map = {
       'Minimal': '😊',
