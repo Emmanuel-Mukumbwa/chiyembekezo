@@ -1,12 +1,22 @@
-// backend/src/controllers/professionalController.js
 const pool = require('../config/db');
-const { logAuditAction } = require('../services/auditLogService');
 
-// Get list of professionals with filters
+// Helper to parse languages (could be JSON array or comma-separated string)
+const parseLanguages = (lang) => {
+  if (!lang) return [];
+  if (typeof lang === 'string' && lang.startsWith('[')) {
+    try { return JSON.parse(lang); } catch(e) { return lang.split(',').map(s => s.trim()); }
+  }
+  if (typeof lang === 'string') {
+    return lang.split(',').map(s => s.trim());
+  }
+  return [];
+};
+
+// Get list of professionals with filters (PUBLIC)
 exports.getProfessionals = async (req, res) => {
   try {
     const { district, language, specialty, availability, gender, search } = req.query;
-    let conditions = ['p.is_verified = 1']; // only show verified
+    let conditions = ['p.is_verified = 1'];
     const params = [];
 
     if (district) {
@@ -14,18 +24,15 @@ exports.getProfessionals = async (req, res) => {
       params.push(district);
     }
     if (language) {
-      conditions.push(`JSON_CONTAINS(p.languages, ?)`);
-      params.push(`"${language}"`);
+      // language is stored as JSON array, but we also support comma-separated string
+      // We need to check if the language exists in the stored languages
+      // For simplicity, we'll search using LIKE if not JSON
+      conditions.push('p.languages LIKE ?');
+      params.push(`%${language}%`);
     }
     if (specialty) {
       conditions.push('p.specialization LIKE ?');
       params.push(`%${specialty}%`);
-    }
-    if (availability) {
-      // availability can be "today" or a day of week; we'll store days JSON: {"monday": ["09:00-17:00"]}
-      // For simplicity, we'll check if any day has a schedule.
-      // For MVP, we just show all verified professionals.
-      // Could expand later.
     }
     if (gender) {
       conditions.push('u.gender = ?');
@@ -50,10 +57,9 @@ exports.getProfessionals = async (req, res) => {
       ORDER BY p.is_verified DESC, p.created_at DESC
     `;
     const [rows] = await pool.query(query, params);
-    // Parse JSON fields
     const professionals = rows.map(row => ({
       ...row,
-      languages: row.languages ? JSON.parse(row.languages) : [],
+      languages: parseLanguages(row.languages),
       available_days: row.available_days ? JSON.parse(row.available_days) : {},
       avg_rating: row.avg_rating ? parseFloat(row.avg_rating).toFixed(1) : null,
       completed_sessions: row.completed_sessions || 0,
@@ -65,7 +71,7 @@ exports.getProfessionals = async (req, res) => {
   }
 };
 
-// Get single professional by ID
+// Get single professional by ID (PUBLIC)
 exports.getProfessionalById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -85,7 +91,7 @@ exports.getProfessionalById = async (req, res) => {
       return res.status(404).json({ error: 'Professional not found' });
     }
     const pro = rows[0];
-    pro.languages = pro.languages ? JSON.parse(pro.languages) : [];
+    pro.languages = parseLanguages(pro.languages);
     pro.available_days = pro.available_days ? JSON.parse(pro.available_days) : {};
     pro.avg_rating = pro.avg_rating ? parseFloat(pro.avg_rating).toFixed(1) : null;
     res.json(pro);
@@ -95,22 +101,23 @@ exports.getProfessionalById = async (req, res) => {
   }
 };
 
-// Get emergency contacts (hospitals, helplines, NGOs)
+// Get emergency contacts (PUBLIC) – now includes is_featured
 exports.getEmergencyContacts = async (req, res) => {
   try {
     const [rows] = await pool.query(`
-      SELECT id, name, phone, organization, district, contact_type
+      SELECT id, name, phone, organization, district, contact_type, is_featured
       FROM emergency_contacts
       WHERE is_active = 1
       ORDER BY contact_type, name
     `);
-    // group by type
     const grouped = {};
+    const featured = [];
     rows.forEach(row => {
       if (!grouped[row.contact_type]) grouped[row.contact_type] = [];
       grouped[row.contact_type].push(row);
+      if (row.is_featured) featured.push(row);
     });
-    res.json(grouped);
+    res.json({ grouped, featured });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
