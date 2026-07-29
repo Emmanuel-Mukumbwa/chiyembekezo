@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
+import { Button } from '../../components/ui';
 
 const soundLibrary = [
   { id: 'rain', name: 'Rain', icon: '🌧', color: '#4a90d9' },
