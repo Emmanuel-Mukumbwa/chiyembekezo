@@ -1,6 +1,7 @@
 import React from 'react';
-import { Container, Row, Col, Card, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import { Button } from '../../components/ui';
 
 const tools = [
   { icon: '🫁', title: 'Breathing Exercises', desc: 'Reduce anxiety and stress.', link: '/wellness/breathing' },
