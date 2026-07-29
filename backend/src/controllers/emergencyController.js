@@ -1,11 +1,11 @@
 const pool = require('../config/db');
 
-// Get all emergency data for the user
+// Get all emergency data for the user (authenticated)
 exports.getEmergencyData = async (req, res) => {
   try {
     const userId = req.user.id;
 
-    // 1. Get user profile emergency contacts
+    // 1. User profile emergency contacts
     const [profileRows] = await pool.query(
       `SELECT emergency_contact_name, emergency_contact_phone
        FROM profiles WHERE user_id = ?`,
@@ -16,7 +16,7 @@ exports.getEmergencyData = async (req, res) => {
       phone: profileRows[0].emergency_contact_phone,
     } : null;
 
-    // 2. Get safety plan trusted people and emergency numbers
+    // 2. Safety plan trusted people and emergency numbers
     const [safetyRows] = await pool.query(
       `SELECT trusted_people, emergency_numbers
        FROM safety_plans WHERE user_id = ?`,
@@ -27,9 +27,9 @@ exports.getEmergencyData = async (req, res) => {
       emergency_numbers: safetyRows[0].emergency_numbers,
     } : null;
 
-    // 3. Get system emergency contacts (hospitals, helplines, etc.)
+    // 3. System emergency contacts – all, plus featured
     const [systemContacts] = await pool.query(
-      `SELECT id, name, phone, organization, district, contact_type
+      `SELECT id, name, phone, organization, district, contact_type, is_featured
        FROM emergency_contacts
        WHERE is_active = 1
        ORDER BY contact_type, name`
@@ -37,15 +37,18 @@ exports.getEmergencyData = async (req, res) => {
 
     // Group system contacts by type
     const grouped = {};
+    const featured = [];
     systemContacts.forEach(row => {
       if (!grouped[row.contact_type]) grouped[row.contact_type] = [];
       grouped[row.contact_type].push(row);
+      if (row.is_featured) featured.push(row);
     });
 
     res.json({
       profileContacts,
       safetyContacts,
       systemContacts: grouped,
+      featured,
     });
   } catch (err) {
     console.error(err);
