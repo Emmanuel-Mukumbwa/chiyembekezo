@@ -1,14 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Badge, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
+import { Button as UIButton, ErrorState } from '../components/ui';
 import api from '../services/api';
 
 const FindHelp = () => {
   const { showModal } = useModal();
   const [professionals, setProfessionals] = useState([]);
   const [emergencyContacts, setEmergencyContacts] = useState({});
+  const [featuredContacts, setFeaturedContacts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [filters, setFilters] = useState({
     search: '',
     district: '',
@@ -16,21 +19,23 @@ const FindHelp = () => {
     specialty: '',
   });
 
-  // Fetch data
   useEffect(() => {
     fetchData();
   }, [filters]);
 
   const fetchData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const [proRes, emergencyRes] = await Promise.all([
         api.get('/professionals', { params: filters }),
         api.get('/professionals/emergency/contacts'),
       ]);
       setProfessionals(proRes.data);
-      setEmergencyContacts(emergencyRes.data);
+      setEmergencyContacts(emergencyRes.data.grouped || {});
+      setFeaturedContacts(emergencyRes.data.featured || []);
     } catch (err) {
+      setError('Failed to load data');
       showModal('Error', 'Failed to load data');
     } finally {
       setLoading(false);
@@ -45,6 +50,36 @@ const FindHelp = () => {
     setFilters({ search: '', district: '', language: '', specialty: '' });
   };
 
+  const callNumber = (phone) => {
+    window.location.href = `tel:${phone}`;
+  };
+
+  const getMapLink = () => {
+    return 'https://www.google.com/maps/search/hospital';
+  };
+
+  if (loading) {
+    return (
+      <Container className="my-5 text-center">
+        <Spinner animation="border" variant="primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="my-5">
+        <ErrorState
+          title="Error loading data"
+          description={error}
+          onRetry={fetchData}
+        />
+      </Container>
+    );
+  }
+
   return (
     <Container className="my-5">
       <h1 className="text-center mb-4">Find Mental Health Support</h1>
@@ -52,12 +87,35 @@ const FindHelp = () => {
         Connect with verified professionals, hospitals, and helplines in Malawi.
       </p>
 
-      {/* Emergency Quick Card */}
+      {/* Emergency Quick Card – fully DB-driven, no hardcoded 999 */}
       <Card className="border-danger p-3 mb-4 text-center">
         <h5>🚨 Need Immediate Help?</h5>
-        <p className="mb-2">If you are in crisis, call <strong>999</strong> (Police) or go to your nearest hospital.</p>
-        <div className="d-flex flex-wrap justify-content-center gap-2">
-          <Button variant="danger" size="sm">Emergency Contacts</Button>
+        {featuredContacts.length > 0 ? (
+          <>
+            <p className="mb-2">If you are in crisis, call one of the numbers below or go to your nearest hospital.</p>
+            <div className="d-flex flex-wrap justify-content-center gap-2">
+              {featuredContacts.map((contact) => (
+                <Button
+                  key={contact.id}
+                  variant="danger"
+                  size="sm"
+                  onClick={() => callNumber(contact.phone)}
+                >
+                  {contact.name}
+                </Button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <p className="mb-2">No emergency contacts have been configured.</p>
+            <p className="text-muted small">Please go to your nearest hospital or call a trusted contact.</p>
+          </>
+        )}
+        <div className="mt-2">
+          <Button variant="outline-secondary" size="sm" as="a" href={getMapLink()} target="_blank">
+            📍 Find Nearest Hospital
+          </Button>
         </div>
       </Card>
 
@@ -110,9 +168,7 @@ const FindHelp = () => {
 
       {/* Professionals List */}
       <h2 className="mb-3">Professionals</h2>
-      {loading ? (
-        <Spinner animation="border" />
-      ) : professionals.length === 0 ? (
+      {professionals.length === 0 ? (
         <p className="text-muted">No professionals found matching your criteria.</p>
       ) : (
         <Row>
@@ -152,23 +208,27 @@ const FindHelp = () => {
       {/* Emergency Contacts */}
       <h2 className="mt-5 mb-3">Emergency Contacts & Support</h2>
       <Row>
-        {Object.keys(emergencyContacts).map(type => (
-          <Col md={4} key={type} className="mb-3">
-            <Card className="feature-card p-3">
-              <h5>{type.charAt(0).toUpperCase() + type.slice(1)}</h5>
-              <ul className="list-unstyled">
-                {emergencyContacts[type].map(contact => (
-                  <li key={contact.id} className="mb-2">
-                    <strong>{contact.name}</strong>
-                    {contact.organization && <div className="text-muted small">{contact.organization}</div>}
-                    <div className="small">📞 {contact.phone}</div>
-                    {contact.district && <div className="small">{contact.district}</div>}
-                  </li>
-                ))}
-              </ul>
-            </Card>
-          </Col>
-        ))}
+        {Object.keys(emergencyContacts).length === 0 ? (
+          <p className="text-muted">No emergency contacts available.</p>
+        ) : (
+          Object.keys(emergencyContacts).map(type => (
+            <Col md={4} key={type} className="mb-3">
+              <Card className="feature-card p-3">
+                <h5>{type.charAt(0).toUpperCase() + type.slice(1)}</h5>
+                <ul className="list-unstyled">
+                  {emergencyContacts[type].map(contact => (
+                    <li key={contact.id} className="mb-2">
+                      <strong>{contact.name}</strong>
+                      {contact.organization && <div className="text-muted small">{contact.organization}</div>}
+                      <div className="small">📞 {contact.phone}</div>
+                      {contact.district && <div className="small">{contact.district}</div>}
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </Col>
+          ))
+        )}
       </Row>
     </Container>
   );
