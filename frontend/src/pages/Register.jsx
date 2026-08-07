@@ -87,6 +87,12 @@ const Register = () => {
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
+          {/* Back to Home link */}
+          <div className="mb-3">
+            <Link to="/" className="text-muted small text-decoration-none">
+              ← Back to Home
+            </Link>
+          </div>
           <Card className="bg-surface border-0 shadow-sm rounded-lg p-4">
             <div className="text-center mb-3">
               <div style={{ fontSize: '3rem' }}>🌱</div>
@@ -106,6 +112,7 @@ const Register = () => {
                       name="firstName"
                       value={formData.firstName}
                       onChange={handleChange}
+                      placeholder="e.g., Emmanuel"
                     />
                   </Form.Group>
                 </Col>
@@ -117,6 +124,7 @@ const Register = () => {
                       name="lastName"
                       value={formData.lastName}
                       onChange={handleChange}
+                      placeholder="e.g., Mukumbwa"
                     />
                   </Form.Group>
                 </Col>
@@ -131,6 +139,7 @@ const Register = () => {
                   onChange={handleChange}
                   required
                   disabled={!!inviteData?.email}
+                  placeholder="you@example.com"
                 />
               </Form.Group>
 
@@ -144,6 +153,7 @@ const Register = () => {
                     onChange={handleChange}
                     required
                     minLength="6"
+                    placeholder="Create a strong password"
                   />
                   <Button
                     variant="outline-secondary"
@@ -165,6 +175,7 @@ const Register = () => {
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
+                    placeholder="Re-enter your password"
                   />
                   <Button
                     variant="outline-secondary"
@@ -184,6 +195,7 @@ const Register = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleChange}
+                  placeholder="+265 999 123 456"
                 />
               </Form.Group>
 
