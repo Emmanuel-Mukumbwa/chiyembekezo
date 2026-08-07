@@ -1,14 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Spinner, Badge, Button } from 'react-bootstrap';
+import { Container, Spinner, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { DataTable, ErrorState } from '../../components/ui';
+import { Button, DataTable, ErrorState } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminProfessionals = () => {
   const { showModal } = useModal();
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     fetchProfessionals();
@@ -29,23 +31,15 @@ const AdminProfessionals = () => {
   };
 
   const toggleVerify = async (id, current) => {
+    setActionLoading(id);
     try {
       await api.put(`/admin/professionals/${id}/verify`, { is_verified: !current });
       showModal('Success', 'Professional updated.');
       fetchProfessionals();
     } catch (err) {
       showModal('Error', 'Failed to update professional.');
-    }
-  };
-
-  const deleteProfessional = async (id) => {
-    if (!window.confirm('Delete this professional?')) return;
-    try {
-      await api.delete(`/admin/professionals/${id}`);
-      showModal('Success', 'Professional deleted.');
-      fetchProfessionals();
-    } catch (err) {
-      showModal('Error', 'Failed to delete professional.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -63,18 +57,19 @@ const AdminProfessionals = () => {
     {
       field: 'actions',
       label: 'Actions',
-      render: (_, row) => (
-        <div className="d-flex gap-1">
+      render: (_, row) => {
+        const isProcessing = actionLoading === row.id;
+        return (
           <Button
             variant={row.is_verified ? 'outline-secondary' : 'outline-primary'}
             size="sm"
             onClick={() => toggleVerify(row.id, row.is_verified)}
+            disabled={isProcessing}
           >
-            {row.is_verified ? 'Unverify' : 'Verify'}
+            {isProcessing ? <Spinner animation="border" size="sm" /> : (row.is_verified ? 'Unverify' : 'Verify')}
           </Button>
-          <Button variant="danger" size="sm" onClick={() => deleteProfessional(row.id)}>Delete</Button>
-        </div>
-      ),
+        );
+      },
     },
   ];
 
@@ -83,7 +78,10 @@ const AdminProfessionals = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4>Professionals</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Professionals</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <DataTable columns={columns} data={professionals} keyField="id" />
     </Container>
   );
