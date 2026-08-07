@@ -1,4 +1,3 @@
-// backend/src/controllers/admin/communityController.js
 const pool = require('../../config/db');
 const { logAuditAction } = require('../../services/auditLogService');
 
@@ -15,7 +14,7 @@ exports.getPosts = async (req, res) => {
     res.json(rows);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' }); 
+    res.status(500).json({ error: 'Server error' });
   }
 };
 
@@ -23,7 +22,14 @@ exports.deletePost = async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM forum_posts WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted forum post ${id}`, 'forum_post', id);
+    await logAuditAction(
+      req.user.id,
+      `Deleted forum post ${id}`,
+      'forum_post',
+      id,
+      {},
+      req.user.email
+    );
     res.json({ message: 'Post deleted' });
   } catch (err) {
     console.error(err);
@@ -36,7 +42,14 @@ exports.pinPost = async (req, res) => {
     const { id } = req.params;
     const { is_pinned } = req.body;
     await pool.query('UPDATE forum_posts SET is_pinned = ? WHERE id = ?', [is_pinned, id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Pinned forum post ${id}`, 'forum_post', id, { is_pinned });
+    await logAuditAction(
+      req.user.id,
+      `Pinned forum post ${id}`,
+      'forum_post',
+      id,
+      { is_pinned },
+      req.user.email
+    );
     res.json({ message: 'Post updated' });
   } catch (err) {
     console.error(err);
