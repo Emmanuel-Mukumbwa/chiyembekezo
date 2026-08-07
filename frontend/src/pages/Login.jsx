@@ -40,6 +40,12 @@ const Login = () => {
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
+          {/* Back to Home link */}
+          <div className="mb-3">
+            <Link to="/" className="text-muted small text-decoration-none">
+              ← Back to Home
+            </Link>
+          </div>
           <Card className="bg-surface border-0 shadow-sm rounded-lg p-4">
             <div className="text-center mb-3">
               <div style={{ fontSize: '3rem' }}>🌿</div>
@@ -56,6 +62,7 @@ const Login = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="form-control-lg"
+                  placeholder="you@example.com"
                 />
               </Form.Group>
               <Form.Group className="mb-3">
@@ -68,6 +75,7 @@ const Login = () => {
                     required
                     minLength="6"
                     className="form-control-lg"
+                    placeholder="Enter your password"
                   />
                   <Button
                     variant="outline-secondary"
