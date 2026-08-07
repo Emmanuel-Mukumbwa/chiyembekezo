@@ -5,20 +5,13 @@ const { logAuditAction } = require('../../services/auditLogService');
 // ---- GET all resources (admin) ----
 exports.getResources = async (req, res) => {
   try {
-    const { search } = req.query;
-    let query = `
+    const [rows] = await pool.query(`
       SELECT r.id, r.title, r.type, r.is_published, r.view_count,
              c.name as category, r.created_at
       FROM resources r
       LEFT JOIN categories c ON r.category_id = c.id
-    `;
-    const params = [];
-    if (search) {
-      query += ' WHERE r.title LIKE ? OR r.description LIKE ?';
-      params.push(`%${search}%`, `%${search}%`);
-    }
-    query += ' ORDER BY r.created_at DESC';
-    const [rows] = await pool.query(query, params);
+      ORDER BY r.created_at DESC
+    `);
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -26,7 +19,7 @@ exports.getResources = async (req, res) => {
   }
 };
 
-// ---- GET single resource for edit ----
+// ---- GET single resource for editing (admin) ----
 exports.getResourceById = async (req, res) => {
   try {
     const { id } = req.params;
@@ -69,7 +62,6 @@ exports.createResource = async (req, res) => {
 
     let url = req.body.url || null;
 
-    // Handle file upload to Cloudinary
     if (req.files && req.files.file) {
       const resourceType = type === 'video' ? 'video' : type === 'audio' ? 'video' : 'auto';
       const result = await uploadToCloudinary(req.files.file.data, 'resources', resourceType);
@@ -97,7 +89,14 @@ exports.createResource = async (req, res) => {
         organization_id || null,
       ]
     );
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Created resource: ${title}`, 'resource', result.insertId);
+    await logAuditAction(
+      req.user.id,
+      `Created resource: ${title}`,
+      'resource',
+      result.insertId,
+      {},
+      req.user.email
+    );
     res.status(201).json({ message: 'Resource created', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -127,14 +126,12 @@ exports.updateResource = async (req, res) => {
     const updates = [];
     const params = [];
 
-    // Get existing resource to fetch old file URL
     const [oldRows] = await pool.query('SELECT url, type FROM resources WHERE id = ?', [id]);
     if (oldRows.length === 0) return res.status(404).json({ error: 'Resource not found' });
     const oldResource = oldRows[0];
 
-    let url = oldResource.url; // keep existing
+    let url = oldResource.url;
 
-    // Handle file replacement
     if (req.files && req.files.file) {
       if (oldResource.url) {
         try {
@@ -154,7 +151,6 @@ exports.updateResource = async (req, res) => {
       params.push(url);
     }
 
-    // Update fields
     if (title !== undefined) { updates.push('title = ?'); params.push(title); }
     if (slug !== undefined) { updates.push('slug = ?'); params.push(slug); }
     if (type !== undefined) { updates.push('type = ?'); params.push(type); }
@@ -174,7 +170,14 @@ exports.updateResource = async (req, res) => {
     params.push(id);
     await pool.query(`UPDATE resources SET ${updates.join(', ')} WHERE id = ?`, params);
 
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Updated resource ${id}`, 'resource', id);
+    await logAuditAction(
+      req.user.id,
+      `Updated resource ${id}`,
+      'resource',
+      id,
+      {},
+      req.user.email
+    );
     res.json({ message: 'Resource updated' });
   } catch (err) {
     console.error(err);
@@ -188,7 +191,14 @@ exports.publishResource = async (req, res) => {
     const { id } = req.params;
     const { is_published } = req.body;
     await pool.query('UPDATE resources SET is_published = ? WHERE id = ?', [is_published, id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Published resource ${id}`, 'resource', id, { is_published });
+    await logAuditAction(
+      req.user.id,
+      `Published resource ${id}`,
+      'resource',
+      id,
+      { is_published },
+      req.user.email
+    );
     res.json({ message: 'Resource updated' });
   } catch (err) {
     console.error(err);
@@ -200,7 +210,6 @@ exports.publishResource = async (req, res) => {
 exports.deleteResource = async (req, res) => {
   try {
     const { id } = req.params;
-    // Delete file from Cloudinary if exists
     const [rows] = await pool.query('SELECT url FROM resources WHERE id = ?', [id]);
     if (rows.length > 0 && rows[0].url) {
       try {
@@ -214,7 +223,14 @@ exports.deleteResource = async (req, res) => {
       }
     }
     await pool.query('DELETE FROM resources WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted resource ${id}`, 'resource', id);
+    await logAuditAction(
+      req.user.id,
+      `Deleted resource ${id}`,
+      'resource',
+      id,
+      {},
+      req.user.email
+    );
     res.json({ message: 'Resource deleted' });
   } catch (err) {
     console.error(err);
