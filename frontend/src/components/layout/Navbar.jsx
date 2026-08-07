@@ -70,6 +70,7 @@ const Navigation = ({ sidebarOpen, toggleSidebar }) => {
           <Navbar.Collapse id="basic-navbar-nav">
             <Nav className="ms-auto align-items-lg-center">
               {user ? (
+                // ---------- LOGGED IN ----------
                 <>
                   <Nav.Link
                     as={NavLink}
@@ -103,14 +104,21 @@ const Navigation = ({ sidebarOpen, toggleSidebar }) => {
                   >
                     Find Help
                   </Nav.Link>
-                  <Nav.Link
-                    as={NavLink}
-                    to="/emergency"
-                    onClick={handleNavClick}
-                    className="nav-link text-danger fw-bold"
+
+                  {/* Emergency button – opens modal (replaces standalone link) */}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="ms-lg-2 my-2 my-lg-0"
+                    onClick={() => {
+                      handleEmergencyOpen();
+                      setExpanded(false);
+                    }}
                   >
                     🚨 Emergency
-                  </Nav.Link>
+                  </Button>
+
+                  {/* Notifications */}
                   <Button
                     variant="outline-secondary"
                     size="sm"
@@ -127,7 +135,10 @@ const Navigation = ({ sidebarOpen, toggleSidebar }) => {
                       3
                     </Badge>
                   </Button>
+
                   <ThemeToggle />
+
+                  {/* User dropdown */}
                   <Dropdown align="end" className="ms-2">
                     <Dropdown.Toggle variant="outline-primary" size="sm" id="dropdown-user">
                       {user.firstName || user.email}
@@ -181,6 +192,7 @@ const Navigation = ({ sidebarOpen, toggleSidebar }) => {
                   </Dropdown>
                 </>
               ) : (
+                // ---------- PUBLIC ----------
                 <>
                   <Nav.Link as={NavLink} to="/" onClick={handleNavClick} end className="nav-link">
                     Home
@@ -197,18 +209,20 @@ const Navigation = ({ sidebarOpen, toggleSidebar }) => {
                   <Nav.Link as={NavLink} to="/find-help" onClick={handleNavClick} className="nav-link">
                     Find Help
                   </Nav.Link>
-                  <Nav.Link as={NavLink} to="/community" onClick={handleNavClick} className="nav-link">
-                    Community
-                  </Nav.Link>
-                  <Nav.Link as={NavLink} to="/emergency" onClick={handleNavClick} className="nav-link text-danger fw-bold">
+
+                  {/* Emergency button – opens modal */}
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    className="ms-lg-2 my-2 my-lg-0"
+                    onClick={() => {
+                      handleEmergencyOpen();
+                      setExpanded(false);
+                    }}
+                  >
                     🚨 Emergency
-                  </Nav.Link>
-                  <Nav.Link as={NavLink} to="/contact" onClick={handleNavClick} className="nav-link">
-                    Contact
-                  </Nav.Link>
-                  <Nav.Link as={NavLink} to="/faq" onClick={handleNavClick} className="nav-link">
-                    FAQ
-                  </Nav.Link>
+                  </Button>
+
                   <Nav.Link as={NavLink} to="/login" className="ms-lg-2 nav-link" onClick={handleNavClick}>
                     Login
                   </Nav.Link>
