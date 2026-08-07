@@ -74,6 +74,7 @@ import AdminCommunity from './pages/Admin/AdminCommunity';
 import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminEmergencyContacts from './pages/Admin/AdminEmergencyContacts';
+import AdminLogs from './pages/Admin/AdminLogs';
 
 // Professional Portal
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -189,6 +190,7 @@ const router = createBrowserRouter([
       { path: 'peer-support', element: <AdminPeerSupport /> },
       { path: 'emergency-contacts', element: <AdminEmergencyContacts /> },
       { path: 'analytics', element: <AdminAnalytics /> },
+      { path: 'logs', element: <AdminLogs /> },
     ],
   },
 
