@@ -22,7 +22,14 @@ exports.publishArticle = async (req, res) => {
     const { id } = req.params;
     const { is_published } = req.body;
     await pool.query('UPDATE articles SET is_published = ? WHERE id = ?', [is_published, id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Published article ${id}`, 'article', id, { is_published });
+    await logAuditAction(
+      req.user.id,
+      `Published article ${id}`,
+      'article',
+      id,
+      { is_published },
+      req.user.email
+    );
     res.json({ message: 'Article updated' });
   } catch (err) {
     console.error(err);
@@ -34,7 +41,14 @@ exports.deleteArticle = async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM articles WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted article ${id}`, 'article', id);
+    await logAuditAction(
+      req.user.id,
+      `Deleted article ${id}`,
+      'article',
+      id,
+      {},
+      req.user.email
+    );
     res.json({ message: 'Article deleted' });
   } catch (err) {
     console.error(err);
