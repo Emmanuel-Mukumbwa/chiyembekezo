@@ -3,6 +3,7 @@ import { Container, Spinner, Form } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, Input, DataTable, ErrorState } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminUsers = () => {
   const { showModal } = useModal();
@@ -40,14 +41,19 @@ const AdminUsers = () => {
   };
 
   const deleteUser = async (id) => {
-    if (!window.confirm('Delete this user?')) return;
-    try {
-      await api.delete(`/admin/users/${id}`);
-      showModal('Success', 'User deleted.');
-      fetchUsers();
-    } catch (err) {
-      showModal('Error', 'Failed to delete user.');
-    }
+    showModal(
+      'Confirm Delete',
+      'Are you sure you want to delete this user? This action cannot be undone.',
+      async () => {
+        try {
+          await api.delete(`/admin/users/${id}`);
+          showModal('Success', 'User deleted.');
+          fetchUsers();
+        } catch (err) {
+          showModal('Error', 'Failed to delete user.');
+        }
+      }
+    );
   };
 
   const columns = [
@@ -101,7 +107,10 @@ const AdminUsers = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Users</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Users</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <div className="mb-3" style={{ maxWidth: '300px' }}>
         <Input
           label="Search Users"
