@@ -13,6 +13,7 @@ const AdminResources = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     fetchResources();
@@ -33,24 +34,35 @@ const AdminResources = () => {
   };
 
   const togglePublish = async (id, current) => {
+    setActionLoading(id);
     try {
       await api.put(`/admin/resources/${id}/publish`, { is_published: !current });
       showModal('Success', 'Resource updated.');
       fetchResources();
     } catch (err) {
       showModal('Error', 'Failed to update resource.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const deleteResource = async (id) => {
-    if (!window.confirm('Delete this resource?')) return;
-    try {
-      await api.delete(`/admin/resources/${id}`);
-      showModal('Success', 'Resource deleted.');
-      fetchResources();
-    } catch (err) {
-      showModal('Error', 'Failed to delete resource.');
-    }
+    showModal(
+      'Confirm Delete',
+      'Are you sure you want to delete this resource? This action cannot be undone.',
+      async () => {
+        setActionLoading(id);
+        try {
+          await api.delete(`/admin/resources/${id}`);
+          showModal('Success', 'Resource deleted.');
+          fetchResources();
+        } catch (err) {
+          showModal('Error', 'Failed to delete resource.');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    );
   };
 
   const columns = [
@@ -67,25 +79,37 @@ const AdminResources = () => {
     {
       field: 'actions',
       label: 'Actions',
-      render: (_, row) => (
-        <div className="d-flex gap-1">
-          <Button
-            variant="outline-primary"
-            size="sm"
-            onClick={() => navigate(`/admin/resources/edit/${row.id}`)}
-          >
-            Edit
-          </Button>
-          <Button
-            variant={row.is_published ? 'outline-secondary' : 'outline-primary'}
-            size="sm"
-            onClick={() => togglePublish(row.id, row.is_published)}
-          >
-            {row.is_published ? 'Unpublish' : 'Publish'}
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => deleteResource(row.id)}>Delete</Button>
-        </div>
-      ),
+      render: (_, row) => {
+        const isProcessing = actionLoading === row.id;
+        return (
+          <div className="d-flex gap-1">
+            <Button
+              variant="outline-primary"
+              size="sm"
+              onClick={() => navigate(`/admin/resources/edit/${row.id}`)}
+              disabled={isProcessing}
+            >
+              Edit
+            </Button>
+            <Button
+              variant={row.is_published ? 'outline-secondary' : 'outline-primary'}
+              size="sm"
+              onClick={() => togglePublish(row.id, row.is_published)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : (row.is_published ? 'Unpublish' : 'Publish')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => deleteResource(row.id)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : 'Delete'}
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
