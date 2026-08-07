@@ -8,6 +8,7 @@ import {
   DataTable,
   ErrorState,
 } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminPeerSupport = () => {
   const { showModal } = useModal();
@@ -50,13 +51,19 @@ const AdminPeerSupport = () => {
   };
 
   const unassignVolunteer = async (requestId) => {
-    try {
-      await api.put(`/admin/peer-support/requests/${requestId}/unassign`);
-      showModal('Success', 'Volunteer unassigned.');
-      fetchData();
-    } catch (err) {
-      showModal('Error', 'Failed to unassign volunteer.');
-    }
+    showModal(
+      'Confirm Unassign',
+      'Are you sure you want to unassign this volunteer?',
+      async () => {
+        try {
+          await api.put(`/admin/peer-support/requests/${requestId}/unassign`);
+          showModal('Success', 'Volunteer unassigned.');
+          fetchData();
+        } catch (err) {
+          showModal('Error', 'Failed to unassign volunteer.');
+        }
+      }
+    );
   };
 
   const columns = [
@@ -107,7 +114,10 @@ const AdminPeerSupport = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Peer Support Requests</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Peer Support Requests</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <Row className="mb-3 g-2">
         <Col md={3}>
           <Select
