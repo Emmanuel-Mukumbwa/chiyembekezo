@@ -1,3 +1,4 @@
+//src/middleware/requestLogger.js
 const logger = require('../utils/logger');
 
 const sanitizeBody = (body) => {
@@ -11,7 +12,7 @@ const sanitizeBody = (body) => {
 
 const requestLogger = (req, res, next) => {
   const start = Date.now();
-  const originalEnd = res.end;
+  const originalEnd = res.end; 
   let responseBody = null;
 
   res.end = function (chunk, encoding) {
