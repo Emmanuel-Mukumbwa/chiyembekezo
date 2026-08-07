@@ -33,6 +33,7 @@ const AdminLayout = () => {
     { path: '/peer-support', label: 'Peer Support', icon: '🤝' },
     { path: '/emergency-contacts', label: 'Emergency Contacts', icon: '🚨' },
     { path: '/analytics', label: 'Analytics', icon: '📈' },
+    { path: '/logs', label: 'Audit Logs', icon: '📜' },
   ];
 
   return (
