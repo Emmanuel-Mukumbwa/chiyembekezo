@@ -15,6 +15,7 @@ const communityController = require('../controllers/admin/communityController');
 const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
 const emergencyController = require('../controllers/admin/emergencyController');
+const logsController = require('../controllers/admin/logsController'); // 👈 NOW ADDED
 
 // Application and Invitation controllers
 const applicationController = require('../controllers/applicationController');
@@ -23,7 +24,6 @@ const invitationController = require('../controllers/invitationController');
 // Wellness controllers
 const wellnessController = require('../controllers/admin/wellnessController');
 
-// Apply authentication and admin check to ALL routes
 router.use(auth, isAdmin);
 
 // Test endpoint
@@ -109,5 +109,8 @@ router.get('/emergency-contacts', emergencyController.getAll);
 router.post('/emergency-contacts', emergencyController.create);
 router.put('/emergency-contacts/:id', emergencyController.update);
 router.delete('/emergency-contacts/:id', emergencyController.delete);
+
+// ===== Admin Logs =====
+router.get('/logs', logsController.getLogs);
 
 module.exports = router;
