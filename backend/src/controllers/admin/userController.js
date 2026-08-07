@@ -32,7 +32,14 @@ exports.updateUserStatus = async (req, res) => {
       'UPDATE users SET is_active = ?, is_admin = ?, is_professional = ? WHERE id = ?',
       [is_active, is_admin, is_professional, id]
     );
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Updated user ${id}`, 'user', id, { is_active, is_admin, is_professional });
+    await logAuditAction(
+      req.user.id,
+      `Updated user ${id}`,
+      'user',
+      id,
+      { is_active, is_admin, is_professional },
+      req.user.email
+    );
     res.json({ message: 'User updated' });
   } catch (err) {
     console.error(err);
@@ -44,7 +51,14 @@ exports.deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
     await pool.query('DELETE FROM users WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted user ${id}`, 'user', id);
+    await logAuditAction(
+      req.user.id,
+      `Deleted user ${id}`,
+      'user',
+      id,
+      {},
+      req.user.email
+    );
     res.json({ message: 'User deleted' });
   } catch (err) {
     console.error(err);
