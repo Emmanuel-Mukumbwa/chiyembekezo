@@ -3,7 +3,7 @@ import { Container, Row, Col, ListGroup, Spinner } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { Card, Button, ErrorState } from '../components/ui';
+import { Card, Button, ErrorState, EmergencyCard } from '../components/ui';
 import api from '../services/api';
 
 const Emergency = () => {
@@ -106,42 +106,19 @@ const Emergency = () => {
 
       <Row>
         <Col lg={10} className="mx-auto">
-          {/* Emergency Banner – only from featured contacts */}
-          <Card
-            className="p-4 mb-4 text-center border-danger"
-            style={{ backgroundColor: 'var(--color-danger-bg)' }}
-          >
-            <h2 className="text-danger display-4">Need Immediate Help?</h2>
-            <p className="lead">
-              If you are in immediate danger, call one of the numbers below or go to your nearest hospital.
-            </p>
-            {featuredContacts.length > 0 ? (
-              <div className="d-flex flex-wrap gap-3 justify-content-center">
-                {featuredContacts.map((contact) => (
-                  <Button
-                    key={contact.id}
-                    variant="danger"
-                    size="lg"
-                    onClick={() => callNumber(contact.phone)}
-                  >
-                    📞 {contact.name}
-                  </Button>
-                ))}
-                <Button variant="outline-secondary" size="lg" as="a" href={getMapLink()} target="_blank">
-                  📍 Find Nearest Hospital
-                </Button>
-              </div>
-            ) : (
-              <div>
-                <p className="text-muted">No emergency contacts have been configured.</p>
-                <Button variant="outline-secondary" size="lg" as="a" href={getMapLink()} target="_blank">
-                  📍 Find Nearest Hospital
-                </Button>
-              </div>
-            )}
-          </Card>
+          {/* Emergency Card – featured contacts */}
+          <EmergencyCard
+            title="Need Immediate Help?"
+            description="If you are in immediate danger, call one of the numbers below or go to your nearest hospital."
+            helplines={featuredContacts.map(c => ({ name: c.name, phone: c.phone }))}
+            onCall={callNumber}
+            onOpenEmergency={() => window.location.href = '/emergency'}
+            variant="large"
+            className="mb-4"
+          />
 
-          {/* Quick Help Numbers – featured contacts (small buttons) */}
+          {/* Quick Help Numbers – featured contacts (small buttons) – optional, but EmergencyCard already shows them */}
+          {/* We can keep this as a fallback or remove it – I'll keep it as a backup */}
           {featuredContacts.length > 0 && (
             <Card className="p-3 mb-3">
               <h5>📞 Quick Help Numbers</h5>
