@@ -78,7 +78,7 @@ const Home = () => {
     { name: "John, Blantyre", text: "I was hesitant to seek help, but the anonymous community stories inspired me. I'm now seeing a counselor and feeling better every day." },
   ];
 
-  const stats = [
+  const stats = [ 
     { icon: '📖', value: '200+', label: 'Resources' },
     { icon: '🧠', value: '5', label: 'Self-Assessments' },
     { icon: '🫁', value: '8', label: 'Wellness Tools' },
