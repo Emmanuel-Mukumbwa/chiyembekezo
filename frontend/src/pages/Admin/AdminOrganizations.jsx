@@ -10,6 +10,7 @@ import {
   EmptyState,
   ErrorState,
 } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminOrganizations = () => {
   const { showModal } = useModal();
@@ -76,13 +77,19 @@ const AdminOrganizations = () => {
   };
 
   const removeMember = async (orgId, userId) => {
-    try {
-      await api.delete(`/admin/organizations/${orgId}/members/${userId}`);
-      showModal('Success', 'Member removed.');
-      fetchOrgs();
-    } catch (err) {
-      showModal('Error', 'Failed to remove member.');
-    }
+    showModal(
+      'Confirm Remove',
+      'Are you sure you want to remove this member from the organization?',
+      async () => {
+        try {
+          await api.delete(`/admin/organizations/${orgId}/members/${userId}`);
+          showModal('Success', 'Member removed.');
+          fetchOrgs();
+        } catch (err) {
+          showModal('Error', 'Failed to remove member.');
+        }
+      }
+    );
   };
 
   const columns = [
@@ -111,7 +118,10 @@ const AdminOrganizations = () => {
     <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Organizations</h4>
-        <Button variant="primary" onClick={() => setShowCreate(true)}>+ New Organization</Button>
+        <div className="d-flex gap-2">
+          <Button variant="primary" onClick={() => setShowCreate(true)}>+ New Organization</Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
       </div>
 
       {orgs.length === 0 ? (
@@ -131,6 +141,7 @@ const AdminOrganizations = () => {
               value={newOrg.name}
               onChange={(e) => setNewOrg({...newOrg, name: e.target.value})}
               required
+              placeholder="e.g., Youth Mental Health Malawi"
             />
             <Select
               label="Type"
@@ -151,12 +162,14 @@ const AdminOrganizations = () => {
               type="email"
               value={newOrg.contact_email}
               onChange={(e) => setNewOrg({...newOrg, contact_email: e.target.value})}
+              placeholder="info@organization.mw"
             />
             <Input
               label="Contact Phone"
               name="contact_phone"
               value={newOrg.contact_phone}
               onChange={(e) => setNewOrg({...newOrg, contact_phone: e.target.value})}
+              placeholder="+265 999 123 456"
             />
             <Input
               label="Domain (optional)"
