@@ -98,16 +98,17 @@ const AdminResourcesCreate = () => {
           <Row>
             <Col md={6}>
               <Input
-                label="Title"
+                label="Title *"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
+                placeholder="e.g., Managing Anxiety"
               />
             </Col>
             <Col md={6}>
               <Select
-                label="Type"
+                label="Type *"
                 name="type"
                 value={formData.type}
                 options={typeOptions}
@@ -132,6 +133,7 @@ const AdminResourcesCreate = () => {
                 name="author"
                 value={formData.author}
                 onChange={handleChange}
+                placeholder="e.g., Dr. Jane Mkandawire"
               />
             </Col>
           </Row>
@@ -141,6 +143,7 @@ const AdminResourcesCreate = () => {
             rows={2}
             value={formData.description}
             onChange={handleChange}
+            placeholder="Brief summary of the resource (displayed in listings)"
           />
           <Textarea
             label="Content (full text)"
@@ -148,6 +151,7 @@ const AdminResourcesCreate = () => {
             rows={5}
             value={formData.content}
             onChange={handleChange}
+            placeholder="Full article text or detailed content (for articles, courses, etc.)"
           />
           <Row>
             <Col md={6}>
@@ -158,6 +162,7 @@ const AdminResourcesCreate = () => {
                 onChange={handleChange}
                 placeholder="https://example.com/resource"
               />
+              <Form.Text className="text-muted">If you upload a file below, the URL will be auto‑filled.</Form.Text>
             </Col>
             <Col md={6}>
               <Input
@@ -168,6 +173,7 @@ const AdminResourcesCreate = () => {
                 onChange={handleChange}
                 placeholder="e.g., 5"
               />
+              <Form.Text className="text-muted">For videos, podcasts, or courses.</Form.Text>
             </Col>
           </Row>
           <Row>
@@ -189,7 +195,7 @@ const AdminResourcesCreate = () => {
                   onChange={handleChange}
                 />
                 <Form.Text className="text-muted">
-                  If you upload a file, it will be stored on Cloudinary and the URL will be used.
+                  File will be stored on Cloudinary and the URL will be used.
                 </Form.Text>
               </Form.Group>
             </Col>
@@ -202,6 +208,7 @@ const AdminResourcesCreate = () => {
               checked={formData.is_published}
               onChange={handleChange}
             />
+            <Form.Text className="text-muted">If unchecked, the resource will be saved as draft.</Form.Text>
           </Form.Group>
           <div className="d-flex gap-2">
             <Button variant="primary" type="submit" disabled={loading}>
