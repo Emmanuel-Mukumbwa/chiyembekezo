@@ -3,6 +3,7 @@ import { Container, Card, Alert } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, Input, Select } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminInvitations = () => {
   const { showModal } = useModal();
@@ -28,7 +29,10 @@ const AdminInvitations = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Send Invitation</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Send Invitation</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <Card className="p-4">
         {error && <Alert variant="danger">{error}</Alert>}
         <form onSubmit={handleSubmit}>
@@ -39,6 +43,7 @@ const AdminInvitations = () => {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
+            placeholder="person@example.com"
           />
           <Select
             label="Role"
