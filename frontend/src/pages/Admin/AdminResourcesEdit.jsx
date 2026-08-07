@@ -127,16 +127,17 @@ const AdminResourcesEdit = () => {
           <Row>
             <Col md={6}>
               <Input
-                label="Title"
+                label="Title *"
                 name="title"
                 value={formData.title}
                 onChange={handleChange}
                 required
+                placeholder="e.g., Managing Anxiety"
               />
             </Col>
             <Col md={6}>
               <Select
-                label="Type"
+                label="Type *"
                 name="type"
                 value={formData.type}
                 options={typeOptions}
@@ -161,6 +162,7 @@ const AdminResourcesEdit = () => {
                 name="author"
                 value={formData.author}
                 onChange={handleChange}
+                placeholder="e.g., Dr. Jane Mkandawire"
               />
             </Col>
           </Row>
@@ -170,6 +172,7 @@ const AdminResourcesEdit = () => {
             rows={2}
             value={formData.description}
             onChange={handleChange}
+            placeholder="Brief summary of the resource"
           />
           <Textarea
             label="Content (full text)"
@@ -177,6 +180,7 @@ const AdminResourcesEdit = () => {
             rows={5}
             value={formData.content}
             onChange={handleChange}
+            placeholder="Full article text or detailed content"
           />
           <Row>
             <Col md={6}>
@@ -187,6 +191,7 @@ const AdminResourcesEdit = () => {
                 onChange={handleChange}
                 placeholder="https://example.com/resource"
               />
+              <Form.Text className="text-muted">Upload a new file below to replace the current one.</Form.Text>
             </Col>
             <Col md={6}>
               <Input
@@ -231,6 +236,7 @@ const AdminResourcesEdit = () => {
               checked={formData.is_published}
               onChange={handleChange}
             />
+            <Form.Text className="text-muted">If unchecked, the resource will be saved as draft.</Form.Text>
           </Form.Group>
           <div className="d-flex gap-2">
             <Button variant="primary" type="submit" disabled={loading}>
