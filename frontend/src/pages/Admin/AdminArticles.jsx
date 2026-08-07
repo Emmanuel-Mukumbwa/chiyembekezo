@@ -10,6 +10,7 @@ const AdminArticles = () => {
   const [articles, setArticles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null); // track which row is being processed
 
   useEffect(() => {
     fetchArticles();
@@ -30,24 +31,35 @@ const AdminArticles = () => {
   };
 
   const togglePublish = async (id, current) => {
+    setActionLoading(id);
     try {
       await api.put(`/admin/articles/${id}/publish`, { is_published: !current });
-      fetchArticles();
       showModal('Success', 'Article updated.');
+      fetchArticles();
     } catch (err) {
       showModal('Error', 'Failed to update article.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const deleteArticle = async (id) => {
-    if (!window.confirm('Delete this article?')) return;
-    try {
-      await api.delete(`/admin/articles/${id}`);
-      fetchArticles();
-      showModal('Success', 'Article deleted.');
-    } catch (err) {
-      showModal('Error', 'Failed to delete article.');
-    }
+    showModal(
+      'Confirm Delete',
+      'Are you sure you want to delete this article? This action cannot be undone.',
+      async () => {
+        setActionLoading(id);
+        try {
+          await api.delete(`/admin/articles/${id}`);
+          showModal('Success', 'Article deleted.');
+          fetchArticles();
+        } catch (err) {
+          showModal('Error', 'Failed to delete article.');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    );
   };
 
   const columns = [
@@ -63,18 +75,29 @@ const AdminArticles = () => {
     {
       field: 'actions',
       label: 'Actions',
-      render: (_, row) => (
-        <div className="d-flex gap-1">
-          <Button
-            variant={row.is_published ? 'outline-secondary' : 'outline-primary'}
-            size="sm"
-            onClick={() => togglePublish(row.id, row.is_published)}
-          >
-            {row.is_published ? 'Unpublish' : 'Publish'}
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => deleteArticle(row.id)}>Delete</Button>
-        </div>
-      ),
+      render: (_, row) => {
+        const isProcessing = actionLoading === row.id;
+        return (
+          <div className="d-flex gap-1">
+            <Button
+              variant={row.is_published ? 'outline-secondary' : 'outline-primary'}
+              size="sm"
+              onClick={() => togglePublish(row.id, row.is_published)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : (row.is_published ? 'Unpublish' : 'Publish')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => deleteArticle(row.id)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : 'Delete'}
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
