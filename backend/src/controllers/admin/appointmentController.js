@@ -26,7 +26,14 @@ exports.updateAppointmentStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     await pool.query('UPDATE appointments SET status = ? WHERE id = ?', [status, id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Updated appointment ${id} status to ${status}`, 'appointment', id, { status });
+    await logAuditAction(
+      req.user.id,
+      `Updated appointment ${id} status to ${status}`,
+      'appointment',
+      id,
+      { status },
+      req.user.email
+    );
     res.json({ message: 'Appointment updated' });
   } catch (err) {
     console.error(err);
