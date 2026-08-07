@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Form, Spinner, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
-import { Button as UIButton, ErrorState } from '../components/ui';
+import { Button as UIButton, ErrorState, EmergencyCard } from '../components/ui';
 import api from '../services/api';
 
 const FindHelp = () => {
@@ -87,37 +87,15 @@ const FindHelp = () => {
         Connect with verified professionals, hospitals, and helplines in Malawi.
       </p>
 
-      {/* Emergency Quick Card – fully DB-driven, no hardcoded 999 */}
-      <Card className="border-danger p-3 mb-4 text-center">
-        <h5>🚨 Need Immediate Help?</h5>
-        {featuredContacts.length > 0 ? (
-          <>
-            <p className="mb-2">If you are in crisis, call one of the numbers below or go to your nearest hospital.</p>
-            <div className="d-flex flex-wrap justify-content-center gap-2">
-              {featuredContacts.map((contact) => (
-                <Button
-                  key={contact.id}
-                  variant="danger"
-                  size="sm"
-                  onClick={() => callNumber(contact.phone)}
-                >
-                  {contact.name}
-                </Button>
-              ))}
-            </div>
-          </>
-        ) : (
-          <>
-            <p className="mb-2">No emergency contacts have been configured.</p>
-            <p className="text-muted small">Please go to your nearest hospital or call a trusted contact.</p>
-          </>
-        )}
-        <div className="mt-2">
-          <Button variant="outline-secondary" size="sm" as="a" href={getMapLink()} target="_blank">
-            📍 Find Nearest Hospital
-          </Button>
-        </div>
-      </Card>
+      {/* Emergency Card – fully DB-driven */}
+      <EmergencyCard
+        title="Need Immediate Help?"
+        description="If you are in crisis, call one of the numbers below or go to your nearest hospital."
+        helplines={featuredContacts.map(c => ({ name: c.name, phone: c.phone }))}
+        onCall={callNumber}
+        onOpenEmergency={() => window.location.href = '/emergency'}
+        className="mb-4"
+      />
 
       {/* Filters */}
       <Card className="feature-card p-3 mb-4">
