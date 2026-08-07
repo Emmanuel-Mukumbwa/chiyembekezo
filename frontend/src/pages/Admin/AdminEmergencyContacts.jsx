@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Modal, Spinner, Badge, Button } from 'react-bootstrap';
+import { Container, Modal, Spinner, Badge, Button, Form } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { DataTable, Input, Select, ErrorState } from '../../components/ui';
@@ -64,14 +64,19 @@ const AdminEmergencyContacts = () => {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Delete this contact?')) return;
-    try {
-      await api.delete(`/admin/emergency-contacts/${id}`);
-      showModal('Success', 'Contact deleted.');
-      fetchContacts();
-    } catch (err) {
-      showModal('Error', 'Failed to delete contact.');
-    }
+    showModal(
+      'Confirm Delete',
+      'Are you sure you want to delete this contact?',
+      async () => {
+        try {
+          await api.delete(`/admin/emergency-contacts/${id}`);
+          showModal('Success', 'Contact deleted.');
+          fetchContacts();
+        } catch (err) {
+          showModal('Error', 'Failed to delete contact.');
+        }
+      }
+    );
   };
 
   const openEdit = (contact) => {
@@ -135,7 +140,7 @@ const AdminEmergencyContacts = () => {
         <Modal.Header closeButton>
           <Modal.Title>{editingContact ? 'Edit Contact' : 'New Contact'}</Modal.Title>
         </Modal.Header>
-        <form onSubmit={handleSave}>
+        <Form onSubmit={handleSave}>
           <Modal.Body>
             <Input
               label="Name *"
@@ -143,6 +148,7 @@ const AdminEmergencyContacts = () => {
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
+              placeholder="e.g., Lilongwe Police Station"
             />
             <Input
               label="Phone *"
@@ -150,18 +156,21 @@ const AdminEmergencyContacts = () => {
               value={formData.phone}
               onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               required
+              placeholder="e.g., +265 999 123 456"
             />
             <Input
               label="Organization"
               name="organization"
               value={formData.organization}
               onChange={(e) => setFormData({ ...formData, organization: e.target.value })}
+              placeholder="e.g., Malawi Police Service"
             />
             <Input
               label="District"
               name="district"
               value={formData.district}
               onChange={(e) => setFormData({ ...formData, district: e.target.value })}
+              placeholder="e.g., Lilongwe"
             />
             <Select
               label="Contact Type"
@@ -183,6 +192,7 @@ const AdminEmergencyContacts = () => {
                 checked={formData.is_active}
                 onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
               />
+              <Form.Text className="text-muted">Only active contacts appear in the emergency help pages.</Form.Text>
             </Form.Group>
             <Form.Group className="mb-3">
               <Form.Check
@@ -191,6 +201,7 @@ const AdminEmergencyContacts = () => {
                 checked={formData.is_featured}
                 onChange={(e) => setFormData({ ...formData, is_featured: e.target.checked })}
               />
+              <Form.Text className="text-muted">Featured contacts appear prominently in the emergency quick‑help section.</Form.Text>
             </Form.Group>
           </Modal.Body>
           <Modal.Footer>
@@ -199,7 +210,7 @@ const AdminEmergencyContacts = () => {
               {submitting ? 'Saving...' : 'Save'}
             </Button>
           </Modal.Footer>
-        </form>
+        </Form>
       </Modal>
     </Container>
   );
