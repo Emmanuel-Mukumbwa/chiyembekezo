@@ -3,12 +3,14 @@ import { Container, Spinner, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, DataTable, ErrorState } from '../../components/ui';
+import LogoutButton from '../../components/LogoutButton';
 
 const AdminVolunteers = () => {
   const { showModal } = useModal();
   const [volunteers, setVolunteers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [actionLoading, setActionLoading] = useState(null);
 
   useEffect(() => {
     fetchVolunteers();
@@ -29,24 +31,35 @@ const AdminVolunteers = () => {
   };
 
   const toggleVerify = async (id, currentStatus) => {
+    setActionLoading(id);
     try {
       await api.put(`/admin/volunteers/${id}/verify`, { is_verified: !currentStatus });
       showModal('Success', 'Volunteer updated.');
       fetchVolunteers();
     } catch (err) {
       showModal('Error', 'Failed to update volunteer.');
+    } finally {
+      setActionLoading(null);
     }
   };
 
   const deleteVolunteer = async (id) => {
-    if (!window.confirm('Delete this volunteer?')) return;
-    try {
-      await api.delete(`/admin/volunteers/${id}`);
-      showModal('Success', 'Volunteer deleted.');
-      fetchVolunteers();
-    } catch (err) {
-      showModal('Error', 'Failed to delete volunteer.');
-    }
+    showModal(
+      'Confirm Delete',
+      'Are you sure you want to delete this volunteer? This action cannot be undone.',
+      async () => {
+        setActionLoading(id);
+        try {
+          await api.delete(`/admin/volunteers/${id}`);
+          showModal('Success', 'Volunteer deleted.');
+          fetchVolunteers();
+        } catch (err) {
+          showModal('Error', 'Failed to delete volunteer.');
+        } finally {
+          setActionLoading(null);
+        }
+      }
+    );
   };
 
   const columns = [
@@ -66,18 +79,29 @@ const AdminVolunteers = () => {
     {
       field: 'actions',
       label: 'Actions',
-      render: (_, row) => (
-        <div className="d-flex gap-1">
-          <Button
-            variant={row.is_verified ? 'warning' : 'success'}
-            size="sm"
-            onClick={() => toggleVerify(row.id, row.is_verified)}
-          >
-            {row.is_verified ? 'Unverify' : 'Verify'}
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => deleteVolunteer(row.id)}>Delete</Button>
-        </div>
-      ),
+      render: (_, row) => {
+        const isProcessing = actionLoading === row.id;
+        return (
+          <div className="d-flex gap-1">
+            <Button
+              variant={row.is_verified ? 'warning' : 'success'}
+              size="sm"
+              onClick={() => toggleVerify(row.id, row.is_verified)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : (row.is_verified ? 'Unverify' : 'Verify')}
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => deleteVolunteer(row.id)}
+              disabled={isProcessing}
+            >
+              {isProcessing ? <Spinner animation="border" size="sm" /> : 'Delete'}
+            </Button>
+          </div>
+        );
+      },
     },
   ];
 
@@ -86,7 +110,10 @@ const AdminVolunteers = () => {
 
   return (
     <Container fluid className="px-4">
-      <h4 className="mb-4">Volunteer Listeners</h4>
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Volunteer Listeners</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
       <DataTable columns={columns} data={volunteers} keyField="id" />
     </Container>
   );
