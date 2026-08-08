@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Container, Row, Col, Card, Form, Alert, InputGroup } from 'react-bootstrap';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Button from '../components/ui/Button';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../services/api';
 
 const ResetPassword = () => {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -71,7 +73,7 @@ const ResetPassword = () => {
                 <Form.Label>New Password</Form.Label>
                 <InputGroup>
                   <Form.Control
-                    type={showPassword ? 'text' : 'password'}
+                    type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     required
@@ -79,11 +81,11 @@ const ResetPassword = () => {
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowNewPassword(!showNewPassword)}
                     tabIndex="-1"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showNewPassword ? <FaEyeSlash /> : <FaEye />}
                   </Button>
                 </InputGroup>
               </Form.Group>
@@ -91,18 +93,18 @@ const ResetPassword = () => {
                 <Form.Label>Confirm Password</Form.Label>
                 <InputGroup>
                   <Form.Control
-                    type={showPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     tabIndex="-1"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </Button>
                 </InputGroup>
               </Form.Group>
