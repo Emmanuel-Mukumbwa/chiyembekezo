@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Modal, Form, Spinner } from 'react-bootstrap';
+import { Container, Modal, Form, Spinner, Row, Col } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import {
@@ -10,6 +11,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  LoadingSkeleton,
 } from '../components/ui';
 import api from '../services/api';
 
@@ -104,25 +106,14 @@ const Journal = () => {
   const columns = [
     { field: 'created_at', label: 'Date', render: (val) => new Date(val).toLocaleDateString() },
     { field: 'title', label: 'Title', render: (val) => val || '(no title)' },
-    {
-      field: 'mood_at_entry',
-      label: 'Mood',
-      render: (val) => {
-        const emojis = { 1: '😭', 2: '😔', 3: '😐', 4: '🙂', 5: '😊' };
-        return emojis[val] || '-';
-      },
-    },
+    { field: 'mood_at_entry', label: 'Mood', render: (val) => ['😭','😔','😐','🙂','😊'][val-1] || '-' },
     { field: 'entry_type', label: 'Type' },
     { field: 'word_count', label: 'Words' },
     {
       field: 'is_favorite',
       label: '⭐',
       render: (val, row) => (
-        <Button
-          variant="link"
-          onClick={() => toggleFavorite(row.id, val)}
-          className="p-0 text-decoration-none"
-        >
+        <Button variant="link" onClick={() => toggleFavorite(row.id, val)} className="p-0 text-decoration-none">
           {val ? '⭐' : '☆'}
         </Button>
       ),
@@ -139,23 +130,20 @@ const Journal = () => {
     },
   ];
 
-  if (!user) {
-    return <div className="text-center mt-5">Please log in to access your journal.</div>;
-  }
+  if (!user) return <div className="text-center mt-5">Please log in to access your journal.</div>;
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container fluid className="px-3 px-sm-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="avatar" />
+        </div>
+        <LoadingSkeleton type="card" lines={6} />
       </Container>
     );
   }
 
-  if (error) {
-    return <ErrorState title="Error loading journal" description={error} onRetry={fetchEntries} />;
-  }
+  if (error) return <ErrorState title="Error loading journal" description={error} onRetry={fetchEntries} />;
 
   return (
     <Container fluid className="px-3 px-sm-4">
@@ -167,83 +155,34 @@ const Journal = () => {
       </div>
 
       {entries.length === 0 ? (
-        <EmptyState
-          icon="📝"
-          title="No journal entries yet"
-          description="Start writing to reflect and grow."
-          actionText="Write Entry"
-          onAction={() => {}}
-        />
+        <EmptyState icon="📝" title="No journal entries yet" description="Start writing to reflect and grow." actionText="Write Entry" />
       ) : (
         <DataTable columns={columns} data={entries} keyField="id" />
       )}
 
-      {/* Modal */}
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editingEntry ? 'Edit Entry' : 'New Entry'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave}>
           <Modal.Body>
-            <Input
-              label="Title"
-              name="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            />
-            <Textarea
-              label="Content"
-              name="content"
-              rows={5}
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-              required
-            />
+            <Input label="Title" name="title" value={formData.title} onChange={(e) => setFormData({ ...formData, title: e.target.value })} />
+            <Textarea label="Content" name="content" rows={5} value={formData.content} onChange={(e) => setFormData({ ...formData, content: e.target.value })} required />
             <Row>
               <Col sm={4}>
-                <Select
-                  label="Mood"
-                  name="mood_at_entry"
-                  value={formData.mood_at_entry}
-                  options={[
-                    { value: '', label: 'Select mood' },
-                    { value: '5', label: '😊 Happy' },
-                    { value: '4', label: '🙂 Okay' },
-                    { value: '3', label: '😐 Neutral' },
-                    { value: '2', label: '😔 Sad' },
-                    { value: '1', label: '😭 Overwhelmed' },
-                  ]}
-                  onChange={(e) => setFormData({ ...formData, mood_at_entry: e.target.value })}
-                />
+                <Select label="Mood" name="mood_at_entry" value={formData.mood_at_entry} options={[{ value: '', label: 'Select mood' }, { value: '5', label: '😊 Happy' }, { value: '4', label: '🙂 Okay' }, { value: '3', label: '😐 Neutral' }, { value: '2', label: '😔 Sad' }, { value: '1', label: '😭 Overwhelmed' }]} onChange={(e) => setFormData({ ...formData, mood_at_entry: e.target.value })} />
               </Col>
               <Col sm={4}>
-                <Select
-                  label="Entry Type"
-                  name="entry_type"
-                  value={formData.entry_type}
-                  options={[
-                    { value: 'free', label: 'Free Writing' },
-                    { value: 'guided', label: 'Guided Prompt' },
-                    { value: 'gratitude', label: 'Gratitude' },
-                  ]}
-                  onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })}
-                />
+                <Select label="Entry Type" name="entry_type" value={formData.entry_type} options={[{ value: 'free', label: 'Free Writing' }, { value: 'guided', label: 'Guided Prompt' }, { value: 'gratitude', label: 'Gratitude' }]} onChange={(e) => setFormData({ ...formData, entry_type: e.target.value })} />
               </Col>
               <Col sm={4} className="d-flex align-items-center">
-                <Form.Check
-                  type="checkbox"
-                  label="⭐ Favorite"
-                  checked={formData.is_favorite}
-                  onChange={(e) => setFormData({ ...formData, is_favorite: e.target.checked })}
-                />
+                <Form.Check type="checkbox" label="⭐ Favorite" checked={formData.is_favorite} onChange={(e) => setFormData({ ...formData, is_favorite: e.target.checked })} />
               </Col>
             </Row>
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowEditModal(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
-            </Button>
+            <Button variant="primary" type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save'}</Button>
           </Modal.Footer>
         </Form>
       </Modal>
