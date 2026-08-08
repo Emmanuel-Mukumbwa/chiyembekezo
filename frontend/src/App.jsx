@@ -55,6 +55,7 @@ import ListenerDashboard from './pages/Listener/ListenerDashboard';
 import Settings from './pages/Settings';
 import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
 import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
+import NotFound from './pages/NotFound';
 
 // Admin
 import AdminLayout from './pages/Admin/AdminLayout';
@@ -110,7 +111,7 @@ const ProtectedLayout = ({ children }) => (
     <DashboardLayout>{children}</DashboardLayout>
   </ProtectedRoute>
 );
-
+ 
 const router = createBrowserRouter([
   // Public routes
   { path: '/', element: <PublicLayout><Home /></PublicLayout> },
@@ -222,6 +223,9 @@ const router = createBrowserRouter([
       { path: 'resources/edit/:id', element: <OrganizationResourceEdit /> },
     ],
   },
+
+  // 404 – catch-all route
+  { path: '*', element: <PublicLayout><NotFound /></PublicLayout> },
 ]);
 
 function App() {
