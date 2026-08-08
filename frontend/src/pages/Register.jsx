@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Alert, InputGroup } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Alert, InputGroup, ProgressBar } from 'react-bootstrap';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 import api from '../services/api';
 
 const Register = () => {
@@ -19,10 +20,27 @@ const Register = () => {
     phone: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [acceptedTerms, setAcceptedTerms] = useState(false);
   const { register } = useAuth();
   const navigate = useNavigate();
+
+  // Password strength calculation
+  const getPasswordStrength = (password) => {
+    let score = 0;
+    if (password.length >= 8) score++;
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) score++;
+    if (/\d/.test(password)) score++;
+    if (/[^a-zA-Z0-9]/.test(password)) score++;
+    return score;
+  };
+
+  const strength = getPasswordStrength(formData.password);
+  const strengthLabels = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
+  const strengthColors = ['#dc3545', '#fd7e14', '#ffc107', '#28a745', '#198754'];
+  const strengthPercentage = (strength / 4) * 100;
 
   useEffect(() => {
     if (inviteToken) {
@@ -43,6 +61,11 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    if (!acceptedTerms) {
+      setError('You must accept the Terms & Conditions to register.');
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match.');
@@ -79,15 +102,10 @@ const Register = () => {
     }
   };
 
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
-
   return (
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
-          {/* Back to Home link */}
           <div className="mb-3">
             <Link to="/" className="text-muted small text-decoration-none">
               ← Back to Home
@@ -157,20 +175,31 @@ const Register = () => {
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={togglePasswordVisibility}
+                    onClick={() => setShowPassword(!showPassword)}
                     tabIndex="-1"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </Button>
                 </InputGroup>
+                {formData.password && (
+                  <div className="mt-2">
+                    <ProgressBar
+                      now={strengthPercentage}
+                      label={strengthLabels[strength] || 'Very Weak'}
+                      variant={['danger', 'warning', 'warning', 'success', 'success'][strength] || 'danger'}
+                      style={{ height: '8px' }}
+                    />
+                    <small className="text-muted">{strengthLabels[strength] || 'Very Weak'}</small>
+                  </div>
+                )}
               </Form.Group>
 
               <Form.Group className="mb-3">
                 <Form.Label>Confirm Password</Form.Label>
                 <InputGroup>
                   <Form.Control
-                    type={showPassword ? 'text' : 'password'}
+                    type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
@@ -179,11 +208,11 @@ const Register = () => {
                   />
                   <Button
                     variant="outline-secondary"
-                    onClick={togglePasswordVisibility}
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     tabIndex="-1"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                   </Button>
                 </InputGroup>
               </Form.Group>
@@ -196,6 +225,27 @@ const Register = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+265 999 123 456"
+                />
+              </Form.Group>
+
+              <Form.Group className="mb-3">
+                <Form.Check
+                  type="checkbox"
+                  id="acceptTerms"
+                  checked={acceptedTerms}
+                  onChange={(e) => setAcceptedTerms(e.target.checked)}
+                  label={
+                    <>
+                      I agree to the{' '}
+                      <Link to="/terms" className="fw-semibold">
+                        Terms & Conditions
+                      </Link>
+                      {' '}and{' '}
+                      <Link to="/privacy-policy" className="fw-semibold">
+                        Privacy Policy
+                      </Link>
+                    </>
+                  }
                 />
               </Form.Group>
 
