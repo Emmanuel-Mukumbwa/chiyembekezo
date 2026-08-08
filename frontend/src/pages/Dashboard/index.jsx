@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Badge, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { useModal } from '../../context/ModalContext';
-import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
 import MoodTracker from '../../components/MoodTracker';
 import {
@@ -12,6 +10,7 @@ import {
   StatCard,
   GoalCard,
   JournalCard,
+  LoadingSkeleton,
 } from '../../components/ui';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -38,7 +37,6 @@ const computeStreak = (history) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { showModal } = useModal();
   const [moodHistory, setMoodHistory] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
@@ -46,11 +44,6 @@ const Dashboard = () => {
   const [recommendations, setRecommendations] = useState([]);
   const [loading, setLoading] = useState(true);
   const [streak, setStreak] = useState(0);
-
-  usePrompt(
-    () => {},
-    () => {}
-  );
 
   useEffect(() => {
     if (user) fetchAllData();
@@ -115,10 +108,25 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container fluid className="px-3 px-sm-4">
+        <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+          <LoadingSkeleton type="avatar" className="w-100" />
+        </div>
+        <Row className="g-2 g-md-3 mb-4">
+          {[1, 2, 3, 4].map(i => (
+            <Col xs={6} md={3} key={i}>
+              <LoadingSkeleton type="card" lines={2} />
+            </Col>
+          ))}
+        </Row>
+        <Row>
+          <Col lg={7}>
+            <LoadingSkeleton type="card" lines={5} withImage />
+          </Col>
+          <Col lg={5}>
+            <LoadingSkeleton type="card" lines={4} />
+          </Col>
+        </Row>
       </Container>
     );
   }
