@@ -3,6 +3,7 @@ import { Container, Row, Col, Card, Form, Alert, InputGroup } from 'react-bootst
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import Button from '../components/ui/Button';
+import { FaEye, FaEyeSlash } from 'react-icons/fa';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -40,7 +41,6 @@ const Login = () => {
     <Container className="my-5">
       <Row className="justify-content-center">
         <Col md={6} lg={5}>
-          {/* Back to Home link */}
           <div className="mb-3">
             <Link to="/" className="text-muted small text-decoration-none">
               ← Back to Home
@@ -84,7 +84,7 @@ const Login = () => {
                     tabIndex="-1"
                     style={{ borderColor: 'var(--color-border)' }}
                   >
-                    {showPassword ? '🙈' : '👁️'}
+                    {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </Button>
                 </InputGroup>
               </Form.Group>
