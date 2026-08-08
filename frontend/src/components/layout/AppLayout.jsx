@@ -3,6 +3,7 @@ import { Container } from 'react-bootstrap';
 import Navbar from './Navbar';
 import Footer from './Footer';
 import ScrollToTop from '../ScrollToTop';
+import ScrollToTopButton from '../ScrollToTopButton';
 import { useAuth } from '../../context/AuthContext';
 
 const AppLayout = ({ children, maxWidth = 'xl', className = '' }) => {
@@ -27,6 +28,7 @@ const AppLayout = ({ children, maxWidth = 'xl', className = '' }) => {
         </Container>
       </main>
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 };
