@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Spinner, Table, Badge, Button } from 'react-bootstrap';
+import { Container, Row, Col, Table, Badge, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
-import { Card, StatCard, ErrorState } from '../../components/ui';
+import { Card, StatCard, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 import { Bar, Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
@@ -45,12 +45,34 @@ const AdminAnalytics = () => {
     }
   };
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container fluid className="px-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h2 className="fw-bold">Analytics Dashboard</h2>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
+        <Row className="g-3 mb-4">
+          {[...Array(8)].map((_, i) => (
+            <Col md={3} sm={6} key={i}>
+              <LoadingSkeleton type="card" lines={2} />
+            </Col>
+          ))}
+        </Row>
+        <Row className="mb-4">
+          {[...Array(2)].map((_, i) => (
+            <Col md={6} key={i}>
+              <LoadingSkeleton type="card" lines={6} />
+            </Col>
+          ))}
+        </Row>
+        <Row>
+          {[...Array(2)].map((_, i) => (
+            <Col md={6} key={i}>
+              <LoadingSkeleton type="card" lines={4} />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
