@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
-import { Button as UIButton, ErrorState, EmergencyCard } from '../components/ui';
+import { Button as UIButton, ErrorState, EmergencyCard, LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const FindHelp = () => {
@@ -60,10 +60,19 @@ const FindHelp = () => {
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <h1 className="text-center mb-4">Find Mental Health Support</h1>
+        <p className="text-center text-muted mb-4">
+          Connect with verified professionals, hospitals, and helplines in Malawi.
+        </p>
+        <LoadingSkeleton type="card" lines={3} className="mb-4" />
+        <Row>
+          {[...Array(6)].map((_, i) => (
+            <Col md={6} lg={4} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={4} className="h-100" />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
