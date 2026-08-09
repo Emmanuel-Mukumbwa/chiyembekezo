@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, ListGroup, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, ListGroup } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { Card, Button, ErrorState, EmergencyCard } from '../components/ui';
+import { Card, Button, ErrorState, EmergencyCard, LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const Emergency = () => {
@@ -78,12 +78,18 @@ const Emergency = () => {
     return `https://www.google.com/maps/search/${encodeURIComponent(query)}`;
   };
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container fluid className="px-4 my-4">
+        <h1 className="text-center mb-4">
+          <LoadingSkeleton type="article" lines={1} className="mx-auto" />
+        </h1>
+        <Row>
+          <Col lg={10} className="mx-auto">
+            <LoadingSkeleton type="card" lines={5} withImage className="mb-4" />
+            <LoadingSkeleton type="list" />
+          </Col>
+        </Row>
       </Container>
     );
   }
