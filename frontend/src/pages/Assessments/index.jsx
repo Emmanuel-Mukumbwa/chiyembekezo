@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Badge } from 'react-bootstrap';
 import AssessmentCard from '../../components/AssessmentCard';
+import { LoadingSkeleton } from '../../components/ui';
 
 const assessments = [
   {
@@ -41,6 +42,28 @@ const assessments = [
 ];
 
 const Assessments = () => {
+  const [pageLoading, setPageLoading] = useState(true);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  if (pageLoading) {
+    return (
+      <Container className="my-5">
+        <h2 className="text-center mb-4">Mental Health Self-Assessments</h2>
+        <Row>
+          {[...Array(6)].map((_, i) => (
+            <Col md={4} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={4} className="h-100" />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    );
+  }
+
   return (
     <Container className="my-5">
       <h2 className="text-center mb-4">Mental Health Self-Assessments</h2>
