@@ -1,15 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 
 const Breathing = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
   const navigate = useNavigate();
+  const [pageLoading, setPageLoading] = useState(true);
   const [technique, setTechnique] = useState('box');
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState('idle');
@@ -34,7 +35,9 @@ const Breathing = () => {
   const phaseLabels = { inhale: 'Breathe In', hold: 'Hold', exhale: 'Exhale', hold2: 'Hold' };
 
   useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 300);
     return () => {
+      clearTimeout(t);
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
@@ -130,6 +133,25 @@ const Breathing = () => {
       showModal('Error', 'Failed to save session.');
     }
   };
+
+  if (pageLoading) {
+    return (
+      <Container className="my-5">
+        <h2>Breathing Exercises</h2>
+        <Row>
+          <Col lg={7}>
+            <LoadingSkeleton type="article" lines={8} />
+          </Col>
+          <Col lg={5}>
+            <LoadingSkeleton type="card" lines={5} />
+            <div className="mt-3">
+              <LoadingSkeleton type="card" lines={2} />
+            </div>
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   return (
     <Container className="my-5">
