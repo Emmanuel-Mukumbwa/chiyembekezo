@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Modal, Spinner, Badge } from 'react-bootstrap';
+import { Container, Modal, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import {
@@ -9,6 +9,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  LoadingSkeleton,
 } from '../../components/ui';
 
 const OrganizationMembers = () => {
@@ -121,7 +122,16 @@ const OrganizationMembers = () => {
     },
   ];
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (loading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Organization Members</h4>
+        <Button variant="primary">+ Add Member</Button>
+      </div>
+      <LoadingSkeleton type="list" />
+      <LoadingSkeleton type="list" className="mt-3" />
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading members" description={error} onRetry={fetchMembers} />;
 
   return (
