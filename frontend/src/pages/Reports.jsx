@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge, Alert } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
@@ -63,12 +64,26 @@ const Reports = () => {
     );
   }
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row className="g-3 mb-4">
+          {[...Array(4)].map((_, i) => (
+            <Col md={3} key={i}>
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
+        <Row className="g-3">
+          {[...Array(2)].map((_, i) => (
+            <Col md={6} key={i}>
+              <LoadingSkeleton type="card" lines={6} />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
