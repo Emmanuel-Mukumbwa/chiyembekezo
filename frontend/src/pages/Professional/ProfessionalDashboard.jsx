@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Badge, Spinner, Table } from 'react-bootstrap';
+import { Container, Row, Col, Badge, Table } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import { Card, Button, StatCard } from '../../components/ui';
+import { Card, Button, StatCard, LoadingSkeleton } from '../../components/ui';
 
 const ProfessionalDashboard = () => {
   const { logout } = useAuth();
@@ -41,10 +41,27 @@ const ProfessionalDashboard = () => {
     }
   };
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" />
+      <Container fluid className="px-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row className="g-3 mb-4">
+          {[...Array(4)].map((_, i) => (
+            <Col md={3} sm={6} key={i}>
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
+        <Row className="g-3">
+          <Col md={8}>
+            <LoadingSkeleton type="card" lines={6} />
+          </Col>
+          <Col md={4}>
+            <LoadingSkeleton type="card" lines={4} />
+          </Col>
+        </Row>
       </Container>
     );
   }
