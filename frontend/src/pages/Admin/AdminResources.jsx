@@ -3,7 +3,7 @@ import { Container, Spinner, Badge, Button } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { DataTable, ErrorState, SearchBar } from '../../components/ui';
+import { DataTable, ErrorState, SearchBar, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
 const AdminResources = () => {
@@ -113,7 +113,22 @@ const AdminResources = () => {
     },
   ];
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Resources</h4>
+        <div className="d-flex gap-2">
+          <Button variant="primary">+ New Resource</Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
+      </div>
+      <div className="mb-3" style={{ maxWidth: '300px' }}>
+        <LoadingSkeleton type="avatar" />
+      </div>
+      <LoadingSkeleton type="list" />
+      <LoadingSkeleton type="list" className="mt-3" />
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading resources" description={error} onRetry={fetchResources} />;
 
   return (
