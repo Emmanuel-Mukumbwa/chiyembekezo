@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Modal, Form, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -11,6 +11,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  LoadingSkeleton,
 } from '../components/ui';
 import api from '../services/api';
 
@@ -131,12 +132,16 @@ const Habits = () => {
     return <div className="text-center mt-5">Please log in to manage habits.</div>;
   }
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container fluid className="px-3 px-sm-4 py-4">
+        <Row>
+          {[...Array(4)].map((_, i) => (
+            <Col md={6} lg={3} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={4} />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
