@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Badge, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const Achievements = () => {
@@ -41,12 +42,19 @@ const Achievements = () => {
     );
   }
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row>
+          {[...Array(8)].map((_, i) => (
+            <Col md={3} sm={6} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
