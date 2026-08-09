@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Card, StatCard, ErrorState } from '../../components/ui';
+import { Card, StatCard, ErrorState, LoadingSkeleton } from '../../components/ui';
 
 const OrganizationInsights = () => {
   const { showModal } = useModal();
@@ -28,7 +28,22 @@ const OrganizationInsights = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (loading) return (
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Organization Insights</h4>
+      <Row className="g-3 mb-4">
+        {[...Array(4)].map((_, i) => (
+          <Col md={3} sm={6} key={i}>
+            <LoadingSkeleton type="card" lines={2} />
+          </Col>
+        ))}
+      </Row>
+      <Row>
+        <Col md={6}><LoadingSkeleton type="article" lines={5} /></Col>
+        <Col md={6}><LoadingSkeleton type="article" lines={5} /></Col>
+      </Row>
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading insights" description={error} onRetry={fetchInsights} />;
   if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
