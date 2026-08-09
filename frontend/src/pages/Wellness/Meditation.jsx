@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, ProgressBar } from 'react-bootstrap';
+import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 
 const Meditation = () => {
@@ -76,7 +76,18 @@ const Meditation = () => {
     }
   };
 
-  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (loading) return (
+    <Container className="my-5">
+      <h2>Meditation</h2>
+      <Row>
+        {[...Array(3)].map((_, i) => (
+          <Col md={4} key={i} className="mb-3">
+            <LoadingSkeleton type="card" lines={4} />
+          </Col>
+        ))}
+      </Row>
+    </Container>
+  );
 
   return (
     <Container className="my-5">
