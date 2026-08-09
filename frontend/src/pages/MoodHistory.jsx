@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Card, Table, Spinner, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Table, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import api from '../services/api';
+import { LoadingSkeleton } from '../components/ui';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
 
@@ -36,10 +37,14 @@ const MoodHistory = () => {
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Card className="feature-card p-3 mb-4">
+          <LoadingSkeleton type="article" lines={5} />
+        </Card>
+        <LoadingSkeleton type="list" />
       </Container>
     );
   }
