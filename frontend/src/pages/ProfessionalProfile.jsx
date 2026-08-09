@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Badge, Spinner, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Badge, Modal, Form } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const ProfessionalProfile = () => {
@@ -84,10 +85,8 @@ const ProfessionalProfile = () => {
 
   if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <LoadingSkeleton type="article" lines={8} />
       </Container>
     );
   }
