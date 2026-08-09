@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
-import { Button, ErrorState } from '../components/ui';
+import { Button, ErrorState, LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const ResourceDetail = () => {
@@ -71,12 +71,15 @@ const ResourceDetail = () => {
     }
   };
 
-  if (loading) {
+if (loading) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-5">
+        <LoadingSkeleton type="article" lines={8} />
+        <Row className="mt-4">
+          <Col md={4}>
+            <LoadingSkeleton type="card" lines={5} />
+          </Col>
+        </Row>
       </Container>
     );
   }
