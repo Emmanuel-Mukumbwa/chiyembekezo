@@ -76,6 +76,9 @@ import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminEmergencyContacts from './pages/Admin/AdminEmergencyContacts';
 import AdminLogs from './pages/Admin/AdminLogs';
+// NEW WELLNESS ADMIN IMPORTS
+import AdminMeditations from './pages/Admin/AdminMeditations';
+import AdminSounds from './pages/Admin/AdminSounds';
 
 // Professional Portal
 import ProfessionalLayout from './pages/Professional/ProfessionalLayout';
@@ -111,7 +114,7 @@ const ProtectedLayout = ({ children }) => (
     <DashboardLayout>{children}</DashboardLayout>
   </ProtectedRoute>
 );
- 
+
 const router = createBrowserRouter([
   // Public routes
   { path: '/', element: <PublicLayout><Home /></PublicLayout> },
@@ -192,6 +195,9 @@ const router = createBrowserRouter([
       { path: 'emergency-contacts', element: <AdminEmergencyContacts /> },
       { path: 'analytics', element: <AdminAnalytics /> },
       { path: 'logs', element: <AdminLogs /> },
+      // WELLNESS ADMIN ROUTES
+      { path: 'wellness/meditations', element: <AdminMeditations /> },
+      { path: 'wellness/sounds', element: <AdminSounds /> },
     ],
   },
 
