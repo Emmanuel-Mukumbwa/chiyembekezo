@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Spinner, Badge, Form, Row, Col, Pagination } from 'react-bootstrap';
+import { Container, Table, Badge, Row, Col, Pagination } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Button, Input, Select, ErrorState } from '../../components/ui';
+import { Button, Input, Select, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
 const AdminLogs = () => {
@@ -67,7 +67,16 @@ const AdminLogs = () => {
     setPagination(prev => ({ ...prev, page }));
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (loading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h4>Audit Logs</h4>
+        <LogoutButton variant="outline-danger" size="sm" />
+      </div>
+      <LoadingSkeleton type="list" />
+      <LoadingSkeleton type="list" className="mt-3" />
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading logs" description={error} onRetry={fetchLogs} />;
 
   return (
