@@ -3,11 +3,12 @@ import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 
 const Timers = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
+  const [pageLoading, setPageLoading] = useState(true);
   const [timerType, setTimerType] = useState('pomodoro');
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(25 * 60);
@@ -25,6 +26,14 @@ const Timers = () => {
   };
 
   const currentPreset = presets[timerType] || presets.pomodoro;
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 300);
+    return () => {
+      clearTimeout(t);
+      clearInterval(intervalRef.current);
+    };
+  }, []);
 
   const startTimer = () => {
     setIsRunning(true);
@@ -70,10 +79,6 @@ const Timers = () => {
   };
 
   useEffect(() => {
-    return () => clearInterval(intervalRef.current);
-  }, []);
-
-  useEffect(() => {
     if (timerType !== 'custom') {
       const base = isBreak ? currentPreset.break : currentPreset.work;
       setTimeLeft(base * 60);
@@ -88,6 +93,19 @@ const Timers = () => {
   };
 
   const progress = totalTime > 0 ? ((totalTime - timeLeft) / totalTime) * 100 : 0;
+
+  if (pageLoading) {
+    return (
+      <Container className="my-5">
+        <h2 className="mb-4">Relaxation Timers</h2>
+        <Row>
+          <Col lg={8} className="mx-auto">
+            <LoadingSkeleton type="article" lines={8} />
+          </Col>
+        </Row>
+      </Container>
+    );
+  }
 
   return (
     <Container className="my-5">
