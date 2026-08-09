@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Spinner, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Badge, Modal } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button, Input, Select, Textarea, EmptyState, ErrorState } from '../../components/ui';
+import { Button, Input, Select, Textarea, EmptyState, ErrorState, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -67,7 +67,23 @@ const CommunityHome = () => {
     }
   };
 
-  if (loading && posts.length === 0) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading && posts.length === 0) {
+    return (
+      <Container fluid className="px-4 my-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row>
+          {[...Array(3)].map((_, i) => (
+            <Col md={4} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={4} />
+            </Col>
+          ))}
+        </Row>
+        <LoadingSkeleton type="list" />
+      </Container>
+    );
+  }
   if (error) return <ErrorState title="Error loading community" description={error} onRetry={fetchPosts} />;
 
   return (
