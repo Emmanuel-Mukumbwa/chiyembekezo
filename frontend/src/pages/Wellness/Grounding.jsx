@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 
 const exercises = {
@@ -71,6 +71,7 @@ const exercises = {
 const Grounding = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
+  const [pageLoading, setPageLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState([]);
@@ -78,6 +79,11 @@ const Grounding = () => {
   const [moodAfter, setMoodAfter] = useState(null);
   const [completed, setCompleted] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 300);
+    return () => clearTimeout(t);
+  }, []);
 
   const startExercise = (id) => {
     setSelected(id);
@@ -116,6 +122,21 @@ const Grounding = () => {
       setSaving(false);
     }
   };
+
+  if (pageLoading) {
+    return (
+      <Container className="my-5">
+        <h2 className="mb-4">Grounding Techniques</h2>
+        <Row>
+          {[...Array(6)].map((_, i) => (
+            <Col md={4} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={4} className="h-100" />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    );
+  }
 
   if (!selected) {
     return (
