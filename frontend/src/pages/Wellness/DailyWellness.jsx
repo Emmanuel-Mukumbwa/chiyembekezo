@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 
 const DailyWellness = () => {
@@ -50,7 +50,17 @@ const DailyWellness = () => {
   const total = checklist.length;
   const progress = total > 0 ? (completed / total) * 100 : 0;
 
-  if (loading) return <div className="text-center mt-5">Loading...</div>;
+  if (loading) return (
+    <Container className="my-5">
+      <h2 className="mb-4">Daily Wellness</h2>
+      <Row>
+        <Col lg={6} className="mx-auto">
+          <LoadingSkeleton type="list" className="mb-3" />
+          <LoadingSkeleton type="card" lines={2} />
+        </Col>
+      </Row>
+    </Container>
+  );
 
   return (
     <Container className="my-5">
