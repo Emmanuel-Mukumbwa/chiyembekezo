@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Spinner, InputGroup, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, InputGroup, Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
-import { EmptyState, ErrorState, SectionTitle } from '../components/ui';
+import { EmptyState, ErrorState, SectionTitle, LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const Resources = () => {
@@ -102,12 +102,16 @@ const Resources = () => {
     return variants[type] || 'secondary';
   };
 
-  if (loading && resources.length === 0) {
+if (loading && resources.length === 0) {
     return (
-      <Container className="my-5 text-center">
-        <Spinner animation="border" variant="primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+      <Container className="my-4">
+        <Row>
+          {[...Array(9)].map((_, i) => (
+            <Col md={4} sm={6} key={i} className="mb-3">
+              <LoadingSkeleton type="card" withImage lines={4} />
+            </Col>
+          ))}
+        </Row>
       </Container>
     );
   }
