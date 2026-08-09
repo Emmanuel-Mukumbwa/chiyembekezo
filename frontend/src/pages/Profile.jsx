@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
+import { Container, Row, Col, Card, Alert } from 'react-bootstrap';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import {
@@ -9,6 +9,7 @@ import {
   Textarea,
   DatePicker,
   SectionTitle,
+  LoadingSkeleton,
 } from '../components/ui';
 import LogoutButton from '../components/LogoutButton';
 
@@ -75,7 +76,17 @@ const Profile = () => {
     }
   };
 
-  if (authLoading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (authLoading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold">My Profile</h2>
+        <div style={{ width: '100px', height: '36px' }} />
+      </div>
+      <Card className="p-4">
+        <LoadingSkeleton type="article" lines={8} />
+      </Card>
+    </Container>
+  );
   if (!user) return <div className="text-center mt-5">Please log in to view your profile.</div>;
 
   return (
