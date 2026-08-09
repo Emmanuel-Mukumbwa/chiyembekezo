@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Button, Form, Spinner, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
+import { LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const PeerSupport = () => {
@@ -65,7 +66,23 @@ const PeerSupport = () => {
     );
   }
 
-  if (loading) return <Spinner animation="border" className="my-5 d-block mx-auto" />;
+  if (loading) return (
+    <Container className="my-5">
+      <h2>Peer Support</h2>
+      <Row>
+        <Col md={8}>
+          <h5>Available Listeners</h5>
+          <LoadingSkeleton type="list" />
+        </Col>
+        <Col md={4}>
+          <Card className="feature-card p-3">
+            <h6>Your Requests</h6>
+            <LoadingSkeleton type="list" />
+          </Card>
+        </Col>
+      </Row>
+    </Container>
+  );
 
   return (
     <Container className="my-5">
