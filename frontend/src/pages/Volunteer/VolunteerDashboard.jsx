@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
@@ -10,6 +10,7 @@ import {
   Card,
   StatCard,
   ErrorState,
+  LoadingSkeleton,
 } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
@@ -50,7 +51,29 @@ const VolunteerDashboard = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) {
+    return (
+      <Container fluid className="px-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row className="g-3 mb-4">
+          {[...Array(3)].map((_, i) => (
+            <Col md={4} key={i}>
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
+        <Row className="g-3">
+          {[...Array(3)].map((_, i) => (
+            <Col md={4} key={i}>
+              <LoadingSkeleton type="card" lines={4} />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    );
+  }
   if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchStats} />;
 
   // Use user?.firstName or fallback to email
