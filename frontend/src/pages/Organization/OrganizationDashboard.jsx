@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import { Card, StatCard } from '../../components/ui';
+import { Card, StatCard, LoadingSkeleton } from '../../components/ui';
 
 const OrganizationDashboard = () => {
   const { logout } = useAuth();
@@ -44,7 +44,29 @@ const OrganizationDashboard = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) {
+    return (
+      <Container fluid className="px-4">
+        <div className="mb-4">
+          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+        </div>
+        <Row className="g-3 mb-4">
+          {[...Array(4)].map((_, i) => (
+            <Col md={3} sm={6} key={i}>
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
+        <Row className="g-3">
+          {[...Array(2)].map((_, i) => (
+            <Col md={6} key={i}>
+              <LoadingSkeleton type="card" lines={6} />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    );
+  }
   if (error) return <p className="text-center mt-5 text-danger">{error}</p>;
   if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
