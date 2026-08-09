@@ -10,6 +10,7 @@ import {
   StatCard,
   FeatureCard,
   EmergencyCard,
+  LoadingSkeleton,
 } from '../components/ui';
 import api from '../services/api';
 import '../styles/custom.css';
@@ -18,6 +19,7 @@ const Home = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
   const [featuredContacts, setFeaturedContacts] = useState([]);
+  const [contactsLoading, setContactsLoading] = useState(true);
 
   // Fetch featured emergency contacts
   useEffect(() => {
@@ -27,6 +29,8 @@ const Home = () => {
         setFeaturedContacts(res.data.featured || []);
       } catch (err) {
         console.error('Failed to fetch emergency contacts:', err);
+      } finally {
+        setContactsLoading(false);
       }
     };
     fetchEmergencyContacts();
@@ -110,13 +114,17 @@ const Home = () => {
     <main>
       {/* Emergency Banner – fully DB-driven */}
       <Container className="my-4">
-        <EmergencyCard
-          title="Need immediate help?"
-          description="If you're in crisis, don't face it alone."
-          helplines={featuredContacts.map(c => ({ name: c.name, phone: c.phone }))}
-          onCall={(phone) => window.location.href = `tel:${phone}`}
-          onOpenEmergency={() => window.location.href = '/emergency'}
-        />
+        {contactsLoading ? (
+          <LoadingSkeleton type="card" lines={3} />
+        ) : (
+          <EmergencyCard
+            title="Need immediate help?"
+            description="If you're in crisis, don't face it alone."
+            helplines={featuredContacts.map(c => ({ name: c.name, phone: c.phone }))}
+            onCall={(phone) => window.location.href = `tel:${phone}`}
+            onOpenEmergency={() => window.location.href = '/emergency'}
+          />
+        )}
       </Container>
 
       {/* Hero */}
