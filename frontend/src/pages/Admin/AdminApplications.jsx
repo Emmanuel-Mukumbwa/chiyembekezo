@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Spinner, Row, Col, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import {
@@ -8,6 +8,7 @@ import {
   DataTable,
   EmptyState,
   ErrorState,
+  LoadingSkeleton,
 } from '../../components/ui';
 
 const AdminApplications = () => {
@@ -74,7 +75,18 @@ const AdminApplications = () => {
     },
   ];
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) return (
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Applications</h4>
+      <Row className="mb-3 g-2">
+        <Col md={3}><LoadingSkeleton type="card" lines={2} /></Col>
+        <Col md={3}><LoadingSkeleton type="card" lines={2} /></Col>
+        <Col md={2}><LoadingSkeleton type="card" lines={2} /></Col>
+      </Row>
+      <LoadingSkeleton type="list" />
+      <LoadingSkeleton type="list" className="mt-3" />
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading applications" description={error} onRetry={fetchData} />;
 
   return (
