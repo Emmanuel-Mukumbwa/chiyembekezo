@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Card, Form, Spinner, Badge, Row, Col } from 'react-bootstrap';
+import { Container, Card, Form, Badge, Row, Col } from 'react-bootstrap';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button, Input, Textarea, ErrorState } from '../../components/ui';
+import { Button, Input, Textarea, ErrorState, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -95,7 +95,15 @@ const PostDetail = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) {
+    return (
+      <Container className="my-5">
+        <LoadingSkeleton type="article" lines={8} />
+        <hr className="my-4" />
+        <LoadingSkeleton type="list" />
+      </Container>
+    );
+  }
   if (error) return <ErrorState title="Error loading post" description={error} onRetry={fetchPost} />;
   if (!post) return <p>Post not found.</p>;
 
