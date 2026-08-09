@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Spinner } from 'react-bootstrap';
+import { Container, Row, Col } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import { Card, Button, StatCard, ErrorState } from '../../components/ui';
+import { Card, Button, StatCard, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
 const AdminDashboard = () => {
@@ -41,7 +41,33 @@ const AdminDashboard = () => {
     }
   };
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+  if (loading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <h2 className="fw-bold">Admin Dashboard</h2>
+        <div className="d-flex gap-2">
+          <Button as={Link} to="/admin/analytics" variant="outline-primary" size="sm">
+            📊 Full Analytics
+          </Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
+      </div>
+      <Row className="g-3 mb-4">
+        {[...Array(8)].map((_, i) => (
+          <Col md={3} sm={6} key={i}>
+            <LoadingSkeleton type="card" lines={2} />
+          </Col>
+        ))}
+      </Row>
+      <Row>
+        {[...Array(3)].map((_, i) => (
+          <Col md={4} key={i}>
+            <LoadingSkeleton type="card" lines={3} />
+          </Col>
+        ))}
+      </Row>
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchStats} />;
   if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
