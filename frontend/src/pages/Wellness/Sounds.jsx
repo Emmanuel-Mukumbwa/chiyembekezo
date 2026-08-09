@@ -3,7 +3,7 @@ import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
-import { Button } from '../../components/ui';
+import { Button, LoadingSkeleton } from '../../components/ui';
 
 const soundLibrary = [
   { id: 'rain', name: 'Rain', icon: '🌧', color: '#4a90d9' },
@@ -19,12 +19,21 @@ const soundLibrary = [
 const Sounds = () => {
   const { user } = useAuth();
   const { showModal } = useModal();
+  const [pageLoading, setPageLoading] = useState(true);
   const [selectedSound, setSelectedSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(70);
   const [sleepTimer, setSleepTimer] = useState(null);
   const [remaining, setRemaining] = useState(0);
   const timerRef = useRef(null);
+
+  useEffect(() => {
+    const t = setTimeout(() => setPageLoading(false), 300);
+    return () => {
+      clearTimeout(t);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+  }, []);
 
   const playSound = (sound) => {
     setSelectedSound(sound);
@@ -63,11 +72,20 @@ const Sounds = () => {
     return `${m}:${s.toString().padStart(2, '0')}`;
   };
 
-  useEffect(() => {
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, []);
+  if (pageLoading) {
+    return (
+      <Container className="my-5">
+        <h2 className="mb-4">Relaxation Sounds</h2>
+        <Row>
+          {[...Array(8)].map((_, i) => (
+            <Col md={3} sm={6} key={i} className="mb-3">
+              <LoadingSkeleton type="card" lines={3} />
+            </Col>
+          ))}
+        </Row>
+      </Container>
+    );
+  }
 
   return (
     <Container className="my-5">
