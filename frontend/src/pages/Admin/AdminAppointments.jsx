@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Spinner, Badge } from 'react-bootstrap';
+import { Container, Badge } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { Select, DataTable, ErrorState } from '../../components/ui';
+import { Select, DataTable, ErrorState, LoadingSkeleton } from '../../components/ui';
 
 const AdminAppointments = () => {
   const { showModal } = useModal();
@@ -78,7 +78,13 @@ const AdminAppointments = () => {
     },
   ];
 
-  if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
+if (loading) return (
+    <Container fluid className="px-4">
+      <h4 className="mb-4">Appointments</h4>
+      <LoadingSkeleton type="list" />
+      <LoadingSkeleton type="list" className="mt-3" />
+    </Container>
+  );
   if (error) return <ErrorState title="Error loading appointments" description={error} onRetry={fetchAppointments} />;
 
   return (
