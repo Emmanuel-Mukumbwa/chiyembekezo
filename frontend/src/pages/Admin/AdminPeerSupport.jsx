@@ -1,14 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Badge, Row, Col } from 'react-bootstrap';
+import { Container, Badge, Row, Col, Button, Modal, Spinner } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import {
-  Button,
-  Select,
-  DataTable,
-  ErrorState,
-  LoadingSkeleton,
-} from '../../components/ui';
+import { Select, DataTable, ErrorState, LoadingSkeleton, SearchBar } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
 const AdminPeerSupport = () => {
@@ -18,17 +12,19 @@ const AdminPeerSupport = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterStatus, setFilterStatus] = useState('');
+  const [search, setSearch] = useState('');
+  const [previewItem, setPreviewItem] = useState(null);
 
   useEffect(() => {
     fetchData();
-  }, [filterStatus]);
+  }, [filterStatus, search]);
 
   const fetchData = async () => {
     setLoading(true);
     setError(null);
     try {
       const [reqRes, volRes] = await Promise.all([
-        api.get(`/admin/peer-support/requests?status=${filterStatus}`),
+        api.get(`/admin/peer-support/requests?status=${filterStatus}&search=${search}`),
         api.get('/admin/volunteers'),
       ]);
       setRequests(reqRes.data);
@@ -52,19 +48,15 @@ const AdminPeerSupport = () => {
   };
 
   const unassignVolunteer = async (requestId) => {
-    showModal(
-      'Confirm Unassign',
-      'Are you sure you want to unassign this volunteer?',
-      async () => {
-        try {
-          await api.put(`/admin/peer-support/requests/${requestId}/unassign`);
-          showModal('Success', 'Volunteer unassigned.');
-          fetchData();
-        } catch (err) {
-          showModal('Error', 'Failed to unassign volunteer.');
-        }
+    showModal('Confirm Unassign', 'Are you sure?', async () => {
+      try {
+        await api.put(`/admin/peer-support/requests/${requestId}/unassign`);
+        showModal('Success', 'Volunteer unassigned.');
+        fetchData();
+      } catch (err) {
+        showModal('Error', 'Failed to unassign volunteer.');
       }
-    );
+    });
   };
 
   const columns = [
@@ -85,6 +77,7 @@ const AdminPeerSupport = () => {
       label: 'Actions',
       render: (_, row) => (
         <div className="d-flex gap-1 align-items-center">
+          <Button variant="outline-info" size="sm" onClick={() => setPreviewItem(row)}>Preview</Button>
           {row.status === 'pending' && (
             <Select
               name="assign"
@@ -99,7 +92,7 @@ const AdminPeerSupport = () => {
                 }
               }}
               className="mb-0"
-              style={{ width: '150px' }}
+              style={{ width: '180px' }}
             />
           )}
           {row.volunteer_id && (
@@ -110,7 +103,7 @@ const AdminPeerSupport = () => {
     },
   ];
 
-if (loading) return (
+  if (loading) return (
     <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Peer Support Requests</h4>
@@ -121,39 +114,57 @@ if (loading) return (
         <Col md={2}><LoadingSkeleton type="card" lines={2} /></Col>
       </Row>
       <LoadingSkeleton type="list" />
-      <LoadingSkeleton type="list" className="mt-3" />
     </Container>
   );
   if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchData} />;
 
   return (
-    <Container fluid className="px-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4>Peer Support Requests</h4>
-        <LogoutButton variant="outline-danger" size="sm" />
-      </div>
-      <Row className="mb-3 g-2">
-        <Col md={3}>
-          <Select
-            label="Filter by Status"
-            name="status"
-            value={filterStatus}
-            options={[
-              { value: '', label: 'All Statuses' },
-              { value: 'pending', label: 'Pending' },
-              { value: 'accepted', label: 'Accepted' },
-              { value: 'completed', label: 'Completed' },
-              { value: 'cancelled', label: 'Cancelled' },
-            ]}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          />
-        </Col>
-        <Col md={2} className="d-flex align-items-end">
-          <Button variant="primary" onClick={fetchData}>Apply</Button>
-        </Col>
-      </Row>
-      <DataTable columns={columns} data={requests} keyField="id" />
-    </Container>
+    <>
+      <Container fluid className="px-4">
+        <div className="d-flex justify-content-between align-items-center mb-4">
+          <h4>Peer Support Requests</h4>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
+        <Row className="mb-3 g-2 align-items-end">
+          <Col md={3}>
+            <Select
+              label="Status"
+              name="status"
+              value={filterStatus}
+              options={[
+                { value: '', label: 'All Statuses' },
+                { value: 'pending', label: 'Pending' },
+                { value: 'accepted', label: 'Accepted' },
+                { value: 'completed', label: 'Completed' },
+                { value: 'cancelled', label: 'Cancelled' },
+              ]}
+              onChange={(e) => setFilterStatus(e.target.value)}
+            />
+          </Col>
+          <Col md={3}>
+            <SearchBar value={search} onChange={setSearch} onSearch={fetchData} placeholder="Search by user..." />
+          </Col>
+          <Col md={2}>
+            <Button variant="primary" onClick={fetchData}>Apply</Button>
+          </Col>
+        </Row>
+        <DataTable columns={columns} data={requests} keyField="id" />
+      </Container>
+
+      <Modal show={!!previewItem} onHide={() => setPreviewItem(null)} size="lg" centered>
+        <Modal.Header closeButton><Modal.Title>Request Details</Modal.Title></Modal.Header>
+        <Modal.Body>
+          {previewItem && (
+            <div>
+              <h5>{previewItem.user_first} {previewItem.user_last}</h5>
+              <p><strong>Message:</strong> {previewItem.message}</p>
+              <p><strong>Status:</strong> {previewItem.status}</p>
+              <p><strong>Volunteer:</strong> {previewItem.volunteer_id ? `${previewItem.vol_first} ${previewItem.vol_last}` : 'Unassigned'}</p>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
+    </>
   );
 };
 
