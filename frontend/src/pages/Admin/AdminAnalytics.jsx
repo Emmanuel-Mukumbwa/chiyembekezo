@@ -17,7 +17,7 @@ const AdminAnalytics = () => {
   const { showModal } = useModal();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(null); 
 
   usePrompt(
     () => {
