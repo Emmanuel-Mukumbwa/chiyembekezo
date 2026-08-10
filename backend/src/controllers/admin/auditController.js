@@ -8,7 +8,7 @@ exports.getLogs = async (req, res) => {
     const params = [];
     if (search) {
       where = 'WHERE action LIKE ? OR target_type LIKE ? OR actor_email LIKE ?';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`); 
     }
     const [rows] = await pool.query(`
       SELECT id, admin_user_id, actor_email, action, target_type, target_id, details, created_at
