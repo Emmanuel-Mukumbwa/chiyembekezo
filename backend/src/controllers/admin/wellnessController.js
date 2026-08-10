@@ -2,12 +2,13 @@ const pool = require('../../config/db');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../../utils/upload');
 const { logAuditAction } = require('../../services/auditLogService');
 
+// Helper to get file buffer from multer's req.files
+const getFileBuffer = (fileField) => (fileField && fileField[0] ? fileField[0].buffer : null);
+
 // ---- Meditations ----
 exports.getMeditations = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM meditations ORDER BY sort_order, title'
-    );
+    const [rows] = await pool.query('SELECT * FROM meditations ORDER BY sort_order, title');
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -21,15 +22,14 @@ exports.createMeditation = async (req, res) => {
     let audio_url = null;
     let image_url = null;
 
-    // Upload audio file if provided
     if (req.files && req.files.audio) {
-      const result = await uploadToCloudinary(req.files.audio.data, 'meditations', 'video', {
-        resource_type: 'video',
-      });
+      const buffer = getFileBuffer(req.files.audio);
+      const result = await uploadToCloudinary(buffer, 'meditations', 'video', { resource_type: 'video' });
       audio_url = result.secure_url;
     }
     if (req.files && req.files.image) {
-      const result = await uploadToCloudinary(req.files.image.data, 'meditations', 'image');
+      const buffer = getFileBuffer(req.files.image);
+      const result = await uploadToCloudinary(buffer, 'meditations', 'image');
       image_url = result.secure_url;
     }
 
@@ -39,7 +39,7 @@ exports.createMeditation = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [title, category, duration, description || null, narrator || null, background_sound || null, audio_url, image_url, sort_order || 0]
     );
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Created meditation: ${title}`, 'meditation', result.insertId);
+    await logAuditAction(req.user.id, `Created meditation: ${title}`, 'meditation', result.insertId, {}, req.user.email);
     res.status(201).json({ message: 'Meditation created', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -63,37 +63,35 @@ exports.updateMeditation = async (req, res) => {
     if (is_active !== undefined) { updates.push('is_active = ?'); params.push(is_active); }
     if (sort_order !== undefined) { updates.push('sort_order = ?'); params.push(sort_order); }
 
-    // Handle file uploads
+    // Audio upload
     if (req.files && req.files.audio) {
-      // Delete old audio if exists
       const [old] = await pool.query('SELECT audio_url FROM meditations WHERE id = ?', [id]);
       if (old[0]?.audio_url) {
         const publicId = old[0].audio_url.split('/').pop().split('.')[0];
         await deleteFromCloudinary(`chiyembekezo/meditations/${publicId}`, 'video').catch(() => {});
       }
-      const result = await uploadToCloudinary(req.files.audio.data, 'meditations', 'video', {
-        resource_type: 'video',
-      });
+      const buffer = getFileBuffer(req.files.audio);
+      const result = await uploadToCloudinary(buffer, 'meditations', 'video', { resource_type: 'video' });
       updates.push('audio_url = ?');
       params.push(result.secure_url);
     }
+    // Image upload
     if (req.files && req.files.image) {
       const [old] = await pool.query('SELECT image_url FROM meditations WHERE id = ?', [id]);
       if (old[0]?.image_url) {
         const publicId = old[0].image_url.split('/').pop().split('.')[0];
         await deleteFromCloudinary(`chiyembekezo/meditations/${publicId}`, 'image').catch(() => {});
       }
-      const result = await uploadToCloudinary(req.files.image.data, 'meditations', 'image');
+      const buffer = getFileBuffer(req.files.image);
+      const result = await uploadToCloudinary(buffer, 'meditations', 'image');
       updates.push('image_url = ?');
       params.push(result.secure_url);
     }
 
-    if (updates.length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
-    }
+    if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
     params.push(id);
     await pool.query(`UPDATE meditations SET ${updates.join(', ')} WHERE id = ?`, params);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Updated meditation ${id}`, 'meditation', id);
+    await logAuditAction(req.user.id, `Updated meditation ${id}`, 'meditation', id, {}, req.user.email);
     res.json({ message: 'Meditation updated' });
   } catch (err) {
     console.error(err);
@@ -116,7 +114,7 @@ exports.deleteMeditation = async (req, res) => {
       }
     }
     await pool.query('DELETE FROM meditations WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted meditation ${id}`, 'meditation', id);
+    await logAuditAction(req.user.id, `Deleted meditation ${id}`, 'meditation', id, {}, req.user.email);
     res.json({ message: 'Meditation deleted' });
   } catch (err) {
     console.error(err);
@@ -127,9 +125,7 @@ exports.deleteMeditation = async (req, res) => {
 // ---- Relaxation Sounds ----
 exports.getSounds = async (req, res) => {
   try {
-    const [rows] = await pool.query(
-      'SELECT * FROM relaxation_sounds ORDER BY sort_order, name'
-    );
+    const [rows] = await pool.query('SELECT * FROM relaxation_sounds ORDER BY sort_order, name');
     res.json(rows);
   } catch (err) {
     console.error(err);
@@ -144,13 +140,13 @@ exports.createSound = async (req, res) => {
     let image_url = null;
 
     if (req.files && req.files.audio) {
-      const result = await uploadToCloudinary(req.files.audio.data, 'sounds', 'video', {
-        resource_type: 'video',
-      });
+      const buffer = getFileBuffer(req.files.audio);
+      const result = await uploadToCloudinary(buffer, 'sounds', 'video', { resource_type: 'video' });
       audio_url = result.secure_url;
     }
     if (req.files && req.files.image) {
-      const result = await uploadToCloudinary(req.files.image.data, 'sounds', 'image');
+      const buffer = getFileBuffer(req.files.image);
+      const result = await uploadToCloudinary(buffer, 'sounds', 'image');
       image_url = result.secure_url;
     }
 
@@ -159,7 +155,7 @@ exports.createSound = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?)`,
       [name, icon || null, color || null, audio_url, image_url, sort_order || 0]
     );
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Created sound: ${name}`, 'sound', result.insertId);
+    await logAuditAction(req.user.id, `Created sound: ${name}`, 'sound', result.insertId, {}, req.user.email);
     res.status(201).json({ message: 'Sound created', id: result.insertId });
   } catch (err) {
     console.error(err);
@@ -186,9 +182,8 @@ exports.updateSound = async (req, res) => {
         const publicId = old[0].audio_url.split('/').pop().split('.')[0];
         await deleteFromCloudinary(`chiyembekezo/sounds/${publicId}`, 'video').catch(() => {});
       }
-      const result = await uploadToCloudinary(req.files.audio.data, 'sounds', 'video', {
-        resource_type: 'video',
-      });
+      const buffer = getFileBuffer(req.files.audio);
+      const result = await uploadToCloudinary(buffer, 'sounds', 'video', { resource_type: 'video' });
       updates.push('audio_url = ?');
       params.push(result.secure_url);
     }
@@ -198,7 +193,8 @@ exports.updateSound = async (req, res) => {
         const publicId = old[0].image_url.split('/').pop().split('.')[0];
         await deleteFromCloudinary(`chiyembekezo/sounds/${publicId}`, 'image').catch(() => {});
       }
-      const result = await uploadToCloudinary(req.files.image.data, 'sounds', 'image');
+      const buffer = getFileBuffer(req.files.image);
+      const result = await uploadToCloudinary(buffer, 'sounds', 'image');
       updates.push('image_url = ?');
       params.push(result.secure_url);
     }
@@ -206,7 +202,7 @@ exports.updateSound = async (req, res) => {
     if (updates.length === 0) return res.status(400).json({ error: 'No fields to update' });
     params.push(id);
     await pool.query(`UPDATE relaxation_sounds SET ${updates.join(', ')} WHERE id = ?`, params);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Updated sound ${id}`, 'sound', id);
+    await logAuditAction(req.user.id, `Updated sound ${id}`, 'sound', id, {}, req.user.email);
     res.json({ message: 'Sound updated' });
   } catch (err) {
     console.error(err);
@@ -229,7 +225,7 @@ exports.deleteSound = async (req, res) => {
       }
     }
     await pool.query('DELETE FROM relaxation_sounds WHERE id = ?', [id]);
-    await logAuditAction(req.user.id, 'admin', req.user.email, `Deleted sound ${id}`, 'sound', id);
+    await logAuditAction(req.user.id, `Deleted sound ${id}`, 'sound', id, {}, req.user.email);
     res.json({ message: 'Sound deleted' });
   } catch (err) {
     console.error(err);
