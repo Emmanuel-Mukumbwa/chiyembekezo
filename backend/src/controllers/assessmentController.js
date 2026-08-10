@@ -1,5 +1,6 @@
 const pool = require('../config/db');
 const Assessment = require('../models/Assessment');
+const { logAuditAction } = require('../services/auditLogService');
 
 exports.submitAssessment = async (req, res) => {
   try {
@@ -26,11 +27,18 @@ exports.submitAssessment = async (req, res) => {
       typeId = typeIdResult[0][0].id;
     }
 
-    const query = `
-      INSERT INTO assessment_results (user_id, assessment_type_id, score, severity_level, recommendations, taken_at)
-      VALUES (?, ?, ?, ?, ?, NOW())
-    `;
-    await pool.query(query, [userId || null, typeId, score, level.label, JSON.stringify(recommendations)]);
+    const [result] = await pool.query(
+      `INSERT INTO assessment_results (user_id, assessment_type_id, score, severity_level, recommendations, taken_at)
+       VALUES (?, ?, ?, ?, ?, NOW())`,
+      [userId || null, typeId, score, level.label, JSON.stringify(recommendations)]
+    );
+
+    // Log the assessment submission
+    if (userId) {
+      const [userRow] = await pool.query('SELECT email FROM users WHERE id = ?', [userId]);
+      const email = userRow.length > 0 ? userRow[0].email : null;
+      await logAuditAction(userId, 'user', email, `Submitted ${type} assessment`, 'assessment', result.insertId, { score, level: level.label });
+    }
 
     res.status(201).json({
       score,
