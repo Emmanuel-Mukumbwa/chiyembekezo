@@ -13,7 +13,7 @@ exports.getStats = async (req, res) => {
     // Weekly new users (last 7 days)
     const [weeklyUsers] = await pool.query(`
       SELECT DATE(created_at) as date, COUNT(*) as count
-      FROM users
+      FROM users 
       WHERE created_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
       GROUP BY DATE(created_at)
       ORDER BY date ASC
