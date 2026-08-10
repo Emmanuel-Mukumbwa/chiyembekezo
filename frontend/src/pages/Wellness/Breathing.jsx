@@ -1,3 +1,4 @@
+//src/pages/Wellness/Breathing.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,7 +16,7 @@ const Breathing = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [phase, setPhase] = useState('idle');
   const [cycle, setCycle] = useState(0);
-  const [totalCycles, setTotalCycles] = useState(10);
+  const [totalCycles, setTotalCycles] = useState(10); 
   const [remaining, setRemaining] = useState(0);
   const [duration, setDuration] = useState(0);
   const [moodBefore, setMoodBefore] = useState(null);
