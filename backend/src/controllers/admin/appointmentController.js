@@ -15,7 +15,7 @@ exports.getAppointments = async (req, res) => {
       ORDER BY a.scheduled_time DESC
     `);
     res.json(rows);
-  } catch (err) {
+  } catch (err) { 
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
