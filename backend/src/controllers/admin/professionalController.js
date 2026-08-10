@@ -1,3 +1,4 @@
+//src/controllers/admin/professionalController.js
 const pool = require('../../config/db');
 const { logAuditAction } = require('../../services/auditLogService');
 
@@ -12,7 +13,7 @@ exports.getProfessionals = async (req, res) => {
     `);
     res.json(rows);
   } catch (err) {
-    console.error(err);
+    console.error(err); 
     res.status(500).json({ error: 'Server error' });
   }
 };
