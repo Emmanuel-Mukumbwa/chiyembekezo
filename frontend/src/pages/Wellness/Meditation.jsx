@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Row, Col, Card, Form } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
@@ -17,6 +17,7 @@ const Meditation = () => {
   const [timer, setTimer] = useState(null);
   const [moodBefore, setMoodBefore] = useState(null);
   const [moodAfter, setMoodAfter] = useState(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
     fetchMeditations();
@@ -40,6 +41,13 @@ const Meditation = () => {
     setProgress(0);
     setMoodBefore(null);
     setMoodAfter(null);
+
+    // Play audio if available
+    if (med.audio_url && audioRef.current) {
+      audioRef.current.src = med.audio_url;
+      audioRef.current.play().catch(() => {});
+    }
+
     const total = med.duration * 60;
     let elapsed = 0;
     const interval = setInterval(() => {
@@ -49,6 +57,7 @@ const Meditation = () => {
         clearInterval(interval);
         setPlaying(false);
         setTimer(null);
+        if (audioRef.current) audioRef.current.pause();
         showModal('Session Complete', 'Great job! How do you feel now?');
       }
     }, 1000);
@@ -59,6 +68,7 @@ const Meditation = () => {
     if (timer) clearInterval(timer);
     setPlaying(false);
     setTimer(null);
+    if (audioRef.current) audioRef.current.pause();
   };
 
   const saveSession = async () => {
@@ -92,6 +102,10 @@ const Meditation = () => {
   return (
     <Container className="my-5">
       <h2>Meditation</h2>
+
+      {/* Hidden audio element */}
+      <audio ref={audioRef} />
+
       <Row>
         {!selected ? (
           <>
@@ -122,7 +136,18 @@ const Meditation = () => {
           <Col md={8} className="mx-auto">
             <Card className="feature-card p-4 text-center">
               <h3>{selected.title}</h3>
+              {selected.image_url && (
+                <img
+                  src={selected.image_url}
+                  alt={selected.title}
+                  style={{ maxWidth: '200px', borderRadius: '8px', margin: '10px auto' }}
+                />
+              )}
               <p>{selected.duration} min</p>
+              {selected.description && <p className="text-muted">{selected.description}</p>}
+              {selected.narrator && <p><strong>Narrator:</strong> {selected.narrator}</p>}
+              {selected.background_sound && <p><strong>Background:</strong> {selected.background_sound}</p>}
+
               {playing && (
                 <>
                   <div className="my-3">
