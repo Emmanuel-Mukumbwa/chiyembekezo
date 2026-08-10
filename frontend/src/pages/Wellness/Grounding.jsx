@@ -1,3 +1,4 @@
+//src/pages/Wellness/Grounding.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -9,7 +10,7 @@ import api from '../../services/api';
 const exercises = {
   '54321': {
     name: '5-4-3-2-1',
-    description: 'Engage all five senses to ground yourself.',
+    description: 'Engage all five senses to ground yourself.', 
     steps: [
       { label: '5 things you can see', placeholder: 'e.g., a tree, a window, a book...' },
       { label: '4 things you can touch', placeholder: 'e.g., the fabric of your shirt, your skin...' },
