@@ -1,3 +1,4 @@
+//src/pages/Wellness/Grounding.jsx
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -15,7 +16,7 @@ const DailyWellness = () => {
 
   useEffect(() => {
     if (user) fetchChecklist();
-  }, [user]);
+  }, [user]); 
 
   const fetchChecklist = async () => {
     try {
