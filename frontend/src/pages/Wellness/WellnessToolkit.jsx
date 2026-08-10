@@ -1,3 +1,4 @@
+//src/pages/Wellness/WellnessToolkit.jsx
 import React from 'react';
 import { Container, Row, Col, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -18,7 +19,7 @@ const WellnessToolkit = () => {
       <h1 className="text-center mb-4">Wellness Toolkit</h1>
       <p className="text-center text-muted mb-5">Take a few minutes for yourself.</p>
       <Row>
-        {tools.map((tool, idx) => (
+        {tools.map((tool, idx) => ( 
           <Col md={4} lg={3} key={idx} className="mb-4">
             <Card className="feature-card text-center h-100 p-3">
               <div style={{ fontSize: '4rem' }}>{tool.icon}</div>
