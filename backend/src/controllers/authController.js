@@ -2,6 +2,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
 const { sendPasswordResetEmail } = require('../services/emailService');
+const { logAuditAction } = require('../services/auditLogService');
 
 // ----- Ensure JWT_SECRET is defined (with fallback for development) -----
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -71,6 +72,9 @@ exports.register = async (req, res) => {
       }
     }
 
+    // Log registration
+    await logAuditAction(userId, 'user', email, 'User registered', 'user', userId);
+
     const token = generateToken(userId);
 
     res.status(201).json({
@@ -121,6 +125,9 @@ exports.login = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: 'Invalid credentials' });
     }
+
+    // Log successful login
+    await logAuditAction(user.id, 'user', user.email, 'User logged in', 'user', user.id);
 
     const token = generateToken(user.id);
 
@@ -200,12 +207,13 @@ exports.resetPassword = async (req, res) => {
     }
 
     const [rows] = await pool.query(
-      'SELECT id FROM users WHERE id = ? AND reset_token = ? AND reset_token_expires > NOW()',
+      'SELECT id, email FROM users WHERE id = ? AND reset_token = ? AND reset_token_expires > NOW()',
       [decoded.id, token]
     );
     if (rows.length === 0) {
       return res.status(400).json({ error: 'Invalid or expired token' });
     }
+    const user = rows[0];
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(newPassword, salt);
@@ -214,6 +222,9 @@ exports.resetPassword = async (req, res) => {
       'UPDATE users SET password_hash = ?, reset_token = NULL, reset_token_expires = NULL WHERE id = ?',
       [hashedPassword, decoded.id]
     );
+
+    // Log password reset
+    await logAuditAction(user.id, 'user', user.email, 'Password reset', 'user', user.id);
 
     res.json({ message: 'Password reset successful. You can now log in.' });
   } catch (err) {
@@ -296,6 +307,9 @@ exports.updateProfile = async (req, res) => {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `, [userId, bio, location, district, city, occupation, emergencyContactName, emergencyContactPhone, preferredLanguage, preferences]);
     }
+
+    // Log profile update
+    await logAuditAction(userId, 'user', req.user.email, 'Updated profile', 'user', userId);
 
     res.json({ message: 'Profile updated successfully' });
   } catch (err) {
