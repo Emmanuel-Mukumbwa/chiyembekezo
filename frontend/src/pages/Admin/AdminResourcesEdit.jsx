@@ -12,6 +12,8 @@ const AdminResourcesEdit = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [categories, setCategories] = useState([]);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [existingFile, setExistingFile] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     type: 'article',
@@ -22,6 +24,7 @@ const AdminResourcesEdit = () => {
     tags: '',
     url: '',
     is_published: false,
+    is_featured: false,
     duration_minutes: '',
     file: null,
   });
@@ -35,7 +38,7 @@ const AdminResourcesEdit = () => {
     try {
       const res = await api.get('/resources/categories');
       setCategories(res.data);
-    } catch (err) {
+    } catch {
       showModal('Error', 'Failed to load categories.');
     }
   };
@@ -52,13 +55,17 @@ const AdminResourcesEdit = () => {
         description: data.description || '',
         content: data.content || '',
         author: data.author || '',
-        tags: data.tags ? data.tags.join(', ') : '',
+        tags: Array.isArray(data.tags) ? data.tags.join(', ') : data.tags || '',
         url: data.url || '',
         is_published: !!data.is_published,
+        is_featured: !!data.is_featured,
         duration_minutes: data.duration_minutes || '',
         file: null,
       });
-    } catch (err) {
+      if (data.url) {
+        setExistingFile({ url: data.url, type: data.type });
+      }
+    } catch {
       showModal('Error', 'Failed to load resource.');
     } finally {
       setLoading(false);
@@ -68,12 +75,23 @@ const AdminResourcesEdit = () => {
   const handleChange = (e) => {
     const { name, value, type, checked, files } = e.target;
     if (type === 'file') {
-      setFormData({ ...formData, file: files[0] });
+      const file = files[0];
+      if (file) {
+        setSelectedFile(file);
+        setFormData(prev => ({ ...prev, file }));
+      }
     } else if (type === 'checkbox') {
-      setFormData({ ...formData, [name]: checked });
+      setFormData(prev => ({ ...prev, [name]: checked }));
     } else {
-      setFormData({ ...formData, [name]: value });
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const clearFile = () => {
+    setSelectedFile(null);
+    setFormData(prev => ({ ...prev, file: null }));
+    const fileInput = document.getElementById('file-upload-edit');
+    if (fileInput) fileInput.value = '';
   };
 
   const handleSubmit = async (e) => {
@@ -85,9 +103,10 @@ const AdminResourcesEdit = () => {
         if (key === 'file' && formData.file) {
           formDataToSend.append('file', formData.file);
         } else if (key === 'tags' && formData.tags) {
-          formDataToSend.append('tags', formData.tags.split(',').map(t => t.trim()));
-        } else if (key === 'is_published') {
-          formDataToSend.append('is_published', formData.is_published ? 1 : 0);
+          const tagArray = formData.tags.split(',').map(t => t.trim()).filter(Boolean);
+          formDataToSend.append('tags', JSON.stringify(tagArray));
+        } else if (key === 'is_published' || key === 'is_featured') {
+          formDataToSend.append(key, formData[key] ? 1 : 0);
         } else if (key !== 'file' && formData[key] !== null && formData[key] !== '') {
           formDataToSend.append(key, formData[key]);
         }
@@ -114,12 +133,46 @@ const AdminResourcesEdit = () => {
     { value: 'interactive-lesson', label: 'Interactive Lesson' },
   ];
 
+  const showFileUpload = ['video', 'podcast', 'pdf', 'worksheet', 'interactive-lesson'].includes(formData.type);
+  const showContent = ['article', 'course'].includes(formData.type);
+
+  const renderExistingFilePreview = () => {
+    if (!existingFile) return null;
+    const { url, type } = existingFile;
+    return (
+      <div className="mt-2 p-2 border rounded bg-light">
+        <strong>Current file:</strong>
+        {type === 'video' ? (
+          <video controls style={{ maxWidth: '100%', maxHeight: '200px' }}>
+            <source src={url} type="video/mp4" />
+          </video>
+        ) : type === 'podcast' ? (
+          <audio controls style={{ width: '100%' }}>
+            <source src={url} type="audio/mpeg" />
+          </audio>
+        ) : type === 'pdf' ? (
+          <div>
+            <a href={url} target="_blank" rel="noopener noreferrer">Open PDF</a>
+            <iframe src={url} style={{ width: '100%', height: '300px' }} title="PDF preview" />
+          </div>
+        ) : (
+          <a href={url} target="_blank" rel="noopener noreferrer">View file</a>
+        )}
+      </div>
+    );
+  };
+
   if (loading) return <Spinner animation="border" variant="primary" className="my-5 d-block mx-auto" />;
 
   return (
     <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h4>Edit Resource</h4>
+        <div className="d-flex align-items-center gap-3">
+          <Button variant="outline-secondary" as={Link} to="/admin/resources">
+            ← Back to Resources
+          </Button>
+          <h4 className="mb-0">Edit Resource</h4>
+        </div>
         <LogoutButton variant="outline-danger" size="sm" />
       </div>
       <Card className="p-4">
@@ -174,24 +227,25 @@ const AdminResourcesEdit = () => {
             onChange={handleChange}
             placeholder="Brief summary of the resource"
           />
-          <Textarea
-            label="Content (full text)"
-            name="content"
-            rows={5}
-            value={formData.content}
-            onChange={handleChange}
-            placeholder="Full article text or detailed content"
-          />
+          {showContent && (
+            <Textarea
+              label="Content (full text)"
+              name="content"
+              rows={5}
+              value={formData.content}
+              onChange={handleChange}
+              placeholder="Full article or course content"
+            />
+          )}
           <Row>
             <Col md={6}>
               <Input
-                label="URL (external link or Cloudinary URL)"
+                label="External URL (optional)"
                 name="url"
                 value={formData.url}
                 onChange={handleChange}
                 placeholder="https://example.com/resource"
               />
-              <Form.Text className="text-muted">Upload a new file below to replace the current one.</Form.Text>
             </Col>
             <Col md={6}>
               <Input
@@ -215,34 +269,65 @@ const AdminResourcesEdit = () => {
               />
             </Col>
             <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Upload File (PDF, image, audio, video)</Form.Label>
-                <Form.Control
-                  type="file"
-                  name="file"
-                  onChange={handleChange}
-                />
-                <Form.Text className="text-muted">
-                  Upload a new file to replace the current one (if any).
-                </Form.Text>
-              </Form.Group>
+              {showFileUpload ? (
+                <Form.Group className="mb-3">
+                  <Form.Label>Upload New File</Form.Label>
+                  <Form.Control
+                    type="file"
+                    id="file-upload-edit"
+                    name="file"
+                    onChange={handleChange}
+                    accept={
+                      formData.type === 'video' ? 'video/*' :
+                      formData.type === 'podcast' ? 'audio/*' :
+                      formData.type === 'pdf' ? '.pdf' : '*'
+                    }
+                  />
+                  {selectedFile && (
+                    <div className="mt-2 d-flex align-items-center gap-2">
+                      <span className="text-success">📎 {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)</span>
+                      <Button variant="outline-danger" size="sm" onClick={clearFile}>
+                        Remove
+                      </Button>
+                    </div>
+                  )}
+                  {!selectedFile && existingFile && (
+                    <div className="text-muted small mt-1">Leave empty to keep the current file.</div>
+                  )}
+                  {renderExistingFilePreview()}
+                </Form.Group>
+              ) : (
+                <div className="text-muted small mt-2">File upload not applicable for this type.</div>
+              )}
             </Col>
           </Row>
-          <Form.Group className="mb-3">
-            <Form.Check
-              type="checkbox"
-              label="Publish immediately"
-              name="is_published"
-              checked={formData.is_published}
-              onChange={handleChange}
-            />
-            <Form.Text className="text-muted">If unchecked, the resource will be saved as draft.</Form.Text>
-          </Form.Group>
-          <div className="d-flex gap-2">
+          <Row>
+            <Col md={6}>
+              <Form.Check
+                type="checkbox"
+                label="Publish"
+                name="is_published"
+                checked={formData.is_published}
+                onChange={handleChange}
+              />
+            </Col>
+            <Col md={6}>
+              <Form.Check
+                type="checkbox"
+                label="⭐ Feature this resource"
+                name="is_featured"
+                checked={formData.is_featured}
+                onChange={handleChange}
+              />
+            </Col>
+          </Row>
+          <div className="d-flex gap-2 mt-3">
             <Button variant="primary" type="submit" disabled={loading}>
               {loading ? 'Updating...' : 'Update Resource'}
             </Button>
-            <Button variant="outline-secondary" as={Link} to="/admin/resources">Cancel</Button>
+            <Button variant="outline-secondary" as={Link} to="/admin/resources">
+              Cancel
+            </Button>
           </div>
         </Form>
       </Card>
