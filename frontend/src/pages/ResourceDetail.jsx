@@ -17,44 +17,37 @@ const ResourceDetail = () => {
   const [isLiked, setIsLiked] = useState(false);
 
   useEffect(() => {
-    fetchResource();
-    if (user) {
-      fetchUserProgress();
-    }
-  }, [id, user]);
-
-  const fetchResource = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const res = await api.get(`/resources/${id}`);
-      setResource(res.data);
-    } catch (err) {
-      setError('Resource not found.');
-      showModal('Error', 'Resource not found.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchUserProgress = async () => {
-    try {
-      const res = await api.get('/resources/user/course-progress');
-      const progress = res.data[id];
-      if (progress) {
-        setCourseProgress(progress.progress_percent || 0);
+    const fetchResource = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await api.get(`/resources/${id}`);
+        setResource(res.data);
+        // Fetch user progress if logged in
+        if (user && res.data.type === 'course') {
+          try {
+            const progressRes = await api.get('/resources/user/course-progress');
+            if (progressRes.data[res.data.id]) {
+              setCourseProgress(progressRes.data[res.data.id]);
+            }
+          } catch (e) { /* ignore */ }
+        }
+      } catch (err) {
+        setError('Resource not found.');
+        showModal('Error', 'Resource not found.');
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+    };
+    fetchResource();
+  }, [id, user]);
 
   const updateProgress = async (progress) => {
     try {
       await api.post(`/resources/user/course-progress/${id}`, { progress });
       setCourseProgress(progress);
       if (progress >= 100) {
-        showModal('🎉 Course Complete!', 'Congratulations on completing this course!');
+        showModal('🎉 Course Complete!', 'Congratulations!');
       }
     } catch (err) {
       showModal('Error', 'Failed to update progress.');
@@ -65,13 +58,13 @@ const ResourceDetail = () => {
     try {
       await api.post(`/resources/${id}/like`, { action: isLiked ? 'unlike' : 'like' });
       setIsLiked(!isLiked);
-      setResource({ ...resource, like_count: resource.like_count + (isLiked ? -1 : 1) });
+      setResource(prev => ({ ...prev, like_count: prev.like_count + (isLiked ? -1 : 1) }));
     } catch (err) {
       showModal('Error', 'Failed to like.');
     }
   };
 
-if (loading) {
+  if (loading) {
     return (
       <Container className="my-5">
         <LoadingSkeleton type="article" lines={8} />
@@ -104,10 +97,45 @@ if (loading) {
     'interactive-lesson': '🎯',
   };
 
+  const renderMedia = () => {
+    if (!resource.url) return null;
+    const { type, url } = resource;
+    if (type === 'video') {
+      return (
+        <div className="mb-3">
+          <video controls style={{ maxWidth: '100%', maxHeight: '400px' }}>
+            <source src={url} type="video/mp4" />
+            Your browser does not support video.
+          </video>
+        </div>
+      );
+    } else if (type === 'podcast') {
+      return (
+        <div className="mb-3">
+          <audio controls style={{ width: '100%' }}>
+            <source src={url} type="audio/mpeg" />
+            Your browser does not support audio.
+          </audio>
+        </div>
+      );
+    } else if (type === 'pdf') {
+      return (
+        <div className="mb-3">
+          <iframe src={url} style={{ width: '100%', height: '500px' }} title="PDF preview" />
+        </div>
+      );
+    } else {
+      return (
+        <Button variant="primary" as="a" href={url} target="_blank" rel="noopener noreferrer">
+          Open Resource
+        </Button>
+      );
+    }
+  };
+
   return (
     <Container className="my-5">
       <Button as={Link} to="/resources" variant="outline-secondary" className="mb-3">← Back to Resources</Button>
-
       <Row>
         <Col md={8}>
           <Card className="feature-card p-4">
@@ -118,38 +146,35 @@ if (loading) {
               {resource.category_name && <Badge bg="light" text="dark" className="ms-1">{resource.category_name}</Badge>}
             </div>
             {resource.author && <p><strong>Author:</strong> {resource.author}</p>}
-            {resource.duration_minutes && <p><strong>Duration:</strong> {resource.duration_minutes} minutes</p>}
+            {resource.duration_minutes && <p><strong>Duration:</strong> {resource.duration_minutes} min</p>}
             <div className="mb-3"><strong>Description:</strong><p>{resource.description}</p></div>
+            {renderMedia()}
             {resource.content && (
               <div className="mb-3">
                 <strong>Content:</strong>
                 <div dangerouslySetInnerHTML={{ __html: resource.content }} />
               </div>
             )}
-
-            {resource.url && (
-              <Button variant="primary" as="a" href={resource.url} target="_blank">
-                {resource.type === 'pdf' ? '📄 Download PDF' :
-                 resource.type === 'video' ? '▶️ Watch Video' :
-                 resource.type === 'podcast' ? '🎧 Listen Now' : 'Open Resource'}
-              </Button>
-            )}
-
             {resource.type === 'course' && user && (
               <div className="mt-4">
                 <h6>Your Progress</h6>
-                <div className="progress">
-                  <div className="progress-bar bg-success" style={{ width: `${courseProgress}%` }}>{courseProgress}%</div>
+                <div className="progress mb-2">
+                  <div
+                    className="progress-bar bg-success"
+                    style={{ width: `${courseProgress}%` }}
+                    role="progressbar"
+                  >
+                    {courseProgress}%
+                  </div>
                 </div>
-                <div className="d-flex gap-2 mt-2">
-                  <Button variant="outline-primary" size="sm" onClick={() => updateProgress(Math.min(courseProgress + 10, 100))}>+10% Progress</Button>
+                <div className="d-flex gap-2">
+                  <Button variant="outline-primary" size="sm" onClick={() => updateProgress(Math.min(courseProgress + 10, 100))}>+10%</Button>
                   <Button variant="outline-success" size="sm" onClick={() => updateProgress(100)}>Mark Complete</Button>
                 </div>
               </div>
             )}
-
             <div className="mt-3 d-flex gap-3">
-              <Button variant="outline-primary" size="sm" onClick={toggleLike}>❤️ {resource.like_count || 0} Likes</Button>
+              <Button variant="outline-primary" size="sm" onClick={toggleLike}>❤️ {resource.like_count || 0}</Button>
               <span className="text-muted small">👁 {resource.view_count} views</span>
             </div>
           </Card>
