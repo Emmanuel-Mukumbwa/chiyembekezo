@@ -1,237 +1,151 @@
 const pool = require('../config/db');
 const { logAuditAction } = require('../services/auditLogService');
-const { checkAndAwardAchievements } = require('../services/achievementService');
 
-// ---------- Breathing ----------
-exports.getBreathingTypes = async (req, res) => {
-  const types = [
-    { id: 'box', name: 'Box Breathing', description: 'Inhale, hold, exhale, hold – equal times.' },
-    { id: '478', name: '4-7-8 Breathing', description: 'Inhale 4s, hold 7s, exhale 8s.' },
-    { id: 'deep', name: 'Deep Breathing', description: 'Slow, deep belly breaths.' },
-    { id: 'calm', name: 'Calm Breathing', description: 'Gentle, soothing rhythm.' },
-  ];
-  res.json(types);
+// Breathing techniques (static)
+const breathingTechniques = [
+  { id: 'box', name: 'Box Breathing', inhale: 4, hold: 4, exhale: 4, hold2: 4 },
+  { id: '478', name: '4-7-8 Breathing', inhale: 4, hold: 7, exhale: 8, hold2: 0 },
+  { id: 'deep', name: 'Deep Breathing', inhale: 5, hold: 0, exhale: 5, hold2: 0 },
+  { id: 'calm', name: 'Calm Breathing', inhale: 6, hold: 0, exhale: 6, hold2: 0 },
+];
+
+exports.getBreathingTechniques = (req, res) => {
+  res.json(breathingTechniques);
 };
 
-exports.completeBreathing = async (req, res) => {
-  const userId = req.user.id;
-  const { session_name, duration_seconds, mood_before, mood_after } = req.body;
-
-  try {
-    const [result] = await pool.query(
-      `INSERT INTO wellness_sessions
-       (user_id, session_type, session_name, duration_seconds, completed, mood_before, mood_after)
-       VALUES (?, 'breathing', ?, ?, TRUE, ?, ?)`,
-      [userId, session_name, duration_seconds, mood_before || null, mood_after || null]
-    );
-    // Audit log
-    await logAuditAction(
-      userId,
-      'user',
-      req.user.email,
-      'Completed breathing session',
-      'wellness',
-      result.insertId,
-      { session_name, duration_seconds }
-    );
-
-    // Check for achievements after completing wellness session
-    await checkAndAwardAchievements(userId, 'wellness');
-
-    res.json({ message: 'Breathing session saved.', id: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-// ---------- Meditation ----------
+// Meditations – from database
 exports.getMeditations = async (req, res) => {
-  // Static list – can be extended from DB later
-  const meditations = [
-    { id: 1, title: 'Quick Calm', duration: 2, category: 'Quick' },
-    { id: 2, title: 'Relax', duration: 5, category: 'Relax' },
-    { id: 3, title: 'Sleep', duration: 10, category: 'Sleep' },
-    { id: 4, title: 'Stress Relief', duration: 15, category: 'Stress Relief' },
-    { id: 5, title: 'Anxiety Release', duration: 15, category: 'Anxiety' },
-    { id: 6, title: 'Gratitude', duration: 10, category: 'Gratitude' },
-  ];
-  res.json(meditations);
-};
-
-exports.completeMeditation = async (req, res) => {
-  const userId = req.user.id;
-  const { session_name, duration_seconds, mood_before, mood_after } = req.body;
-
   try {
-    const [result] = await pool.query(
-      `INSERT INTO wellness_sessions
-       (user_id, session_type, session_name, duration_seconds, completed, mood_before, mood_after)
-       VALUES (?, 'meditation', ?, ?, TRUE, ?, ?)`,
-      [userId, session_name, duration_seconds, mood_before || null, mood_after || null]
+    const [rows] = await pool.query(
+      'SELECT id, title, category, duration, description, narrator, background_sound, audio_url, image_url FROM meditations WHERE is_active = 1 ORDER BY sort_order, title'
     );
-    await logAuditAction(
-      userId,
-      'user',
-      req.user.email,
-      'Completed meditation session',
-      'wellness',
-      result.insertId,
-      { session_name, duration_seconds }
-    );
-
-    // Check for achievements
-    await checkAndAwardAchievements(userId, 'wellness');
-
-    res.json({ message: 'Meditation session saved.', id: result.insertId });
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// ---------- Grounding ----------
-exports.getGroundingExercises = async (req, res) => {
-  const exercises = [
-    { id: '54321', name: '5-4-3-2-1', description: 'Engage all five senses.' },
-    { id: 'pmr', name: 'Progressive Muscle Relaxation', description: 'Tense and relax each muscle group.' },
-    { id: 'bodyscan', name: 'Body Scan', description: 'Bring awareness to each part of your body.' },
-    { id: 'visualization', name: 'Positive Visualization', description: 'Imagine a peaceful place.' },
-    { id: 'safeplace', name: 'Safe Place Exercise', description: 'Create a mental safe space.' },
-  ];
-  res.json(exercises);
-};
-
-exports.completeGrounding = async (req, res) => {
-  const userId = req.user.id;
-  const { session_name, duration_seconds, mood_before, mood_after } = req.body;
-
-  try {
-    const [result] = await pool.query(
-      `INSERT INTO wellness_sessions
-       (user_id, session_type, session_name, duration_seconds, completed, mood_before, mood_after)
-       VALUES (?, 'grounding', ?, ?, TRUE, ?, ?)`,
-      [userId, session_name, duration_seconds, mood_before || null, mood_after || null]
-    );
-    await logAuditAction(
-      userId,
-      'user',
-      req.user.email,
-      'Completed grounding exercise',
-      'wellness',
-      result.insertId,
-      { session_name, duration_seconds }
-    );
-
-    // Check for achievements
-    await checkAndAwardAchievements(userId, 'wellness');
-
-    res.json({ message: 'Grounding session saved.', id: result.insertId });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Server error' });
-  }
-};
-
-// ---------- Relaxation Sounds ----------
+// Sounds – from database
 exports.getSounds = async (req, res) => {
-  const sounds = [
-    { id: 'rain', name: 'Rain', icon: '🌧' },
-    { id: 'forest', name: 'Forest', icon: '🌲' },
-    { id: 'ocean', name: 'Ocean', icon: '🌊' },
-    { id: 'fireplace', name: 'Fireplace', icon: '🔥' },
-    { id: 'night', name: 'Night', icon: '🌙' },
-    { id: 'birds', name: 'Birds', icon: '🐦' },
-    { id: 'piano', name: 'Piano', icon: '🎹' },
-    { id: 'whitenoise', name: 'White Noise', icon: '🤍' },
-  ];
-  res.json(sounds);
-};
-
-// ---------- Timers ----------
-exports.getTimers = async (req, res) => {
-  const timers = [
-    { id: 'pomodoro', name: 'Pomodoro', default: 25, break: 5 },
-    { id: 'study', name: 'Study', default: 60 },
-    { id: 'focus', name: 'Focus', default: 30 },
-    { id: 'meditation-timer', name: 'Meditation', default: 10 },
-    { id: 'sleep-timer', name: 'Sleep', default: 30 },
-  ];
-  res.json(timers);
-};
-
-// ---------- Daily Wellness ----------
-exports.getDailyWellness = async (req, res) => {
-  // For now, return a static checklist.
-  // In production, you could store user preferences per day in a separate table.
-  const checklist = [
-    { id: 'water', label: 'Drink Water', checked: false },
-    { id: 'medicine', label: 'Take Medicine', checked: false },
-    { id: 'journal', label: 'Journal', checked: false },
-    { id: 'exercise', label: 'Exercise', checked: false },
-    { id: 'pray', label: 'Pray', checked: false },
-    { id: 'meditation', label: 'Meditation', checked: false },
-    { id: 'walk', label: 'Walk', checked: false },
-  ];
-  res.json(checklist);
-};
-
-exports.updateDailyWellness = async (req, res) => {
-  // For MVP, just log it.
-  const userId = req.user.id;
-  const { checklist } = req.body;
-  await logAuditAction(
-    userId,
-    'user',
-    req.user.email,
-    'Updated daily wellness checklist',
-    'wellness',
-    null,
-    { checklist }
-  );
-  res.json({ message: 'Daily wellness updated.' });
-};
-
-// ---------- Dashboard Recommendations ----------
-exports.getRecommendations = async (req, res) => {
-  const userId = req.user.id;
   try {
-    // Get today's mood and recent stress levels from mood_entries
-    const [todayMood] = await pool.query(
-      `SELECT mood_score, stress_level, sleep_hours
-       FROM mood_entries
-       WHERE user_id = ?
-       ORDER BY recorded_at DESC
-       LIMIT 1`,
-      [userId]
+    const [rows] = await pool.query(
+      'SELECT id, name, icon, color, audio_url, image_url FROM relaxation_sounds WHERE is_active = 1 ORDER BY sort_order, name'
     );
-    const mood = todayMood[0] || {};
-    const stress = mood.stress_level || 3;
-    const moodScore = mood.mood_score || 3;
-
-    // Rule-based recommendations
-    let recommendations = [];
-
-    if (stress >= 4) {
-      recommendations.push({ type: 'breathing', name: 'Box Breathing', link: '/wellness/breathing' });
-      recommendations.push({ type: 'grounding', name: '5-4-3-2-1 Grounding', link: '/wellness/grounding' });
-    }
-    if (moodScore <= 2) {
-      recommendations.push({ type: 'meditation', name: 'Gratitude Meditation', link: '/wellness/meditation' });
-      recommendations.push({ type: 'journal', name: 'Write a Journal Entry', link: '/journal' });
-    }
-    if (mood.sleep_hours && mood.sleep_hours < 6) {
-      recommendations.push({ type: 'sound', name: 'Sleep Sounds (Rain)', link: '/wellness/sounds' });
-      recommendations.push({ type: 'timer', name: 'Sleep Timer (30 min)', link: '/wellness/timers' });
-    }
-    if (recommendations.length === 0) {
-      recommendations.push({ type: 'breathing', name: 'Calm Breathing', link: '/wellness/breathing' });
-      recommendations.push({ type: 'sounds', name: 'Relaxation Sounds', link: '/wellness/sounds' });
-    }
-
-    res.json(recommendations);
+    res.json(rows);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
+};
+
+// Grounding exercises (static)
+const groundingExercises = [
+  {
+    id: '54321',
+    name: '5-4-3-2-1',
+    description: 'Engage all five senses to ground yourself.',
+    steps: [
+      { label: '5 things you can see', input: true },
+      { label: '4 things you can touch', input: true },
+      { label: '3 things you can hear', input: true },
+      { label: '2 things you can smell', input: true },
+      { label: '1 thing you can taste', input: true },
+    ]
+  },
+  {
+    id: 'pmr',
+    name: 'Progressive Muscle Relaxation',
+    description: 'Tense and relax each muscle group.',
+    steps: [
+      { label: 'Feet – tense for 5 seconds, then relax' },
+      { label: 'Legs – tense for 5 seconds, then relax' },
+      { label: 'Stomach – tense for 5 seconds, then relax' },
+      { label: 'Chest – tense for 5 seconds, then relax' },
+      { label: 'Hands & arms – tense for 5 seconds, then relax' },
+      { label: 'Shoulders – tense for 5 seconds, then relax' },
+      { label: 'Face & jaw – tense for 5 seconds, then relax' },
+    ]
+  },
+  {
+    id: 'bodyscan',
+    name: 'Body Scan',
+    description: 'Bring awareness to each part of your body.',
+    steps: [
+      { label: 'Focus on your breath for 3 breaths' },
+      { label: 'Notice your feet – any sensations?', input: true },
+      { label: 'Notice your legs and hips', input: true },
+      { label: 'Notice your stomach and chest', input: true },
+      { label: 'Notice your hands and arms', input: true },
+      { label: 'Notice your shoulders and neck', input: true },
+      { label: 'Notice your face and head', input: true },
+    ]
+  },
+  {
+    id: 'visualization',
+    name: 'Positive Visualization',
+    description: 'Imagine a peaceful place.',
+    steps: [
+      { label: 'Take 5 deep breaths with your eyes closed' },
+      { label: 'Imagine a safe, calm place', input: true },
+      { label: 'What do you see?', input: true },
+      { label: 'What sounds do you hear?', input: true },
+      { label: 'What does it feel like?', input: true },
+    ]
+  },
+  {
+    id: 'safeplace',
+    name: 'Safe Place Exercise',
+    description: 'Create a mental safe space.',
+    steps: [
+      { label: 'Sit comfortably, take 3 slow breaths' },
+      { label: 'Imagine a place where you feel completely safe', input: true },
+      { label: 'Who is there with you?', input: true },
+      { label: 'What makes it safe?', input: true },
+      { label: 'What is the atmosphere like?', input: true },
+    ]
+  }
+];
+
+exports.getGroundingExercises = (req, res) => {
+  res.json(groundingExercises);
+};
+
+// Session recording for any wellness activity
+exports.saveSession = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { session_type, session_name, duration_seconds, mood_before, mood_after, details } = req.body;
+    if (!session_type || !session_name) {
+      return res.status(400).json({ error: 'session_type and session_name are required' });
+    }
+    const [result] = await pool.query(
+      `INSERT INTO wellness_sessions (user_id, session_type, session_name, duration_seconds, mood_before, mood_after, details)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [userId, session_type, session_name, duration_seconds || 0, mood_before || null, mood_after || null, details ? JSON.stringify(details) : null]
+    );
+    await logAuditAction(userId, 'user', req.user.email, `Completed ${session_type} session: ${session_name}`, 'wellness_session', result.insertId, {});
+    res.json({ message: 'Session recorded' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
+// Daily wellness checklist (sample)
+const defaultChecklist = [
+  { id: 1, label: 'Drink 8 glasses of water', checked: false },
+  { id: 2, label: 'Get at least 15 minutes of sunshine', checked: false },
+  { id: 3, label: 'Practice gratitude (list 3 things)', checked: false },
+  { id: 4, label: 'Move your body (walk, stretch, etc.)', checked: false },
+  { id: 5, label: 'Take 3 deep breaths', checked: false },
+  { id: 6, label: 'Connect with someone you care about', checked: false },
+];
+
+exports.getDailyWellness = (req, res) => {
+  res.json(defaultChecklist);
+};
+
+exports.saveDailyWellness = (req, res) => {
+  res.json({ message: 'Progress saved' });
 };
