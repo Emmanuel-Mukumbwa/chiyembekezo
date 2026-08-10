@@ -1658,3 +1658,12 @@ ALTER TABLE resources MODIFY tags JSON NULL;
 
 -- 3. Verify
 SHOW COLUMNS FROM resources;
+
+ALTER TABLE organizations ADD COLUMN is_active TINYINT(1) DEFAULT 1;
+
+SET SQL_SAFE_UPDATES = 0;
+UPDATE resources SET slug = LOWER(REPLACE(title, ' ', '-')) WHERE slug IS NULL;
+SET SQL_SAFE_UPDATES = 1;
+
+ALTER TABLE resources MODIFY slug VARCHAR(255) NOT NULL;
+ALTER TABLE resources ADD UNIQUE (slug);
