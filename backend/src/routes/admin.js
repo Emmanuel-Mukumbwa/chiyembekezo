@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
 const isAdmin = require('../middleware/isAdmin');
+const { uploadFile, uploadFields } = require('../middleware/upload');
 
 // Import admin controllers
 const userController = require('../controllers/admin/userController');
@@ -15,102 +16,115 @@ const communityController = require('../controllers/admin/communityController');
 const peerSupportController = require('../controllers/peerSupportController');
 const analyticsController = require('../controllers/admin/analyticsController');
 const emergencyController = require('../controllers/admin/emergencyController');
-const logsController = require('../controllers/admin/logsController'); // 👈 NOW ADDED
-
-// Application and Invitation controllers
+const logsController = require('../controllers/admin/logsController');
 const applicationController = require('../controllers/applicationController');
 const invitationController = require('../controllers/invitationController');
-
-// Wellness controllers
 const wellnessController = require('../controllers/admin/wellnessController');
 
 router.use(auth, isAdmin);
 
-// Test endpoint
 router.get('/check', (req, res) => {
-  res.json({
-    message: 'Admin access confirmed',
-    userId: req.user.id,
-    isAdmin: true,
-  });
+  res.json({ message: 'Admin access confirmed', userId: req.user.id, isAdmin: true });
 });
 
-// ===== Users =====
+// Users
 router.get('/users', userController.getUsers);
 router.put('/users/:id', userController.updateUserStatus);
 router.delete('/users/:id', userController.deleteUser);
 
-// ===== Professionals =====
+// Professionals
 router.get('/professionals', professionalController.getProfessionals);
 router.put('/professionals/:id/verify', professionalController.verifyProfessional);
 router.delete('/professionals/:id', professionalController.deleteProfessional);
 
-// ===== Volunteers =====
+// Volunteers
 router.get('/volunteers', volunteerController.getVolunteers);
 router.put('/volunteers/:id/verify', volunteerController.verifyVolunteer);
 router.delete('/volunteers/:id', volunteerController.deleteVolunteer);
 
-// ===== Organizations =====
+// Organizations
 router.get('/organizations', organizationController.getOrganizations);
 router.post('/organizations', organizationController.createOrganization);
 router.post('/organizations/:orgId/members', organizationController.addMember);
 router.delete('/organizations/:orgId/members/:userId', organizationController.removeMember);
+router.get('/organizations/:orgId/members', organizationController.getMembers);
+router.put('/organizations/:id', organizationController.updateOrganization);
+router.put('/organizations/:id/toggle-active', organizationController.toggleActive);
 
-// ===== Articles =====
+// Articles
 router.get('/articles', articleController.getArticles);
 router.put('/articles/:id/publish', articleController.publishArticle);
 router.delete('/articles/:id', articleController.deleteArticle);
 
-// ===== Resources =====
+// Resources (with file upload middleware)
 router.get('/resources', resourceController.getResources);
 router.get('/resources/:id', resourceController.getResourceById);
-router.post('/resources', resourceController.createResource);
-router.put('/resources/:id', resourceController.updateResource);
+router.post('/resources', uploadFile, resourceController.createResource);
+router.put('/resources/:id', uploadFile, resourceController.updateResource);
 router.put('/resources/:id/publish', resourceController.publishResource);
 router.delete('/resources/:id', resourceController.deleteResource);
 
-// ===== Appointments =====
+// Appointments
 router.get('/appointments', appointmentController.getAppointments);
 router.put('/appointments/:id', appointmentController.updateAppointmentStatus);
 
-// ===== Community =====
+// Community
 router.get('/community/posts', communityController.getPosts);
+router.get('/community/posts/:id', communityController.getPost);          // 👈 Preview single post
 router.delete('/community/posts/:id', communityController.deletePost);
 router.put('/community/posts/:id/pin', communityController.pinPost);
+router.delete('/community/comments/:id', communityController.deleteComment); // 👈 Moderate comments
 
-// ===== Peer Support =====
+// Peer Support
 router.get('/peer-support/requests', peerSupportController.adminGetRequests);
 router.put('/peer-support/requests/:id/assign', peerSupportController.adminAssignRequest);
 router.put('/peer-support/requests/:id/unassign', peerSupportController.adminUnassignRequest);
 
-// ===== Applications =====
+// Applications
 router.get('/applications', applicationController.adminGetApplications);
 router.put('/applications/:id', applicationController.adminReviewApplication);
 
-// ===== Invitations =====
+// Invitations
 router.post('/invitations', invitationController.sendInvitation);
 
-// ===== Analytics =====
+// Analytics
 router.get('/analytics', analyticsController.getStats);
 
-// ===== Wellness Content =====
+// Wellness - Meditations (with audio + image upload)
 router.get('/wellness/meditations', wellnessController.getMeditations);
-router.post('/wellness/meditations', wellnessController.createMeditation);
-router.put('/wellness/meditations/:id', wellnessController.updateMeditation);
+router.post(
+  '/wellness/meditations',
+  uploadFields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  wellnessController.createMeditation
+);
+router.put(
+  '/wellness/meditations/:id',
+  uploadFields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  wellnessController.updateMeditation
+);
 router.delete('/wellness/meditations/:id', wellnessController.deleteMeditation);
 
+// Wellness - Sounds (with audio + image upload)
 router.get('/wellness/sounds', wellnessController.getSounds);
-router.post('/wellness/sounds', wellnessController.createSound);
-router.put('/wellness/sounds/:id', wellnessController.updateSound);
+router.post(
+  '/wellness/sounds',
+  uploadFields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  wellnessController.createSound
+);
+router.put(
+  '/wellness/sounds/:id',
+  uploadFields([{ name: 'audio', maxCount: 1 }, { name: 'image', maxCount: 1 }]),
+  wellnessController.updateSound
+);
 router.delete('/wellness/sounds/:id', wellnessController.deleteSound);
 
-// ===== Emergency Contacts =====
+// Emergency Contacts
 router.get('/emergency-contacts', emergencyController.getAll);
 router.post('/emergency-contacts', emergencyController.create);
 router.put('/emergency-contacts/:id', emergencyController.update);
 router.delete('/emergency-contacts/:id', emergencyController.delete);
 
-// ===== Admin Logs =====
+// Admin Logs
 router.get('/logs', logsController.getLogs);
 
 module.exports = router;
