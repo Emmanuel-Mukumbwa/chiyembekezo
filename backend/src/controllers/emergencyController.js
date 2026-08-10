@@ -1,4 +1,5 @@
 const pool = require('../config/db');
+const { logAuditAction } = require('../services/auditLogService');
 
 // Get all emergency data for the user (authenticated)
 exports.getEmergencyData = async (req, res) => {
@@ -43,6 +44,9 @@ exports.getEmergencyData = async (req, res) => {
       grouped[row.contact_type].push(row);
       if (row.is_featured) featured.push(row);
     });
+
+    // Log access to emergency data
+    await logAuditAction(userId, 'user', req.user.email, 'Accessed emergency data', 'emergency', null, {});
 
     res.json({
       profileContacts,
