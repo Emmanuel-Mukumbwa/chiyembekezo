@@ -9,7 +9,6 @@ const AdminLayout = () => {
   const { user } = useAuth();
   const location = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  // All groups closed by default
   const [openGroups, setOpenGroups] = useState({});
 
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
@@ -49,7 +48,7 @@ const AdminLayout = () => {
       label: 'Content',
       icon: '📄',
       items: [
-        { path: '/articles', label: 'Articles', icon: '📄' },
+        // Articles removed – use Resources instead
         { path: '/resources', label: 'Resources', icon: '📁' },
       ]
     },
@@ -78,6 +77,8 @@ const AdminLayout = () => {
       items: [
         { path: '/appointments', label: 'Appointments', icon: '📅' },
         { path: '/analytics', label: 'Analytics', icon: '📈' },
+        { path: '/emergency-contacts', label: 'Emergency Contacts', icon: '🚨' },
+        { path: '/logs', label: 'Audit Logs', icon: '📋' },
       ]
     },
   ];
