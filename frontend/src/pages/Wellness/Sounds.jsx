@@ -1,52 +1,59 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { Button, LoadingSkeleton } from '../../components/ui';
-
-const soundLibrary = [
-  { id: 'rain', name: 'Rain', icon: '🌧', color: '#4a90d9' },
-  { id: 'forest', name: 'Forest', icon: '🌲', color: '#2d7d2d' },
-  { id: 'ocean', name: 'Ocean', icon: '🌊', color: '#1e6f8f' },
-  { id: 'fireplace', name: 'Fireplace', icon: '🔥', color: '#b85a1a' },
-  { id: 'night', name: 'Night', icon: '🌙', color: '#2c3e50' },
-  { id: 'birds', name: 'Birds', icon: '🐦', color: '#6a9fb5' },
-  { id: 'piano', name: 'Piano', icon: '🎹', color: '#8b6b4d' },
-  { id: 'whitenoise', name: 'White Noise', icon: '🤍', color: '#a0a0a0' },
-];
+import api from '../../services/api';
 
 const Sounds = () => {
-  const { user } = useAuth();
   const { showModal } = useModal();
   const [pageLoading, setPageLoading] = useState(true);
+  const [sounds, setSounds] = useState([]);
   const [selectedSound, setSelectedSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(70);
   const [sleepTimer, setSleepTimer] = useState(null);
   const [remaining, setRemaining] = useState(0);
   const timerRef = useRef(null);
+  const audioRef = useRef(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setPageLoading(false), 300);
-    return () => {
-      clearTimeout(t);
-      if (timerRef.current) clearInterval(timerRef.current);
+    const fetchSounds = async () => {
+      try {
+        const res = await api.get('/wellness/sounds');
+        setSounds(res.data);
+      } catch (err) {
+        showModal('Error', 'Failed to load sounds.');
+      } finally {
+        setPageLoading(false);
+      }
     };
+    fetchSounds();
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
   const playSound = (sound) => {
     setSelectedSound(sound);
     setIsPlaying(true);
-    if (sleepTimer) {
-      setRemaining(sleepTimer * 60);
+    if (audioRef.current) {
+      audioRef.current.src = sound.audio_url || '';
+      audioRef.current.volume = volume / 100;
+      audioRef.current.play().catch(() => {});
     }
+    if (sleepTimer) setRemaining(sleepTimer * 60);
   };
 
   const stopSound = () => {
     setIsPlaying(false);
+    if (audioRef.current) audioRef.current.pause();
     if (timerRef.current) clearInterval(timerRef.current);
     setRemaining(0);
+  };
+
+  const handleVolumeChange = (e) => {
+    const v = parseInt(e.target.value, 10);
+    setVolume(v);
+    if (audioRef.current) audioRef.current.volume = v / 100;
   };
 
   const startSleepTimer = (minutes) => {
@@ -58,6 +65,7 @@ const Sounds = () => {
         if (prev <= 1) {
           clearInterval(timerRef.current);
           setIsPlaying(false);
+          if (audioRef.current) audioRef.current.pause();
           showModal('Timer Finished', 'Sound stopped.');
           return 0;
         }
@@ -90,16 +98,20 @@ const Sounds = () => {
   return (
     <Container className="my-5">
       <h2 className="mb-4">Relaxation Sounds</h2>
+
+      {/* Hidden audio element for playback */}
+      <audio ref={audioRef} onEnded={() => setIsPlaying(false)} />
+
       {!selectedSound ? (
         <Row>
-          {soundLibrary.map(sound => (
+          {sounds.map(sound => (
             <Col md={3} sm={6} key={sound.id} className="mb-3">
               <Card
                 className="feature-card text-center p-3"
                 style={{ cursor: 'pointer' }}
                 onClick={() => playSound(sound)}
               >
-                <div style={{ fontSize: '3rem' }}>{sound.icon}</div>
+                <div style={{ fontSize: '3rem' }}>{sound.icon || '🎵'}</div>
                 <Card.Title className="mt-2">{sound.name}</Card.Title>
                 <Button variant="outline-primary" size="sm">Play</Button>
               </Card>
@@ -108,21 +120,26 @@ const Sounds = () => {
         </Row>
       ) : (
         <Card className="feature-card p-4 text-center">
-          <div style={{ fontSize: '4rem' }}>{selectedSound.icon}</div>
+          <div style={{ fontSize: '4rem' }}>{selectedSound.icon || '🎵'}</div>
           <h3>{selectedSound.name}</h3>
+          {selectedSound.image_url && (
+            <img
+              src={selectedSound.image_url}
+              alt={selectedSound.name}
+              style={{ maxWidth: '200px', borderRadius: '8px', margin: '10px auto' }}
+            />
+          )}
           {isPlaying && (
             <>
               <div className="my-3">
                 <Form.Label>Volume: {volume}%</Form.Label>
-                <Form.Range
-                  min="0" max="100"
-                  value={volume}
-                  onChange={(e) => setVolume(parseInt(e.target.value))}
-                />
+                <Form.Range min="0" max="100" value={volume} onChange={handleVolumeChange} />
               </div>
               <div className="d-flex justify-content-center gap-2">
                 <Button variant="danger" onClick={stopSound}>Stop</Button>
-                <Button variant="outline-secondary" onClick={() => setSelectedSound(null)}>Change Sound</Button>
+                <Button variant="outline-secondary" onClick={() => setSelectedSound(null)}>
+                  Change Sound
+                </Button>
               </div>
               {sleepTimer && (
                 <div className="mt-3">
@@ -139,7 +156,12 @@ const Sounds = () => {
             </>
           )}
           {!isPlaying && (
-            <Button variant="primary" onClick={() => setIsPlaying(true)}>Resume</Button>
+            <Button variant="primary" onClick={() => {
+              if (audioRef.current) {
+                audioRef.current.play().catch(() => {});
+                setIsPlaying(true);
+              }
+            }}>Resume</Button>
           )}
         </Card>
       )}
