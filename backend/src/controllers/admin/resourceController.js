@@ -2,14 +2,15 @@ const pool = require('../../config/db');
 const { uploadToCloudinary, deleteFromCloudinary } = require('../../utils/upload');
 const { logAuditAction } = require('../../services/auditLogService');
 
-// ---- GET all resources (admin) ----
 exports.getResources = async (req, res) => {
   try {
     const [rows] = await pool.query(`
       SELECT r.id, r.title, r.type, r.is_published, r.view_count,
-             c.name as category, r.created_at
+             c.name as category, r.created_at,
+             o.name as org_name, r.organization_id
       FROM resources r
       LEFT JOIN categories c ON r.category_id = c.id
+      LEFT JOIN organizations o ON r.organization_id = o.id
       ORDER BY r.created_at DESC
     `);
     res.json(rows);
@@ -19,30 +20,28 @@ exports.getResources = async (req, res) => {
   }
 };
 
-// ---- GET single resource for editing (admin) ----
 exports.getResourceById = async (req, res) => {
   try {
     const { id } = req.params;
     const [rows] = await pool.query(
-      `SELECT r.*, c.name as category_name
+      `SELECT r.*, c.name as category_name, o.name as org_name
        FROM resources r
        LEFT JOIN categories c ON r.category_id = c.id
+       LEFT JOIN organizations o ON r.organization_id = o.id
        WHERE r.id = ?`,
       [id]
     );
     if (rows.length === 0) return res.status(404).json({ error: 'Resource not found' });
-    // Parse tags if JSON
     if (rows[0].tags) {
       try { rows[0].tags = JSON.parse(rows[0].tags); } catch (e) { rows[0].tags = []; }
     } else { rows[0].tags = []; }
     res.json(rows[0]);
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Server error' }); 
   }
 };
 
-// ---- CREATE resource ----
 exports.createResource = async (req, res) => {
   try {
     const {
@@ -62,9 +61,9 @@ exports.createResource = async (req, res) => {
 
     let url = req.body.url || null;
 
-    if (req.files && req.files.file) {
+    if (req.file) {
       const resourceType = type === 'video' ? 'video' : type === 'audio' ? 'video' : 'auto';
-      const result = await uploadToCloudinary(req.files.file.data, 'resources', resourceType);
+      const result = await uploadToCloudinary(req.file.buffer, 'resources', resourceType);
       url = result.secure_url;
     }
 
@@ -82,7 +81,7 @@ exports.createResource = async (req, res) => {
         content || null,
         category_id || null,
         author || null,
-        tags ? JSON.stringify(tags) : null,
+        tags ? (typeof tags === 'string' ? tags : JSON.stringify(tags)) : null,
         is_published || 0,
         duration_minutes || null,
         file_size || null,
@@ -99,12 +98,11 @@ exports.createResource = async (req, res) => {
     );
     res.status(201).json({ message: 'Resource created', id: result.insertId });
   } catch (err) {
-    console.error(err);
+    console.error('Error creating resource:', err);
     res.status(500).json({ error: 'Server error' });
   }
 };
 
-// ---- UPDATE resource ----
 exports.updateResource = async (req, res) => {
   try {
     const { id } = req.params;
@@ -132,7 +130,7 @@ exports.updateResource = async (req, res) => {
 
     let url = oldResource.url;
 
-    if (req.files && req.files.file) {
+    if (req.file) {
       if (oldResource.url) {
         try {
           const parts = oldResource.url.split('/');
@@ -145,7 +143,7 @@ exports.updateResource = async (req, res) => {
         }
       }
       const resourceType = type === 'video' ? 'video' : type === 'audio' ? 'video' : 'auto';
-      const result = await uploadToCloudinary(req.files.file.data, 'resources', resourceType);
+      const result = await uploadToCloudinary(req.file.buffer, 'resources', resourceType);
       url = result.secure_url;
       updates.push('url = ?');
       params.push(url);
@@ -158,7 +156,7 @@ exports.updateResource = async (req, res) => {
     if (content !== undefined) { updates.push('content = ?'); params.push(content); }
     if (category_id !== undefined) { updates.push('category_id = ?'); params.push(category_id); }
     if (author !== undefined) { updates.push('author = ?'); params.push(author); }
-    if (tags !== undefined) { updates.push('tags = ?'); params.push(JSON.stringify(tags)); }
+    if (tags !== undefined) { updates.push('tags = ?'); params.push(typeof tags === 'string' ? tags : JSON.stringify(tags)); }
     if (is_published !== undefined) { updates.push('is_published = ?'); params.push(is_published); }
     if (duration_minutes !== undefined) { updates.push('duration_minutes = ?'); params.push(duration_minutes); }
     if (file_size !== undefined) { updates.push('file_size = ?'); params.push(file_size); }
@@ -185,7 +183,6 @@ exports.updateResource = async (req, res) => {
   }
 };
 
-// ---- TOGGLE PUBLISH ----
 exports.publishResource = async (req, res) => {
   try {
     const { id } = req.params;
@@ -206,7 +203,6 @@ exports.publishResource = async (req, res) => {
   }
 };
 
-// ---- DELETE resource ----
 exports.deleteResource = async (req, res) => {
   try {
     const { id } = req.params;
