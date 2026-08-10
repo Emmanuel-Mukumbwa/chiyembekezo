@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, InputGroup, Form, Button } from 'react-bootstrap';
+import { Container, Row, Col, Card, Badge, Form, Button } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../context/ModalContext';
-import { EmptyState, ErrorState, SectionTitle, LoadingSkeleton } from '../components/ui';
+import { EmptyState, ErrorState, LoadingSkeleton } from '../components/ui';
 import api from '../services/api';
 
 const Resources = () => {
@@ -26,6 +26,9 @@ const Resources = () => {
 
   useEffect(() => {
     fetchCategories();
+  }, []);
+
+  useEffect(() => {
     fetchResources();
   }, [filters, pagination.page]);
 
@@ -47,18 +50,18 @@ const Resources = () => {
         limit: pagination.limit,
         ...filters,
       });
-      for (const key of ['search', 'category', 'type']) {
+      ['search', 'category', 'type'].forEach(key => {
         if (!params.get(key)) params.delete(key);
-      }
+      });
       const res = await api.get(`/resources?${params}`);
       setResources(res.data.resources || []);
-      setPagination({
-        ...pagination,
+      setPagination(prev => ({
+        ...prev,
         total: res.data.total || 0,
         totalPages: res.data.totalPages || 1,
-      });
+      }));
     } catch (err) {
-      setError('Failed to load resources. Please try again.');
+      setError('Failed to load resources.');
       showModal('Error', 'Failed to load resources.');
     } finally {
       setLoading(false);
@@ -67,13 +70,13 @@ const Resources = () => {
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
-    setPagination((prev) => ({ ...prev, page: 1 }));
+    setFilters(prev => ({ ...prev, [name]: value }));
+    setPagination(prev => ({ ...prev, page: 1 }));
   };
 
   const handlePageChange = (newPage) => {
     if (newPage < 1 || newPage > pagination.totalPages) return;
-    setPagination((prev) => ({ ...prev, page: newPage }));
+    setPagination(prev => ({ ...prev, page: newPage }));
   };
 
   const typeIcon = (type) => {
@@ -102,7 +105,7 @@ const Resources = () => {
     return variants[type] || 'secondary';
   };
 
-if (loading && resources.length === 0) {
+  if (loading && resources.length === 0) {
     return (
       <Container className="my-4">
         <Row>
@@ -145,10 +148,8 @@ if (loading && resources.length === 0) {
               <Form.Label>Category</Form.Label>
               <Form.Select name="category" value={filters.category} onChange={handleFilterChange}>
                 <option value="">All Categories</option>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
+                {categories.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </Form.Select>
             </Col>
@@ -170,7 +171,7 @@ if (loading && resources.length === 0) {
                 variant="outline-secondary"
                 onClick={() => {
                   setFilters({ search: '', category: '', type: '' });
-                  setPagination((prev) => ({ ...prev, page: 1 }));
+                  setPagination(prev => ({ ...prev, page: 1 }));
                 }}
               >
                 Clear
@@ -181,7 +182,7 @@ if (loading && resources.length === 0) {
                 className="ms-auto"
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
               >
-                {viewMode === 'grid' ? '📋 List View' : '🔲 Grid View'}
+                {viewMode === 'grid' ? '📋 List' : '🔲 Grid'}
               </Button>
             </Col>
           </Row>
@@ -195,16 +196,16 @@ if (loading && resources.length === 0) {
           <EmptyState
             icon="📚"
             title="No resources found"
-            description="Try adjusting your filters or search terms."
+            description="Try adjusting your filters."
             actionText="Clear Filters"
             onAction={() => {
               setFilters({ search: '', category: '', type: '' });
-              setPagination((prev) => ({ ...prev, page: 1 }));
+              setPagination(prev => ({ ...prev, page: 1 }));
             }}
           />
         ) : viewMode === 'grid' ? (
           <Row>
-            {resources.map((res) => (
+            {resources.map(res => (
               <Col md={4} sm={6} key={res.id} className="mb-3">
                 <Card className="feature-card h-100">
                   <Card.Body>
@@ -226,7 +227,7 @@ if (loading && resources.length === 0) {
           </Row>
         ) : (
           <div>
-            {resources.map((res) => (
+            {resources.map(res => (
               <Card className="mb-2 feature-card" key={res.id}>
                 <Card.Body className="d-flex flex-wrap align-items-center justify-content-between">
                   <div>
