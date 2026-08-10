@@ -1,3 +1,4 @@
+//src/pages/Wellness/Timers.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { Container, Row, Col, Card, Form, ProgressBar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
@@ -14,7 +15,7 @@ const Timers = () => {
   const [timeLeft, setTimeLeft] = useState(25 * 60);
   const [totalTime, setTotalTime] = useState(25 * 60);
   const [isBreak, setIsBreak] = useState(false);
-  const [customMinutes, setCustomMinutes] = useState(25);
+  const [customMinutes, setCustomMinutes] = useState(25); 
   const intervalRef = useRef(null);
 
   const presets = {
