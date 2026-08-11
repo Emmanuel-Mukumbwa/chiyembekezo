@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Badge, Button, Modal, Card, Collapse } from 'react-bootstrap';
+import { Container, Row, Col, Badge, Button, Modal, Card, Collapse, ListGroup } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Select, DataTable, EmptyState, ErrorState, LoadingSkeleton, Input } from '../../components/ui';
@@ -124,6 +124,22 @@ const AdminApplications = () => {
   );
   if (error) return <ErrorState title="Error loading applications" description={error} onRetry={fetchData} />;
 
+  const renderDocuments = (docs) => {
+    if (!docs || docs.length === 0) return <p className="text-muted">No documents uploaded.</p>;
+    return (
+      <ListGroup variant="flush">
+        {docs.map((doc, idx) => (
+          <ListGroup.Item key={idx} className="d-flex justify-content-between align-items-center px-0">
+            <span>{doc.originalName || `Document ${idx+1}`}</span>
+            <Button variant="outline-secondary" size="sm" href={doc.url} target="_blank" rel="noopener noreferrer">
+              View
+            </Button>
+          </ListGroup.Item>
+        ))}
+      </ListGroup>
+    );
+  };
+
   return (
     <>
       <Container fluid className="px-4">
@@ -171,18 +187,43 @@ const AdminApplications = () => {
         )}
       </Container>
 
+      {/* Preview Modal – extended with all fields */}
       <Modal show={!!previewItem} onHide={() => setPreviewItem(null)} size="lg" centered>
-        <Modal.Header closeButton><Modal.Title>Application Details</Modal.Title></Modal.Header>
+        <Modal.Header closeButton>
+          <Modal.Title>Application Details</Modal.Title>
+        </Modal.Header>
         <Modal.Body>
           {previewItem && (
             <div>
               <h5>{previewItem.first_name} {previewItem.last_name} ({previewItem.email})</h5>
               <p><strong>Type:</strong> {previewItem.type}</p>
-              <p><strong>Specialization:</strong> {previewItem.specialization || '-'}</p>
-              <p><strong>Qualifications:</strong> {previewItem.qualifications || '-'}</p>
-              <p><strong>Experience:</strong> {previewItem.experience || '-'}</p>
-              <p><strong>Message:</strong> {previewItem.message || '-'}</p>
               <p><strong>Status:</strong> <Badge bg={previewItem.status === 'pending' ? 'warning' : previewItem.status === 'approved' ? 'success' : 'danger'}>{previewItem.status}</Badge></p>
+              <hr />
+              {previewItem.type === 'professional' && (
+                <>
+                  <p><strong>Profession:</strong> {previewItem.profession || '-'}</p>
+                  <p><strong>Specialization:</strong> {previewItem.specialization || '-'}</p>
+                  <p><strong>Qualifications:</strong> {previewItem.qualifications || '-'}</p>
+                  <p><strong>Experience:</strong> {previewItem.experience || '-'}</p>
+                  <p><strong>License Number:</strong> {previewItem.license_number || '-'}</p>
+                  <p><strong>Registration Body:</strong> {previewItem.registration_body || '-'}</p>
+                  <p><strong>Registration Number:</strong> {previewItem.registration_number || '-'}</p>
+                  <p><strong>Registration Expiry:</strong> {previewItem.registration_expiry ? new Date(previewItem.registration_expiry).toLocaleDateString() : '-'}</p>
+                  <p><strong>Employer/Practice:</strong> {previewItem.employer || '-'}</p>
+                </>
+              )}
+              {previewItem.type === 'volunteer' && (
+                <>
+                  <p><strong>Preferred Role:</strong> {previewItem.role_preference || '-'}</p>
+                  <p><strong>Motivation:</strong> {previewItem.motivation || '-'}</p>
+                  <p><strong>Community Experience:</strong> {previewItem.experience || '-'}</p>
+                </>
+              )}
+              <p><strong>Availability:</strong> {previewItem.availability || '-'}</p>
+              <p><strong>Message:</strong> {previewItem.message || '-'}</p>
+              <hr />
+              <h6>Uploaded Documents</h6>
+              {renderDocuments(previewItem.documents)}
             </div>
           )}
         </Modal.Body>
