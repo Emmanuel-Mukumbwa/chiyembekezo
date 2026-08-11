@@ -83,7 +83,6 @@ const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Summary Cards (same as analytics but simpler) */}
       <Row className="g-3 mb-4">
         <Col md={3} sm={6}><StatCard icon="👥" value={stats.users.total} label="Total Users" variant="primary" /></Col>
         <Col md={3} sm={6}><StatCard icon="🟢" value={stats.users.active} label="Active Users" variant="success" /></Col>
@@ -95,7 +94,6 @@ const AdminDashboard = () => {
         <Col md={3} sm={6}><StatCard icon="👨‍⚕️" value={`${stats.professionals.verified}/${stats.professionals.total}`} label="Verified Professionals" variant="info" /></Col>
       </Row>
 
-      {/* Quick links to key admin areas */}
       <Row>
         <Col md={4}>
           <Card className="p-3 text-center">
