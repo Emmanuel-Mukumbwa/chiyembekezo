@@ -1,26 +1,56 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Spinner, Badge, Button, Modal, Row, Col } from 'react-bootstrap';
+import { Container, Spinner, Badge, Button, Modal, Card, Row, Col, Collapse } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import { DataTable, ErrorState, SearchBar, LoadingSkeleton } from '../../components/ui';
+import { DataTable, ErrorState, LoadingSkeleton, Input } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
+import { FiFilter, FiX } from 'react-icons/fi';
+
+const ProfessionalCard = ({ pro, onVerify, onDelete, onPreview }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h6 className="mb-1">{pro.first_name} {pro.last_name}</h6>
+          <small className="text-muted">{pro.email}</small>
+          <br />
+          <small className="text-muted">{pro.specialization || 'No specialization'} · {pro.district || 'N/A'}</small>
+        </div>
+        <Badge bg={pro.is_verified ? 'success' : 'warning'}>
+          {pro.is_verified ? 'Verified' : 'Pending'}
+        </Badge>
+      </div>
+      <div className="d-flex gap-1 mt-3 flex-wrap">
+        <Button variant="outline-info" size="sm" onClick={() => onPreview(pro)}>Preview</Button>
+        <Button
+          variant={pro.is_verified ? 'outline-secondary' : 'outline-primary'}
+          size="sm"
+          onClick={() => onVerify(pro.id, pro.is_verified)}
+        >
+          {pro.is_verified ? 'Unverify' : 'Verify'}
+        </Button>
+        <Button variant="danger" size="sm" onClick={() => onDelete(pro.id)}>Delete</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
 
 const AdminProfessionals = () => {
   const { showModal } = useModal();
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
   const [previewItem, setPreviewItem] = useState(null);
-
-  useEffect(() => { fetchProfessionals(); }, [search]);
 
   const fetchProfessionals = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await api.get(`/admin/professionals?search=${search}`);
+      const res = await api.get(`/admin/professionals?search=${appliedSearch}`);
       setProfessionals(res.data);
     } catch {
       setError('Failed to load professionals.');
@@ -29,6 +59,13 @@ const AdminProfessionals = () => {
     }
   };
 
+  useEffect(() => {
+    fetchProfessionals();
+  }, [appliedSearch]);
+
+  const handleApply = () => setAppliedSearch(search);
+  const handleClear = () => { setSearch(''); setAppliedSearch(''); };
+
   const toggleVerify = async (id, current) => {
     setActionLoading(id);
     try {
@@ -36,9 +73,7 @@ const AdminProfessionals = () => {
       fetchProfessionals();
     } catch {
       showModal('Error', 'Failed to update.');
-    } finally {
-      setActionLoading(null);
-    }
+    } finally { setActionLoading(null); }
   };
 
   const handleDelete = async (id) => {
@@ -49,9 +84,7 @@ const AdminProfessionals = () => {
         fetchProfessionals();
       } catch {
         showModal('Error', 'Failed to delete.');
-      } finally {
-        setActionLoading(null);
-      }
+      } finally { setActionLoading(null); }
     });
   };
 
@@ -105,12 +138,47 @@ const AdminProfessionals = () => {
       <Container fluid className="px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4>Professionals</h4>
-          <LogoutButton variant="outline-danger" size="sm" />
+          <div className="d-flex gap-2">
+            <Button variant="outline-secondary" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="d-flex align-items-center gap-1">
+              {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />} {filtersOpen ? 'Hide Filters' : 'Filters'}
+            </Button>
+            <LogoutButton variant="outline-danger" size="sm" />
+          </div>
         </div>
-        <div className="mb-3" style={{ maxWidth: '300px' }}>
-          <SearchBar value={search} onChange={setSearch} onSearch={fetchProfessionals} placeholder="Search..." />
+
+        <Collapse in={filtersOpen}>
+          <div>
+            <Row className="mb-3 g-2 align-items-end">
+              <Col md={4}>
+                <Input
+                  label="Search"
+                  name="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search by name, email, or specialty..."
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
+                />
+              </Col>
+              <Col md={4} className="d-flex gap-2">
+                <Button variant="primary" onClick={handleApply}>Apply</Button>
+                <Button variant="outline-secondary" onClick={handleClear}>Clear</Button>
+              </Col>
+            </Row>
+          </div>
+        </Collapse>
+
+        <div className="d-none d-md-block">
+          <DataTable columns={columns} data={professionals} keyField="id" />
         </div>
-        <DataTable columns={columns} data={professionals} keyField="id" />
+        <div className="d-md-none">
+          {professionals.length === 0 ? (
+            <p className="text-center text-muted">No professionals found.</p>
+          ) : (
+            professionals.map(p => (
+              <ProfessionalCard key={p.id} pro={p} onVerify={toggleVerify} onDelete={handleDelete} onPreview={setPreviewItem} />
+            ))
+          )}
+        </div>
       </Container>
 
       <Modal show={!!previewItem} onHide={() => setPreviewItem(null)} size="lg" centered>
@@ -120,9 +188,9 @@ const AdminProfessionals = () => {
             <div>
               <h5>{previewItem.first_name} {previewItem.last_name}</h5>
               <p><strong>Email:</strong> {previewItem.email}</p>
-              <p><strong>Specialization:</strong> {previewItem.specialization}</p>
-              <p><strong>District:</strong> {previewItem.district}</p>
-              <p><strong>Verified:</strong> {previewItem.is_verified ? 'Yes' : 'No'}</p>
+              <p><strong>Specialization:</strong> {previewItem.specialization || 'N/A'}</p>
+              <p><strong>District:</strong> {previewItem.district || 'N/A'}</p>
+              <p><strong>Status:</strong> <Badge bg={previewItem.is_verified ? 'success' : 'warning'}>{previewItem.is_verified ? 'Verified' : 'Pending'}</Badge></p>
             </div>
           )}
         </Modal.Body>
