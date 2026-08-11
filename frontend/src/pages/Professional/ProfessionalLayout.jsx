@@ -12,7 +12,7 @@ const ProfessionalLayout = () => {
   const toggleSidebar = () => setSidebarOpen(!sidebarOpen);
   const closeSidebar = () => setSidebarOpen(false);
 
-  if (!user?.isProfessional) {
+  if (!user?.isProfessional) { 
     return (
       <Container className="my-5 text-center">
         <h3>Access Denied</h3>
