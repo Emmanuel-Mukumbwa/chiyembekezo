@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Modal, Form } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Form, Card, Badge, Collapse } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
 import {
   Button,
-  Card,
   Input,
   Select,
   DataTable,
@@ -14,6 +13,28 @@ import {
   LoadingSkeleton,
 } from '../components/ui';
 import api from '../services/api';
+import { FiFilter, FiX } from 'react-icons/fi';
+
+const HabitCard = ({ habit, onToggleLog, onEdit, onDelete, logged }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h6 className="mb-1">{habit.name}</h6>
+          <small className="text-muted">{habit.category} · {habit.frequency} · Target: {habit.target_value} {habit.unit}</small>
+        </div>
+        <Badge bg={logged ? 'success' : 'secondary'}>{logged ? 'Done Today' : 'Not Done'}</Badge>
+      </div>
+      <div className="d-flex gap-1 mt-3">
+        <Button variant={logged ? 'success' : 'outline-success'} size="sm" onClick={() => onToggleLog(habit.id)}>
+          {logged ? 'Uncheck' : 'Check'}
+        </Button>
+        <Button variant="outline-primary" size="sm" onClick={() => onEdit(habit)}>Edit</Button>
+        <Button variant="outline-danger" size="sm" onClick={() => onDelete(habit.id)}>Delete</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
 
 const Habits = () => {
   const { user } = useAuth();
@@ -25,18 +46,14 @@ const Habits = () => {
   const [showModalHabit, setShowModalHabit] = useState(false);
   const [editingHabit, setEditingHabit] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    category: 'general',
-    target_value: 1,
-    unit: 'times',
-    frequency: 'daily',
-    goal_id: null,
+    name: '', category: 'general', target_value: 1, unit: 'times', frequency: 'daily', goal_id: null,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
 
-  useEffect(() => {
-    if (user) fetchData();
-  }, [user]);
+  useEffect(() => { if (user) fetchData(); }, [user]);
 
   const fetchData = async () => {
     setLoading(true);
@@ -51,9 +68,7 @@ const Habits = () => {
     } catch (err) {
       setError('Failed to load habits.');
       console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const handleLog = async (habitId, value = 1) => {
@@ -93,9 +108,7 @@ const Habits = () => {
       fetchData();
     } catch (err) {
       showModal('Error', err.response?.data?.error || 'Failed to save habit.');
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
   const openEdit = (habit) => {
@@ -111,14 +124,22 @@ const Habits = () => {
     setShowModalHabit(true);
   };
 
+  const filteredHabits = habits.filter(habit => {
+    const query = appliedSearch.toLowerCase();
+    return (habit.name || '').toLowerCase().includes(query) ||
+           (habit.category || '').toLowerCase().includes(query);
+  });
+
+  const handleApply = () => setAppliedSearch(search);
+  const handleClear = () => { setSearch(''); setAppliedSearch(''); };
+
   const columns = [
     { field: 'name', label: 'Name' },
     { field: 'category', label: 'Category' },
     { field: 'target_value', label: 'Target', render: (val, row) => `${val} ${row.unit}` },
     { field: 'frequency', label: 'Frequency' },
     {
-      field: 'actions',
-      label: 'Actions',
+      field: 'actions', label: 'Actions',
       render: (_, row) => (
         <div className="d-flex gap-1">
           <Button variant="outline-primary" size="sm" onClick={() => openEdit(row)}>Edit</Button>
@@ -128,11 +149,9 @@ const Habits = () => {
     },
   ];
 
-  if (!user) {
-    return <div className="text-center mt-5">Please log in to manage habits.</div>;
-  }
+  if (!user) return <div className="text-center mt-5">Please log in to manage habits.</div>;
 
-if (loading) {
+  if (loading) {
     return (
       <Container fluid className="px-3 px-sm-4 py-4">
         <Row>
@@ -146,20 +165,43 @@ if (loading) {
     );
   }
 
-  if (error) {
-    return <ErrorState title="Error loading habits" description={error} onRetry={fetchData} />;
-  }
+  if (error) return <ErrorState title="Error loading habits" description={error} onRetry={fetchData} />;
 
   return (
     <Container fluid className="px-3 px-sm-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>My Habits</h2>
-        <Button variant="primary" onClick={() => { setEditingHabit(null); setFormData({ name: '', category: 'general', target_value: 1, unit: 'times', frequency: 'daily', goal_id: null }); setShowModalHabit(true); }}>
-          + New Habit
-        </Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="d-flex align-items-center gap-1">
+            {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />} {filtersOpen ? 'Hide Filters' : 'Filters'}
+          </Button>
+          <Button variant="primary" onClick={() => { setEditingHabit(null); setFormData({ name: '', category: 'general', target_value: 1, unit: 'times', frequency: 'daily', goal_id: null }); setShowModalHabit(true); }}>
+            + New Habit
+          </Button>
+        </div>
       </div>
 
-      {/* Today's Checklist */}
+      <Collapse in={filtersOpen}>
+        <div>
+          <Row className="mb-3 g-2 align-items-end">
+            <Col md={4}>
+              <Input
+                label="Search Habits"
+                name="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by name or category..."
+                onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
+              />
+            </Col>
+            <Col md={4} className="d-flex gap-2">
+              <Button variant="primary" onClick={handleApply}>Apply</Button>
+              <Button variant="outline-secondary" onClick={handleClear}>Clear</Button>
+            </Col>
+          </Row>
+        </div>
+      </Collapse>
+
       <Card className="p-3 mb-4">
         <h6>Today's Checklist</h6>
         {todayLogs.length === 0 ? (
@@ -180,81 +222,53 @@ if (loading) {
         )}
       </Card>
 
-      {habits.length === 0 ? (
-        <EmptyState
-          icon="✅"
-          title="No habits yet"
-          description="Start building healthy habits today."
-          actionText="Create Habit"
-          onAction={() => {}}
-        />
+      {filteredHabits.length === 0 && !appliedSearch && habits.length === 0 ? (
+        <EmptyState icon="✅" title="No habits yet" description="Start building healthy habits today." actionText="Create Habit" onAction={() => { setEditingHabit(null); setFormData({ name: '', category: 'general', target_value: 1, unit: 'times', frequency: 'daily', goal_id: null }); setShowModalHabit(true); }} />
+      ) : filteredHabits.length === 0 && appliedSearch ? (
+        <p className="text-muted text-center">No habits match your search.</p>
       ) : (
-        <DataTable columns={columns} data={habits} keyField="id" />
+        <>
+          <div className="d-none d-md-block">
+            <DataTable columns={columns} data={filteredHabits} keyField="id" />
+          </div>
+          <div className="d-md-none">
+            {filteredHabits.map(habit => {
+              const todayLog = todayLogs.find(log => log.id === habit.id);
+              return (
+                <HabitCard
+                  key={habit.id}
+                  habit={habit}
+                  logged={todayLog?.logged || false}
+                  onToggleLog={handleLog}
+                  onEdit={openEdit}
+                  onDelete={handleDelete}
+                />
+              );
+            })}
+          </div>
+        </>
       )}
 
-      {/* Modal */}
       <Modal show={showModalHabit} onHide={() => setShowModalHabit(false)}>
         <Modal.Header closeButton>
           <Modal.Title>{editingHabit ? 'Edit Habit' : 'New Habit'}</Modal.Title>
         </Modal.Header>
         <Form onSubmit={handleSave}>
           <Modal.Body>
-            <Input
-              label="Name"
-              name="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-            <Select
-              label="Category"
-              name="category"
-              value={formData.category}
-              options={[
-                { value: 'general', label: 'General' },
-                { value: 'exercise', label: 'Exercise' },
-                { value: 'nutrition', label: 'Nutrition' },
-                { value: 'mental_health', label: 'Mental Health' },
-                { value: 'sleep', label: 'Sleep' },
-              ]}
-              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-            />
+            <Input label="Name" name="name" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} required />
+            <Select label="Category" name="category" value={formData.category} options={[
+              { value: 'general', label: 'General' }, { value: 'exercise', label: 'Exercise' }, { value: 'nutrition', label: 'Nutrition' },
+              { value: 'mental_health', label: 'Mental Health' }, { value: 'sleep', label: 'Sleep' }
+            ]} onChange={(e) => setFormData({ ...formData, category: e.target.value })} />
             <Row>
-              <Col sm={6}>
-                <Input
-                  label="Target Value"
-                  name="target_value"
-                  type="number"
-                  step="0.01"
-                  value={formData.target_value}
-                  onChange={(e) => setFormData({ ...formData, target_value: parseFloat(e.target.value) })}
-                />
-              </Col>
-              <Col sm={6}>
-                <Input
-                  label="Unit"
-                  name="unit"
-                  value={formData.unit}
-                  onChange={(e) => setFormData({ ...formData, unit: e.target.value })}
-                />
-              </Col>
+              <Col sm={6}><Input label="Target Value" name="target_value" type="number" step="0.01" value={formData.target_value} onChange={(e) => setFormData({ ...formData, target_value: parseFloat(e.target.value) })} /></Col>
+              <Col sm={6}><Input label="Unit" name="unit" value={formData.unit} onChange={(e) => setFormData({ ...formData, unit: e.target.value })} /></Col>
             </Row>
-            <Select
-              label="Frequency"
-              name="frequency"
-              value={formData.frequency}
-              options={[
-                { value: 'daily', label: 'Daily' },
-                { value: 'weekly', label: 'Weekly' },
-              ]}
-              onChange={(e) => setFormData({ ...formData, frequency: e.target.value })}
-            />
+            <Select label="Frequency" name="frequency" value={formData.frequency} options={[{ value: 'daily', label: 'Daily' }, { value: 'weekly', label: 'Weekly' }]} onChange={(e) => setFormData({ ...formData, frequency: e.target.value })} />
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowModalHabit(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? 'Saving...' : 'Save'}
-            </Button>
+            <Button variant="primary" type="submit" disabled={submitting}>{submitting ? 'Saving...' : 'Save'}</Button>
           </Modal.Footer>
         </Form>
       </Modal>
