@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Modal, Badge, Row, Col, ListGroup } from 'react-bootstrap';
+import { Container, Modal, Badge, Row, Col, ListGroup, Card } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import {
@@ -12,6 +12,34 @@ import {
   LoadingSkeleton,
 } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
+
+const OrgCard = ({ org, onEdit, onToggleActive, onOpenMembers }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h6 className="mb-1">{org.name}</h6>
+          <small className="text-muted">{org.type} · {org.contact_email || 'No email'}</small>
+        </div>
+        <Badge bg={org.is_active ? 'success' : 'danger'}>{org.is_active ? 'Active' : 'Inactive'}</Badge>
+      </div>
+      <div className="mt-2">
+        <small className="text-muted">👥 {org.member_count} members</small>
+      </div>
+      <div className="d-flex gap-1 mt-2 flex-wrap">
+        <Button variant="outline-secondary" size="sm" onClick={() => onOpenMembers(org)}>👥 Members</Button>
+        <Button variant="outline-primary" size="sm" onClick={() => onEdit(org)}>✏️ Edit</Button>
+        <Button
+          variant={org.is_active ? 'outline-danger' : 'outline-success'}
+          size="sm"
+          onClick={() => onToggleActive(org.id)}
+        >
+          {org.is_active ? 'Deactivate' : 'Activate'}
+        </Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
 
 const AdminOrganizations = () => {
   const { showModal } = useModal();
@@ -27,12 +55,10 @@ const AdminOrganizations = () => {
   const [memberEmail, setMemberEmail] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Members modal state
   const [showMembers, setShowMembers] = useState(false);
   const [members, setMembers] = useState([]);
   const [membersLoading, setMembersLoading] = useState(false);
 
-  // Edit modal state
   const [showEdit, setShowEdit] = useState(false);
   const [editOrg, setEditOrg] = useState({ id: '', name: '', type: '', contact_email: '', contact_phone: '', domain: '' });
 
@@ -109,7 +135,7 @@ const AdminOrganizations = () => {
     }
   };
 
-  const toggleActive = async (orgId, currentStatus) => {
+  const toggleActive = async (orgId) => {
     try {
       await api.put(`/admin/organizations/${orgId}/toggle-active`);
       fetchOrgs();
@@ -186,7 +212,7 @@ const AdminOrganizations = () => {
           <Button
             variant={row.is_active ? 'outline-danger' : 'outline-success'}
             size="sm"
-            onClick={() => toggleActive(row.id, row.is_active)}
+            onClick={() => toggleActive(row.id)}
           >
             {row.is_active ? 'Deactivate' : 'Activate'}
           </Button>
@@ -223,7 +249,16 @@ const AdminOrganizations = () => {
       {orgs.length === 0 ? (
         <EmptyState icon="🏢" title="No organizations" description="Create your first organization." />
       ) : (
-        <DataTable columns={columns} data={orgs} keyField="id" />
+        <>
+          <div className="d-none d-md-block">
+            <DataTable columns={columns} data={orgs} keyField="id" />
+          </div>
+          <div className="d-md-none">
+            {orgs.map(org => (
+              <OrgCard key={org.id} org={org} onEdit={handleEdit} onToggleActive={toggleActive} onOpenMembers={openMembers} />
+            ))}
+          </div>
+        </>
       )}
 
       {/* Create Modal */}
