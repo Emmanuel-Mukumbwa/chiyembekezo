@@ -5,13 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import {
-  Button,
-  Card,
-  StatCard,
-  ErrorState,
-  LoadingSkeleton,
-} from '../../components/ui';
+import { Button, Card, StatCard, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
 const VolunteerDashboard = () => {
@@ -21,17 +15,9 @@ const VolunteerDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  usePrompt(
-    () => {
-      logout();
-      window.location.href = '/login';
-    },
-    () => {}
-  );
+  usePrompt(() => { logout(); window.location.href = '/login'; }, () => {});
 
-  useEffect(() => {
-    fetchStats();
-  }, []);
+  useEffect(() => { fetchStats(); }, []);
 
   const fetchStats = async () => {
     setLoading(true);
@@ -39,10 +25,11 @@ const VolunteerDashboard = () => {
     try {
       const res = await api.get('/peer-support/volunteer/requests');
       const requests = res.data;
-      const pending = requests.filter(r => r.status === 'pending').length;
-      const active = requests.filter(r => r.status === 'accepted').length;
-      const completed = requests.filter(r => r.status === 'completed').length;
-      setStats({ pending, active, completed });
+      setStats({
+        pending: requests.filter(r => r.status === 'pending').length,
+        active: requests.filter(r => r.status === 'accepted').length,
+        completed: requests.filter(r => r.status === 'completed').length,
+      });
     } catch (err) {
       setError('Failed to load statistics.');
       showModal('Error', 'Failed to load statistics.');
@@ -51,33 +38,22 @@ const VolunteerDashboard = () => {
     }
   };
 
-if (loading) {
-    return (
-      <Container fluid className="px-4">
-        <div className="d-flex justify-content-between align-items-center mb-4">
-          <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
-        </div>
-        <Row className="g-3 mb-4">
-          {[...Array(3)].map((_, i) => (
-            <Col md={4} key={i}>
-              <LoadingSkeleton type="card" lines={3} />
-            </Col>
-          ))}
-        </Row>
-        <Row className="g-3">
-          {[...Array(3)].map((_, i) => (
-            <Col md={4} key={i}>
-              <LoadingSkeleton type="card" lines={4} />
-            </Col>
-          ))}
-        </Row>
-      </Container>
-    );
-  }
-  if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchStats} />;
-
-  // Use user?.firstName or fallback to email
   const displayName = user?.firstName || user?.email || 'Volunteer';
+
+  if (loading) return (
+    <Container fluid className="px-4">
+      <div className="d-flex justify-content-between align-items-center mb-4">
+        <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
+      </div>
+      <Row className="g-3 mb-4">
+        {[...Array(3)].map((_, i) => <Col md={4} key={i}><LoadingSkeleton type="card" lines={3} /></Col>)}
+      </Row>
+      <Row className="g-3">
+        {[...Array(3)].map((_, i) => <Col md={4} key={i}><LoadingSkeleton type="card" lines={4} /></Col>)}
+      </Row>
+    </Container>
+  );
+  if (error) return <ErrorState title="Error loading data" description={error} onRetry={fetchStats} />;
 
   return (
     <Container fluid className="px-4">
@@ -88,38 +64,15 @@ if (loading) {
         </div>
         <LogoutButton variant="outline-danger" size="sm" />
       </div>
-
       <Row className="g-3 mb-4">
-        <Col md={4}><StatCard icon="⏳" value={stats.pending} label="Pending Requests" variant="warning" /></Col>
-        <Col md={4}><StatCard icon="🔄" value={stats.active} label="Active Requests" variant="info" /></Col>
-        <Col md={4}><StatCard icon="✅" value={stats.completed} label="Completed" variant="success" /></Col>
+        <Col xs={12} sm={4}><StatCard icon="⏳" value={stats.pending} label="Pending Requests" variant="warning" /></Col>
+        <Col xs={12} sm={4}><StatCard icon="🔄" value={stats.active} label="Active Requests" variant="info" /></Col>
+        <Col xs={12} sm={4}><StatCard icon="✅" value={stats.completed} label="Completed" variant="success" /></Col>
       </Row>
-
       <Row className="g-3">
-        <Col md={4}>
-          <Card className="p-3 text-center h-100">
-            <h6>Support Requests</h6>
-            <Button as={Link} to="/volunteer/requests" variant="outline-primary" size="sm">
-              View Requests
-            </Button>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="p-3 text-center h-100">
-            <h6>Available Requests</h6>
-            <Button as={Link} to="/volunteer/available" variant="outline-primary" size="sm">
-              View Available
-            </Button>
-          </Card>
-        </Col>
-        <Col md={4}>
-          <Card className="p-3 text-center h-100">
-            <h6>My Profile</h6>
-            <Button as={Link} to="/profile" variant="outline-primary" size="sm">
-              Edit Profile
-            </Button>
-          </Card>
-        </Col>
+        <Col xs={12} md={4}><Card className="p-3 text-center h-100"><h6>Support Requests</h6><Button as={Link} to="/volunteer/requests" variant="outline-primary" size="sm">View Requests</Button></Card></Col>
+        <Col xs={12} md={4}><Card className="p-3 text-center h-100"><h6>Available Requests</h6><Button as={Link} to="/volunteer/available" variant="outline-primary" size="sm">View Available</Button></Card></Col>
+        <Col xs={12} md={4}><Card className="p-3 text-center h-100"><h6>My Profile</h6><Button as={Link} to="/profile" variant="outline-primary" size="sm">Edit Profile</Button></Card></Col>
       </Row>
     </Container>
   );
