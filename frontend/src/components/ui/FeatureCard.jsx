@@ -17,7 +17,7 @@ const FeatureCard = ({ icon, title, description, to, linkText = 'Learn More', ..
   return (
     <Card
       className="p-3 h-100 d-flex flex-column"
-      hoverable
+      hoverable="true"
       style={{ textAlign: 'center', cursor: to ? 'pointer' : 'default' }}
       onClick={handleCardClick}
       {...rest}
