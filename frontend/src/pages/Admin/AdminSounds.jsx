@@ -1,16 +1,28 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Spinner, Badge, Button, Modal, Form, Row, Col } from 'react-bootstrap';
+import { Container, Spinner, Badge, Button, Modal, Form, Row, Col, Card } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import {
-  DataTable,
-  Input,
-  Select,
-  EmptyState,
-  ErrorState,
-  LoadingSkeleton,
-} from '../../components/ui';
+import { DataTable, Input, Select, EmptyState, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
+
+const SoundCard = ({ sound, onPreview, onEdit, onDelete }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h6 className="mb-1">{sound.icon} {sound.name}</h6>
+          <div style={{ width: 20, height: 20, backgroundColor: sound.color, borderRadius: 4, display: 'inline-block' }} />
+        </div>
+        <Badge bg={sound.is_active ? 'success' : 'secondary'}>{sound.is_active ? 'Active' : 'Inactive'}</Badge>
+      </div>
+      <div className="d-flex gap-1 mt-3 flex-wrap">
+        <Button variant="outline-info" size="sm" onClick={() => onPreview(sound)}>Preview</Button>
+        <Button variant="outline-primary" size="sm" onClick={() => onEdit(sound)}>Edit</Button>
+        <Button variant="danger" size="sm" onClick={() => onDelete(sound.id)}>Delete</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
 
 const AdminSounds = () => {
   const { showModal } = useModal();
@@ -21,21 +33,13 @@ const AdminSounds = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [selectedAudioFile, setSelectedAudioFile] = useState(null);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
-  const [previewItem, setPreviewItem] = useState(null); // Preview modal state
+  const [previewItem, setPreviewItem] = useState(null);
   const [formData, setFormData] = useState({
-    name: '',
-    icon: '',
-    color: '',
-    sort_order: 0,
-    is_active: true,
-    audio_url: '',
-    image_url: '',
+    name: '', icon: '', color: '', sort_order: 0, is_active: true, audio_url: '', image_url: ''
   });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -88,15 +92,10 @@ const AdminSounds = () => {
     try {
       const formDataToSend = new FormData();
       Object.keys(formData).forEach(key => {
-        if (key === 'audio' && formData.audio) {
-          formDataToSend.append('audio', formData.audio);
-        } else if (key === 'image' && formData.image) {
-          formDataToSend.append('image', formData.image);
-        } else if (key === 'is_active') {
-          formDataToSend.append(key, formData[key] ? 1 : 0);
-        } else if (formData[key] !== null && formData[key] !== '') {
-          formDataToSend.append(key, formData[key]);
-        }
+        if (key === 'audio' && formData.audio) formDataToSend.append('audio', formData.audio);
+        else if (key === 'image' && formData.image) formDataToSend.append('image', formData.image);
+        else if (key === 'is_active') formDataToSend.append(key, formData[key] ? 1 : 0);
+        else if (formData[key] !== null && formData[key] !== '') formDataToSend.append(key, formData[key]);
       });
       if (editingItem) {
         await api.put(`/admin/wellness/sounds/${editingItem.id}`, formDataToSend, {
@@ -123,7 +122,7 @@ const AdminSounds = () => {
   };
 
   const handleDelete = async (id) => {
-    showModal('Confirm Delete', 'Are you sure you want to delete this sound?', async () => {
+    showModal('Confirm Delete', 'Are you sure?', async () => {
       try {
         await api.delete(`/admin/wellness/sounds/${id}`);
         showModal('Success', 'Sound deleted.');
@@ -150,10 +149,6 @@ const AdminSounds = () => {
     setShowModalItem(true);
   };
 
-  const openPreview = (item) => {
-    setPreviewItem(item);
-  };
-
   const columns = [
     { field: 'id', label: 'ID' },
     { field: 'name', label: 'Name' },
@@ -169,7 +164,7 @@ const AdminSounds = () => {
       label: 'Actions',
       render: (_, row) => (
         <div className="d-flex gap-1">
-          <Button variant="outline-info" size="sm" onClick={() => openPreview(row)}>Preview</Button>
+          <Button variant="outline-info" size="sm" onClick={() => setPreviewItem(row)}>Preview</Button>
           <Button variant="outline-primary" size="sm" onClick={() => openEdit(row)}>Edit</Button>
           <Button variant="danger" size="sm" onClick={() => handleDelete(row.id)}>Delete</Button>
         </div>
@@ -196,7 +191,13 @@ const AdminSounds = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4>Relaxation Sounds</h4>
           <div className="d-flex gap-2">
-            <Button variant="primary" onClick={() => { setEditingItem(null); setFormData({ name: '', icon: '', color: '', sort_order: 0, is_active: true, audio_url: '', image_url: '' }); setSelectedAudioFile(null); setSelectedImageFile(null); setShowModalItem(true); }}>+ New Sound</Button>
+            <Button variant="primary" onClick={() => {
+              setEditingItem(null);
+              setFormData({ name: '', icon: '', color: '', sort_order: 0, is_active: true, audio_url: '', image_url: '' });
+              setSelectedAudioFile(null);
+              setSelectedImageFile(null);
+              setShowModalItem(true);
+            }}>+ New Sound</Button>
             <LogoutButton variant="outline-danger" size="sm" />
           </div>
         </div>
@@ -204,7 +205,16 @@ const AdminSounds = () => {
         {sounds.length === 0 ? (
           <EmptyState icon="🌧" title="No sounds" description="Create your first relaxation sound." />
         ) : (
-          <DataTable columns={columns} data={sounds} keyField="id" />
+          <>
+            <div className="d-none d-md-block">
+              <DataTable columns={columns} data={sounds} keyField="id" />
+            </div>
+            <div className="d-md-none">
+              {sounds.map(s => (
+                <SoundCard key={s.id} sound={s} onPreview={setPreviewItem} onEdit={openEdit} onDelete={handleDelete} />
+              ))}
+            </div>
+          </>
         )}
 
         {/* Create/Edit Modal */}
@@ -231,25 +241,14 @@ const AdminSounds = () => {
                 </Col>
               </Row>
               <Form.Group>
-                <Form.Check
-                  type="checkbox"
-                  label="Active"
-                  checked={formData.is_active}
-                  onChange={handleChange}
-                />
+                <Form.Check type="checkbox" label="Active" checked={formData.is_active} onChange={handleChange} />
               </Form.Group>
               <hr />
               <Row>
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Audio File</Form.Label>
-                    <Form.Control
-                      type="file"
-                      id="audio-upload"
-                      name="audio"
-                      onChange={handleChange}
-                      accept="audio/*"
-                    />
+                    <Form.Control type="file" id="audio-upload" name="audio" onChange={handleChange} accept="audio/*" />
                     {selectedAudioFile && (
                       <div className="mt-2 d-flex align-items-center gap-2">
                         <span className="text-success">📎 {selectedAudioFile.name}</span>
@@ -258,9 +257,7 @@ const AdminSounds = () => {
                     )}
                     {formData.audio_url && !selectedAudioFile && (
                       <div className="mt-2">
-                        <audio controls style={{ width: '100%' }}>
-                          <source src={formData.audio_url} />
-                        </audio>
+                        <audio controls style={{ width: '100%' }}><source src={formData.audio_url} /></audio>
                       </div>
                     )}
                   </Form.Group>
@@ -268,13 +265,7 @@ const AdminSounds = () => {
                 <Col md={6}>
                   <Form.Group>
                     <Form.Label>Image (optional)</Form.Label>
-                    <Form.Control
-                      type="file"
-                      id="image-upload"
-                      name="image"
-                      onChange={handleChange}
-                      accept="image/*"
-                    />
+                    <Form.Control type="file" id="image-upload" name="image" onChange={handleChange} accept="image/*" />
                     {selectedImageFile && (
                       <div className="mt-2 d-flex align-items-center gap-2">
                         <span className="text-success">📎 {selectedImageFile.name}</span>
@@ -310,9 +301,7 @@ const AdminSounds = () => {
               {previewItem.color && <div style={{ width: '30px', height: '30px', backgroundColor: previewItem.color, borderRadius: '4px', marginBottom: '10px' }} />}
               {previewItem.audio_url && (
                 <div className="mb-3">
-                  <audio controls style={{ width: '100%' }}>
-                    <source src={previewItem.audio_url} />
-                  </audio>
+                  <audio controls style={{ width: '100%' }}><source src={previewItem.audio_url} /></audio>
                 </div>
               )}
               {previewItem.image_url && (
