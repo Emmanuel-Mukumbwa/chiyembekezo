@@ -10,7 +10,7 @@ import { formatDistanceToNow } from 'date-fns';
 const PostDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
-  const { showModal } = useModal(); 
+  const { showModal } = useModal();
   const navigate = useNavigate();
   const [post, setPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -95,7 +95,7 @@ const PostDetail = () => {
     }
   };
 
-if (loading) {
+  if (loading) {
     return (
       <Container className="my-5">
         <LoadingSkeleton type="article" lines={8} />
@@ -108,7 +108,7 @@ if (loading) {
   if (!post) return <p>Post not found.</p>;
 
   return (
-    <Container className="my-5">
+    <Container className="my-5 px-3 px-md-4">
       <Button as={Link} to="/community" variant="outline-secondary" className="mb-3">
         ← Back to Community
       </Button>
