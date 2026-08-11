@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Modal, Form, Spinner, Row, Col } from 'react-bootstrap';
+import { Container, Modal, Form, Spinner, Row, Col, Card, Badge, Collapse } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -14,6 +14,7 @@ import {
   LoadingSkeleton,
 } from '../components/ui';
 import api from '../services/api';
+import { FiFilter, FiX } from 'react-icons/fi';
 
 const Journal = () => {
   const { user } = useAuth();
@@ -31,6 +32,9 @@ const Journal = () => {
     is_favorite: false,
   });
   const [submitting, setSubmitting] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const [appliedSearch, setAppliedSearch] = useState('');
 
   useEffect(() => {
     if (user) fetchEntries();
@@ -49,6 +53,16 @@ const Journal = () => {
       setLoading(false);
     }
   };
+
+  const filteredEntries = entries.filter(entry => {
+    const query = appliedSearch.toLowerCase();
+    return (entry.title || '').toLowerCase().includes(query) ||
+           (entry.content || '').toLowerCase().includes(query) ||
+           (entry.entry_type || '').toLowerCase().includes(query);
+  });
+
+  const handleApply = () => setAppliedSearch(search);
+  const handleClear = () => { setSearch(''); setAppliedSearch(''); };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -149,15 +163,43 @@ const Journal = () => {
     <Container fluid className="px-3 px-sm-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>My Journal</h2>
-        <Button variant="primary" onClick={() => { setEditingEntry(null); setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false }); setShowEditModal(true); }}>
-          + New Entry
-        </Button>
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="d-flex align-items-center gap-1">
+            {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />} {filtersOpen ? 'Hide Filters' : 'Filters'}
+          </Button>
+          <Button variant="primary" onClick={() => { setEditingEntry(null); setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false }); setShowEditModal(true); }}>
+            + New Entry
+          </Button>
+        </div>
       </div>
 
-      {entries.length === 0 ? (
-        <EmptyState icon="📝" title="No journal entries yet" description="Start writing to reflect and grow." actionText="Write Entry" />
+      <Collapse in={filtersOpen}>
+        <div>
+          <Row className="mb-3 g-2 align-items-end">
+            <Col md={4}>
+              <Input
+                label="Search Entries"
+                name="search"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search by title, content, or type..."
+                onKeyDown={(e) => { if (e.key === 'Enter') handleApply(); }}
+              />
+            </Col>
+            <Col md={4} className="d-flex gap-2">
+              <Button variant="primary" onClick={handleApply}>Apply</Button>
+              <Button variant="outline-secondary" onClick={handleClear}>Clear</Button>
+            </Col>
+          </Row>
+        </div>
+      </Collapse>
+
+      {filteredEntries.length === 0 && !appliedSearch && entries.length === 0 ? (
+        <EmptyState icon="📝" title="No journal entries yet" description="Start writing to reflect and grow." actionText="Write Entry" onAction={() => { setEditingEntry(null); setFormData({ title: '', content: '', mood_at_entry: '', entry_type: 'free', is_favorite: false }); setShowEditModal(true); }} />
+      ) : filteredEntries.length === 0 && appliedSearch ? (
+        <p className="text-muted text-center">No entries match your search.</p>
       ) : (
-        <DataTable columns={columns} data={entries} keyField="id" />
+        <DataTable columns={columns} data={filteredEntries} keyField="id" />
       )}
 
       <Modal show={showEditModal} onHide={() => setShowEditModal(false)} size="lg">
