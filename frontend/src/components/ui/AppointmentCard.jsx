@@ -7,7 +7,7 @@ const statusColors = { pending: 'warning', confirmed: 'info', completed: 'succes
 
 const AppointmentCard = ({ id, patientName, professionalName, scheduledTime, status = 'pending', meetingType, onView, onCancel, onReschedule, ...rest }) => {
   return (
-    <Card className="p-3" hoverable {...rest}>
+    <Card className="p-3" hoverable="true" {...rest}>
       <div className="d-flex justify-content-between align-items-start">
         <div>
           <h6 className="fw-bold mb-1">{patientName || professionalName}</h6>
