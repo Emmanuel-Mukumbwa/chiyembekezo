@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Container, Card, Alert } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, Input, Select } from '../../components/ui';
@@ -31,7 +32,10 @@ const AdminInvitations = () => {
     <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Send Invitation</h4>
-        <LogoutButton variant="outline-danger" size="sm" />
+        <div className="d-flex gap-2">
+          <Button variant="outline-secondary" as={Link} to="/admin">← Back to Dashboard</Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
       </div>
       <Card className="p-4">
         {error && <Alert variant="danger">{error}</Alert>}
