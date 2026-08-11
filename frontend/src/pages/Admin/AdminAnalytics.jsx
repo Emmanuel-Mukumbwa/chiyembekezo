@@ -17,7 +17,7 @@ const AdminAnalytics = () => {
   const { showModal } = useModal();
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null); 
+  const [error, setError] = useState(null);
 
   usePrompt(
     () => {
@@ -45,7 +45,7 @@ const AdminAnalytics = () => {
     }
   };
 
-if (loading) {
+  if (loading) {
     return (
       <Container fluid className="px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -87,10 +87,8 @@ if (loading) {
 
   if (!stats) return <p className="text-center mt-5">No data available.</p>;
 
-  // Prepare charts
   const weeklyLabels = stats.weekly_users.map(d => d.date);
   const weeklyCounts = stats.weekly_users.map(d => d.count);
-
   const weeklyData = {
     labels: weeklyLabels.length ? weeklyLabels : ['No data'],
     datasets: [{
@@ -103,7 +101,6 @@ if (loading) {
 
   const moodLabels = stats.mood_trend.map(d => d.month);
   const moodValues = stats.mood_trend.map(d => parseFloat(d.avg_mood).toFixed(2));
-
   const moodData = {
     labels: moodLabels.length ? moodLabels : ['No data'],
     datasets: [{
@@ -123,7 +120,6 @@ if (loading) {
         <LogoutButton variant="outline-danger" size="sm" />
       </div>
 
-      {/* Summary Cards */}
       <Row className="g-3 mb-4">
         <Col md={3} sm={6}><StatCard icon="👥" value={stats.users.total} label="Total Users" variant="primary" /></Col>
         <Col md={3} sm={6}><StatCard icon="🟢" value={stats.users.active} label="Active Users" variant="success" /></Col>
@@ -135,7 +131,6 @@ if (loading) {
         <Col md={3} sm={6}><StatCard icon="👨‍⚕️" value={`${stats.professionals.verified}/${stats.professionals.total}`} label="Verified Professionals" variant="info" /></Col>
       </Row>
 
-      {/* Charts */}
       <Row className="mb-4">
         <Col md={6}>
           <Card className="p-3">
@@ -155,32 +150,29 @@ if (loading) {
         </Col>
       </Row>
 
-      {/* Recent Activity – Users */}
       <Row className="mb-4">
         <Col md={6}>
           <Card className="p-3">
             <h6 className="fw-bold">Latest Users</h6>
-            <Table striped hover responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Joined</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.latest_users && stats.latest_users.map(user => (
-                  <tr key={user.id}>
-                    <td>{user.first_name || 'N/A'} {user.last_name || ''}</td>
-                    <td>{user.email}</td>
-                    <td>{new Date(user.created_at).toLocaleDateString()}</td>
-                  </tr>
-                ))}
-                {(!stats.latest_users || stats.latest_users.length === 0) && (
-                  <tr><td colSpan="3" className="text-center text-muted">No users yet</td></tr>
-                )}
-              </tbody>
-            </Table>
+            <div className="table-responsive">
+              <Table striped hover size="sm">
+                <thead>
+                  <tr><th>Name</th><th>Email</th><th>Joined</th></tr>
+                </thead>
+                <tbody>
+                  {stats.latest_users && stats.latest_users.map(user => (
+                    <tr key={user.id}>
+                      <td>{user.first_name || 'N/A'} {user.last_name || ''}</td>
+                      <td>{user.email}</td>
+                      <td>{new Date(user.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))}
+                  {(!stats.latest_users || stats.latest_users.length === 0) && (
+                    <tr><td colSpan="3" className="text-center text-muted">No users yet</td></tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
           </Card>
         </Col>
         <Col md={6}>
@@ -202,39 +194,33 @@ if (loading) {
         </Col>
       </Row>
 
-      {/* Recent Admin Logs */}
       <Row>
         <Col md={12}>
           <Card className="p-3">
             <div className="d-flex justify-content-between align-items-center mb-2">
               <h6 className="fw-bold mb-0">Recent Admin Actions</h6>
-              <Button as={Link} to="/admin/logs" variant="outline-primary" size="sm">
-                View All Logs
-              </Button>
+              <Button as={Link} to="/admin/logs" variant="outline-primary" size="sm">View All Logs</Button>
             </div>
-            <Table striped hover responsive size="sm">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Admin</th>
-                  <th>Action</th>
-                  <th>Target</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats.recent_logs && stats.recent_logs.map(log => (
-                  <tr key={log.id}>
-                    <td>{new Date(log.created_at).toLocaleString()}</td>
-                    <td>{log.actor_email || 'System'}</td>
-                    <td>{log.action}</td>
-                    <td>{log.target_type || '-'}</td>
-                  </tr>
-                ))}
-                {(!stats.recent_logs || stats.recent_logs.length === 0) && (
-                  <tr><td colSpan="4" className="text-center text-muted">No logs yet</td></tr>
-                )}
-              </tbody>
-            </Table>
+            <div className="table-responsive">
+              <Table striped hover size="sm">
+                <thead>
+                  <tr><th>Time</th><th>Admin</th><th>Action</th><th>Target</th></tr>
+                </thead>
+                <tbody>
+                  {stats.recent_logs && stats.recent_logs.map(log => (
+                    <tr key={log.id}>
+                      <td>{new Date(log.created_at).toLocaleString()}</td>
+                      <td>{log.actor_email || 'System'}</td>
+                      <td>{log.action}</td>
+                      <td>{log.target_type || '-'}</td>
+                    </tr>
+                  ))}
+                  {(!stats.recent_logs || stats.recent_logs.length === 0) && (
+                    <tr><td colSpan="4" className="text-center text-muted">No logs yet</td></tr>
+                  )}
+                </tbody>
+              </Table>
+            </div>
           </Card>
         </Col>
       </Row>
