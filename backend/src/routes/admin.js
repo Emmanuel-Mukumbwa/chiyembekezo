@@ -1,3 +1,4 @@
+// backend/src/routes/admin.js
 const express = require('express');
 const router = express.Router();
 const auth = require('../middleware/auth');
@@ -13,7 +14,7 @@ const articleController = require('../controllers/admin/articleController');
 const resourceController = require('../controllers/admin/resourceController');
 const appointmentController = require('../controllers/admin/appointmentController');
 const communityController = require('../controllers/admin/communityController');
-const peerSupportController = require('../controllers/peerSupportController');
+const peerSupportController = require('../controllers/peerSupportController'); 
 const analyticsController = require('../controllers/admin/analyticsController');
 const emergencyController = require('../controllers/admin/emergencyController');
 const logsController = require('../controllers/admin/logsController');
@@ -22,7 +23,7 @@ const invitationController = require('../controllers/invitationController');
 const wellnessController = require('../controllers/admin/wellnessController');
 
 router.use(auth, isAdmin);
-
+ 
 router.get('/check', (req, res) => {
   res.json({ message: 'Admin access confirmed', userId: req.user.id, isAdmin: true });
 });
