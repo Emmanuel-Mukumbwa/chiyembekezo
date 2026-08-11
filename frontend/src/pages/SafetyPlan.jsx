@@ -125,7 +125,7 @@ const Resources = () => {
           <Row className="g-3 align-items-end">
             <Col md={3}>
               <Form.Label>Search</Form.Label>
-              <Form.Control
+              <Form.Control 
                 placeholder="Search resources..."
                 name="search"
                 value={filters.search}
