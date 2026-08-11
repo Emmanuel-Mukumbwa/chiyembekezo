@@ -1,3 +1,4 @@
+// backend/src/index.js
 // Global error handlers for uncaught exceptions/rejections
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err);
@@ -77,6 +78,7 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/organization', organizationRoutes);
 app.use('/api/peer-support', peerSupportRoutes);
 app.use('/api/organizations', publicOrgRoutes);
+app.use('/api/applications', require('./routes/applications'));
 app.use('/api/organization/resources', orgResourceRoutes);
 
 // ---- Error handling ----
