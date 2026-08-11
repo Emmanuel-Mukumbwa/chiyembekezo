@@ -14,28 +14,20 @@ const ProfessionalMessages = () => {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  useEffect(() => {
-    fetchConversations();
-  }, []);
+  useEffect(() => { fetchConversations(); }, []);
 
   useEffect(() => {
-    if (selectedPatient) {
-      fetchMessages(selectedPatient.user_id);
-    }
+    if (selectedPatient) fetchMessages(selectedPatient.user_id);
   }, [selectedPatient]);
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+  useEffect(() => { scrollToBottom(); }, [messages]);
 
   const fetchConversations = async () => {
     setLoading(true);
     try {
       const res = await api.get('/professional/messages/conversations');
       setConversations(res.data);
-      if (res.data.length > 0) {
-        setSelectedPatient(res.data[0]);
-      }
+      if (res.data.length > 0) setSelectedPatient(res.data[0]);
     } catch (err) {
       showModal('Error', 'Failed to load conversations.');
     } finally {
@@ -81,30 +73,33 @@ const ProfessionalMessages = () => {
     <Container fluid className="px-4">
       <h4>Messages</h4>
       <Row>
-        <Col md={4}>
+        {/* Conversation list – collapses on mobile to horizontal scroll */}
+        <Col xs={12} md={4} className="mb-3 mb-md-0">
           <Card className="p-2">
             <h6>Conversations</h6>
-            <ListGroup variant="flush">
-              {conversations.length === 0 ? (
-                <ListGroup.Item>No conversations</ListGroup.Item>
-              ) : (
-                conversations.map(c => (
-                  <ListGroup.Item
-                    key={c.user_id}
-                    action
-                    active={selectedPatient?.user_id === c.user_id}
-                    onClick={() => setSelectedPatient(c)}
-                  >
-                    <strong>{c.first_name} {c.last_name}</strong>
-                    <div className="small text-muted">{c.last_message?.substring(0, 30)}...</div>
-                  </ListGroup.Item>
-                ))
-              )}
-            </ListGroup>
+            <div style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <ListGroup variant="flush">
+                {conversations.length === 0 ? (
+                  <ListGroup.Item>No conversations</ListGroup.Item>
+                ) : (
+                  conversations.map(c => (
+                    <ListGroup.Item
+                      key={c.user_id}
+                      action
+                      active={selectedPatient?.user_id === c.user_id}
+                      onClick={() => setSelectedPatient(c)}
+                    >
+                      <strong>{c.first_name} {c.last_name}</strong>
+                      <div className="small text-muted">{c.last_message?.substring(0, 30)}...</div>
+                    </ListGroup.Item>
+                  ))
+                )}
+              </ListGroup>
+            </div>
           </Card>
         </Col>
-        <Col md={8}>
-          <Card className="p-3" style={{ height: '500px', display: 'flex', flexDirection: 'column' }}>
+        <Col xs={12} md={8}>
+          <Card className="p-3" style={{ height: '70vh', display: 'flex', flexDirection: 'column' }}>
             {selectedPatient ? (
               <>
                 <h6>Chat with {selectedPatient.first_name} {selectedPatient.last_name}</h6>
