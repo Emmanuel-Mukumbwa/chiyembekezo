@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Container, Row, Col, Card, Button, Form, Badge, Alert } from 'react-bootstrap';
+import { Container, Row, Col, Card, Button, Form, Badge, Collapse } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useModal } from '../context/ModalContext';
@@ -9,6 +9,7 @@ import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement } from 'chart.js';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { FiFilter, FiX } from 'react-icons/fi';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, ArcElement);
 
@@ -19,13 +20,10 @@ const Reports = () => {
   const [report, setReport] = useState(null);
   const [year, setYear] = useState(new Date().getFullYear());
   const [month, setMonth] = useState(new Date().getMonth() + 1);
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const reportRef = useRef();
 
-  useEffect(() => {
-    if (user) {
-      fetchReport();
-    }
-  }, [user, year, month]);
+  useEffect(() => { if (user) fetchReport(); }, [user, year, month]);
 
   const fetchReport = async () => {
     setLoading(true);
@@ -34,9 +32,7 @@ const Reports = () => {
       setReport(res.data);
     } catch (err) {
       showModal('Error', 'Failed to load report.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const downloadPDF = async () => {
@@ -64,7 +60,7 @@ const Reports = () => {
     );
   }
 
-if (loading) {
+  if (loading) {
     return (
       <Container className="my-5">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -72,16 +68,12 @@ if (loading) {
         </div>
         <Row className="g-3 mb-4">
           {[...Array(4)].map((_, i) => (
-            <Col md={3} key={i}>
-              <LoadingSkeleton type="card" lines={3} />
-            </Col>
+            <Col md={3} key={i}><LoadingSkeleton type="card" lines={3} /></Col>
           ))}
         </Row>
         <Row className="g-3">
           {[...Array(2)].map((_, i) => (
-            <Col md={6} key={i}>
-              <LoadingSkeleton type="card" lines={6} />
-            </Col>
+            <Col md={6} key={i}><LoadingSkeleton type="card" lines={6} /></Col>
           ))}
         </Row>
       </Container>
@@ -99,7 +91,6 @@ if (loading) {
 
   const { mood, moodDistribution, stressTrend, sleep, journal, habitCompletion, assessments, wellness, recommendations, summary } = report;
 
-  // Chart data
   const moodDistData = {
     labels: ['😭', '😔', '😐', '🙂', '😊'],
     datasets: [{
@@ -109,9 +100,7 @@ if (loading) {
     }]
   };
   if (moodDistribution) {
-    moodDistribution.forEach(d => {
-      moodDistData.datasets[0].data[d.mood_score - 1] = d.count;
-    });
+    moodDistribution.forEach(d => { moodDistData.datasets[0].data[d.mood_score - 1] = d.count; });
   }
 
   const stressData = {
@@ -135,10 +124,19 @@ if (loading) {
 
   return (
     <Container className="my-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4">
         <h2>Monthly Report</h2>
+        <div className="d-flex gap-2 align-items-center">
+          <Button variant="outline-secondary" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="d-flex align-items-center gap-1">
+            {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />} {filtersOpen ? 'Hide Filters' : 'Period'}
+          </Button>
+          <Button variant="success" onClick={downloadPDF}>📄 Download PDF</Button>
+        </div>
+      </div>
+
+      <Collapse in={filtersOpen}>
         <div>
-          <Form className="d-inline-flex gap-2 me-2">
+          <Form className="d-inline-flex gap-2 mb-3">
             <Form.Control
               type="number"
               value={year}
@@ -158,17 +156,15 @@ if (loading) {
             </Form.Select>
             <Button variant="primary" onClick={fetchReport}>Update</Button>
           </Form>
-          <Button variant="success" onClick={downloadPDF}>📄 Download PDF</Button>
         </div>
-      </div>
+      </Collapse>
 
       <div ref={reportRef} className="p-3 border rounded bg-white" style={{ maxWidth: '100%' }}>
         <h3 className="text-center">Chiyembekezo - Monthly Wellness Report</h3>
         <p className="text-center text-muted">{report.month}</p>
 
-        {/* Summary */}
         <Row className="mb-4">
-          <Col md={3}>
+          <Col xs={6} md={3}>
             <Card className="feature-card text-center p-2">
               <h6>Tracked Days</h6>
               <h4>{summary.trackedDays} / {summary.totalDays}</h4>
@@ -177,21 +173,21 @@ if (loading) {
               </div>
             </Card>
           </Col>
-          <Col md={3}>
+          <Col xs={6} md={3}>
             <Card className="feature-card text-center p-2">
               <h6>Avg Mood</h6>
               <h4>{mood.avg_mood ? mood.avg_mood.toFixed(1) : 'N/A'}</h4>
               <span className="text-muted">out of 5</span>
             </Card>
           </Col>
-          <Col md={3}>
+          <Col xs={6} md={3}>
             <Card className="feature-card text-center p-2">
               <h6>Avg Sleep</h6>
               <h4>{sleep.avg_sleep ? sleep.avg_sleep.toFixed(1) : 'N/A'}</h4>
               <span className="text-muted">hours</span>
             </Card>
           </Col>
-          <Col md={3}>
+          <Col xs={6} md={3}>
             <Card className="feature-card text-center p-2">
               <h6>Journal Entries</h6>
               <h4>{journal.journal_count}</h4>
@@ -199,7 +195,6 @@ if (loading) {
           </Col>
         </Row>
 
-        {/* Charts */}
         <Row>
           <Col md={6}>
             <Card className="feature-card p-3 mb-3">
@@ -246,7 +241,6 @@ if (loading) {
           </Col>
         </Row>
 
-        {/* Assessments */}
         {assessments.length > 0 && (
           <Card className="feature-card p-3 mb-3">
             <h6>Recent Assessments</h6>
@@ -261,7 +255,6 @@ if (loading) {
           </Card>
         )}
 
-        {/* Recommendations */}
         {recommendations.length > 0 && (
           <Card className="feature-card p-3 mb-3 border-warning">
             <h6>💡 Recommendations</h6>
