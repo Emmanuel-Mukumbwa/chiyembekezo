@@ -5,7 +5,7 @@ import Button from './Button';
 
 const ProfessionalCard = ({ id, name, specialization, district, languages = [], rating, sessions, fee, isVerified, photo, onViewProfile, ...rest }) => {
   return (
-    <Card className="h-100 p-3" hoverable {...rest}>
+    <Card className="h-100 p-3" hoverable="true" {...rest}>
       <div className="d-flex align-items-center gap-3">
         <div style={{ fontSize: '3rem' }}>{photo || '👤'}</div>
         <div className="flex-grow-1">
