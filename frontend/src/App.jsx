@@ -45,6 +45,7 @@ import Emergency from './pages/Emergency';
 import Achievements from './pages/Achievements';
 import Reports from './pages/Reports';
 import GetStarted from './pages/GetStarted';
+import Apply from './pages/Apply';
 import Terms from './pages/Terms';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import CookiePolicy from './pages/CookiePolicy';
@@ -53,6 +54,7 @@ import PeerSupport from './pages/PeerSupport';
 import VolunteerDashboard from './pages/Volunteer/VolunteerDashboard';
 import ListenerDashboard from './pages/Listener/ListenerDashboard';
 import Settings from './pages/Settings';
+import MyApplications from './pages/MyApplications';
 import VolunteerRequests from './pages/Volunteer/VolunteerRequests';
 import VolunteerAvailable from './pages/Volunteer/VolunteerAvailable';
 import NotFound from './pages/NotFound';
@@ -76,7 +78,6 @@ import AdminPeerSupport from './pages/Admin/AdminPeerSupport';
 import AdminAnalytics from './pages/Admin/AdminAnalytics';
 import AdminEmergencyContacts from './pages/Admin/AdminEmergencyContacts';
 import AdminLogs from './pages/Admin/AdminLogs';
-// NEW WELLNESS ADMIN IMPORTS
 import AdminMeditations from './pages/Admin/AdminMeditations';
 import AdminSounds from './pages/Admin/AdminSounds';
 
@@ -106,7 +107,6 @@ import CookieConsentBanner from './components/CookieConsentBanner';
 
 import './styles/custom.css';
 
-// ---- Layout wrappers ----
 const PublicLayout = ({ children }) => <AppLayout>{children}</AppLayout>;
 
 const ProtectedLayout = ({ children }) => (
@@ -137,19 +137,20 @@ const router = createBrowserRouter([
   { path: '/community/post/:id', element: <PublicLayout><PostDetail /></PublicLayout> },
   { path: '/emergency', element: <PublicLayout><Emergency /></PublicLayout> },
   { path: '/get-started', element: <PublicLayout><GetStarted /></PublicLayout> },
+  { path: '/apply', element: <PublicLayout><Apply /></PublicLayout> },
   { path: '/terms', element: <PublicLayout><Terms /></PublicLayout> },
   { path: '/privacy-policy', element: <PublicLayout><PrivacyPolicy /></PublicLayout> },
   { path: '/cookie-policy', element: <PublicLayout><CookiePolicy /></PublicLayout> },
   { path: '/community-guidelines', element: <PublicLayout><CommunityGuidelines /></PublicLayout> },
 
-  // Auth routes (no layout)
+  // Auth routes
   { path: '/login', element: <Login /> },
   { path: '/register', element: <Register /> },
   { path: '/forgot-password', element: <ForgotPassword /> },
   { path: '/reset-password', element: <ResetPassword /> },
   { path: '/verify-email', element: <VerifyEmail /> },
 
-  // Protected routes – each individually wrapped
+  // Protected routes
   { path: '/dashboard', element: <ProtectedLayout><Dashboard /></ProtectedLayout> },
   { path: '/profile', element: <ProtectedLayout><Profile /></ProtectedLayout> },
   { path: '/mood-history', element: <ProtectedLayout><MoodHistory /></ProtectedLayout> },
@@ -171,9 +172,10 @@ const router = createBrowserRouter([
   { path: '/volunteer/requests', element: <ProtectedLayout><VolunteerRequests /></ProtectedLayout> },
   { path: '/volunteer/available', element: <ProtectedLayout><VolunteerAvailable /></ProtectedLayout> },
   { path: '/listener/dashboard', element: <ProtectedLayout><ListenerDashboard /></ProtectedLayout> },
-  { path: 'settings', element: <ProtectedLayout><Settings /></ProtectedLayout> },
+  { path: '/settings', element: <ProtectedLayout><Settings /></ProtectedLayout> },
+ { path: '/applications', element: <ProtectedLayout><MyApplications /></ProtectedLayout> },
 
-  // Admin Panel (nested)
+  // Admin Panel
   {
     path: '/admin',
     element: <ProtectedRoute><AdminLayout /></ProtectedRoute>,
@@ -195,13 +197,12 @@ const router = createBrowserRouter([
       { path: 'emergency-contacts', element: <AdminEmergencyContacts /> },
       { path: 'analytics', element: <AdminAnalytics /> },
       { path: 'logs', element: <AdminLogs /> },
-      // WELLNESS ADMIN ROUTES
       { path: 'wellness/meditations', element: <AdminMeditations /> },
       { path: 'wellness/sounds', element: <AdminSounds /> },
     ],
   },
 
-  // Professional Portal (nested)
+  // Professional Portal
   {
     path: '/professional',
     element: <ProtectedRoute><ProfessionalLayout /></ProtectedRoute>,
@@ -216,9 +217,9 @@ const router = createBrowserRouter([
     ],
   },
 
-  // Organization Portal (nested)
+  // Organization Portal
   {
-    path: '/organization',
+    path: '/organization', 
     element: <ProtectedRoute><OrganizationLayout /></ProtectedRoute>,
     children: [
       { index: true, element: <OrganizationDashboard /> },
@@ -230,7 +231,7 @@ const router = createBrowserRouter([
     ],
   },
 
-  // 404 – catch-all route
+  // 404
   { path: '*', element: <PublicLayout><NotFound /></PublicLayout> },
 ]);
 
