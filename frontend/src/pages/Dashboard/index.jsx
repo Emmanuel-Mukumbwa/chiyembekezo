@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Badge } from 'react-bootstrap';
+import { Row, Col, Badge } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
@@ -13,7 +13,16 @@ import {
   LoadingSkeleton,
 } from '../../components/ui';
 import { Line } from 'react-chartjs-2';
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -79,19 +88,22 @@ const Dashboard = () => {
 
   const chartData = {
     labels: labels.length ? labels : ['No data'],
-    datasets: [{
-      label: 'Mood Score (1-5)',
-      data: dataPoints.length ? dataPoints : [0],
-      fill: false,
-      backgroundColor: 'var(--color-primary-500)',
-      borderColor: 'var(--color-primary-500)',
-      tension: 0.2,
-    }]
+    datasets: [
+      {
+        label: 'Mood Score (1-5)',
+        data: dataPoints.length ? dataPoints : [0],
+        fill: false,
+        backgroundColor: 'var(--color-primary-500)',
+        borderColor: 'var(--color-primary-500)',
+        tension: 0.2,
+      },
+    ],
   };
 
-  const displayName = user?.firstName && user?.lastName
-    ? `${user.firstName} ${user.lastName}`
-    : user?.firstName || user?.email || 'User';
+  const displayName =
+    user?.firstName && user?.lastName
+      ? `${user.firstName} ${user.lastName}`
+      : user?.firstName || user?.email || 'User';
 
   const latestAssessments = assessments.slice(0, 3);
   const recentJournals = journalEntries.slice(0, 3);
@@ -99,16 +111,16 @@ const Dashboard = () => {
 
   if (!user) {
     return (
-      <Container className="my-5 text-center">
+      <div className="text-center mt-5">
         <h3>Please log in to view your dashboard.</h3>
         <Button as={Link} to="/login" variant="primary">Login</Button>
-      </Container>
+      </div>
     );
   }
 
   if (loading) {
     return (
-      <Container fluid className="px-3 px-sm-4">
+      <div style={{ minWidth: 0, maxWidth: '100%' }}>
         <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
           <LoadingSkeleton type="avatar" className="w-100" />
         </div>
@@ -127,18 +139,18 @@ const Dashboard = () => {
             <LoadingSkeleton type="card" lines={4} />
           </Col>
         </Row>
-      </Container>
+      </div>
     );
   }
 
   return (
-    <Container fluid className="px-3 px-sm-4">
+    <div style={{ minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
       <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
         <div>
           <h2 className="fw-bold mb-0">Welcome back, {displayName}!</h2>
           <p className="text-muted">Let's check in on your wellness today.</p>
         </div>
-        {streak > 0 && <Badge bg="success" className="p-2">🔥 {streak}-day streak!</Badge>}
+        {streak > 0 && <Badge bg="success" className="p-2 mt-2 mt-sm-0">🔥 {streak}-day streak!</Badge>}
       </div>
 
       <Row className="g-2 g-md-3 mb-4">
@@ -150,17 +162,17 @@ const Dashboard = () => {
 
       <Row>
         <Col lg={7}>
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Your Mood Trend</h6>
               <Button as={Link} to="/mood-history" variant="outline-primary" size="sm">View History</Button>
             </div>
-            <div style={{ height: '200px', minHeight: '180px' }} className="mt-2">
-              <Line data={chartData} options={{ maintainAspectRatio: false }} />
+            <div className="mt-2" style={{ height: '200px', minHeight: '180px', maxWidth: '100%' }}>
+              <Line data={chartData} options={{ maintainAspectRatio: false, responsive: true }} />
             </div>
           </Card>
 
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Recent Assessments</h6>
               <Button as={Link} to="/assessments" variant="outline-primary" size="sm">Take New</Button>
@@ -170,7 +182,7 @@ const Dashboard = () => {
             ) : (
               <Row className="mt-2 g-2">
                 {latestAssessments.map((item, idx) => (
-                  <Col sm={6} md={4} key={idx}>
+                  <Col xs={6} md={4} key={idx}>
                     <div className="border rounded p-2 text-center">
                       <div className="small text-muted">{item.assessment_type}</div>
                       <div className="fw-bold">{item.severity_level}</div>
@@ -183,7 +195,7 @@ const Dashboard = () => {
             )}
           </Card>
 
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Recent Journal</h6>
               <Button as={Link} to="/journal" variant="outline-primary" size="sm">Write New</Button>
@@ -213,12 +225,14 @@ const Dashboard = () => {
         </Col>
 
         <Col lg={5}>
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <h6 className="fw-bold mb-0">Today's Check-in</h6>
-            <MoodTracker onSave={fetchAllData} />
+            <div style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden' }}>
+              <MoodTracker onSave={fetchAllData} />
+            </div>
           </Card>
 
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <h6 className="fw-bold mb-2">Quick Actions</h6>
             <div className="d-grid gap-2">
               <Button as={Link} to="/assessments" variant="outline-primary">Take Assessment</Button>
@@ -230,7 +244,7 @@ const Dashboard = () => {
             </div>
           </Card>
 
-          <Card className="p-3 mb-4">
+          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
             <h6 className="fw-bold mb-0">Recommended for You</h6>
             {recommendations.length === 0 ? (
               <p className="text-muted mt-2">No recommendations yet. Keep tracking!</p>
@@ -245,7 +259,7 @@ const Dashboard = () => {
             )}
           </Card>
 
-          <Card className="p-3">
+          <Card className="p-3" style={{ maxWidth: '100%' }}>
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Active Goals</h6>
               <Button as={Link} to="/goals" variant="outline-primary" size="sm">Manage</Button>
@@ -273,7 +287,7 @@ const Dashboard = () => {
           </Card>
         </Col>
       </Row>
-    </Container>
+    </div>
   );
 };
 
