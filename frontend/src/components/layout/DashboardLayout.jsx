@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Container, Button } from 'react-bootstrap';
+import { Button } from 'react-bootstrap';
 import { useAuth } from '../../context/AuthContext';
 import Sidebar from './Sidebar';
 import Navbar from './Navbar';
@@ -18,17 +18,14 @@ const DashboardLayout = ({ children }) => {
     <div className="d-flex flex-column min-vh-100">
       <ScrollToTop />
       <Navbar sidebarOpen={sidebarOpen} toggleSidebar={toggleSidebar} />
-      <div className="d-flex flex-grow-1" style={{ overflow: 'hidden' }}>
+      <div className="d-flex" style={{ flex: '1 1 0%', overflow: 'hidden' }}>
         {/* Desktop sidebar */}
         <div
           className="d-none d-md-block bg-surface border-end"
           style={{
             width: '280px',
-            minHeight: 'calc(100vh - 72px)',
             flexShrink: 0,
-            position: 'sticky',
-            top: '72px',
-            alignSelf: 'flex-start',
+            minHeight: '100%',
           }}
         >
           <Sidebar />
@@ -56,7 +53,6 @@ const DashboardLayout = ({ children }) => {
           className="d-md-none bg-surface border-end"
           style={{
             width: '280px',
-            minHeight: 'calc(100vh - 72px)',
             position: 'fixed',
             top: '72px',
             left: 0,
@@ -70,9 +66,17 @@ const DashboardLayout = ({ children }) => {
           <Sidebar onClose={closeSidebar} />
         </div>
 
-        {/* Main content */}
-        <div className="flex-grow-1 p-3 p-md-4 bg-warm" style={{ overflowX: 'hidden', minWidth: 0 }}>
-          {/* Hamburger button – only on mobile */}
+        {/* Main content – forced to stay inside */}
+        <div
+          className="flex-grow-1 p-3 p-md-4 bg-warm"
+          style={{
+            minWidth: 0,
+            maxWidth: '100%',
+            flex: '1 1 0%',
+            overflowX: 'hidden',
+            overflowY: 'auto',
+          }}
+        >
           <Button
             variant="outline-primary"
             size="sm"
@@ -81,9 +85,9 @@ const DashboardLayout = ({ children }) => {
           >
             {sidebarOpen ? '✕' : '☰'} Menu
           </Button>
-          <Container fluid className="px-0" style={{ overflowX: 'hidden' }}>
+          <div style={{ minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
             {children}
-          </Container>
+          </div>
         </div>
       </div>
     </div>
