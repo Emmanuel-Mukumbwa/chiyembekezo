@@ -1,25 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Badge, Row, Col, Pagination, Modal, Button as BsButton } from 'react-bootstrap';
+import { Container, Table, Badge, Row, Col, Pagination, Modal, Button as BsButton, Collapse } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, Input, Select, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
+import { FiFilter, FiX } from 'react-icons/fi';
+
+const LogCard = ({ log, onView }) => (
+  <div className="card shadow-sm mb-3">
+    <div className="card-body">
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <small className="text-muted">{new Date(log.created_at).toLocaleString()}</small>
+          <br />
+          <span className={`badge bg-${log.actor_type === 'admin' ? 'primary' : log.actor_type === 'professional' ? 'info' : 'secondary'}`}>
+            {log.actor_type || 'user'}
+          </span>
+          <span className="ms-2">{log.actor_email || 'System'}</span>
+        </div>
+      </div>
+      <p className="mt-2 mb-1">{log.action}</p>
+      <small className="text-muted">{log.target_type} {log.target_id ? `#${log.target_id}` : ''}</small>
+      <div className="mt-2">
+        {log.details ? (
+          <button className="btn btn-link btn-sm p-0" onClick={() => onView(log.details)}>View Details</button>
+        ) : '-'}
+      </div>
+    </div>
+  </div>
+);
 
 const AdminLogs = () => {
   const { showModal } = useModal();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
-  // UI filter fields (not yet applied)
   const [filters, setFilters] = useState({
     search: '',
     actor_type: '',
     start_date: '',
     end_date: '',
   });
-
-  // These are the filters actually used for API calls (applied on click)
   const [appliedFilters, setAppliedFilters] = useState({ ...filters });
 
   const [pagination, setPagination] = useState({
@@ -31,7 +54,6 @@ const AdminLogs = () => {
 
   const [previewLog, setPreviewLog] = useState(null);
 
-  // Fetch logs whenever appliedFilters or page changes
   useEffect(() => {
     fetchLogs();
   }, [appliedFilters, pagination.page]);
@@ -123,7 +145,6 @@ const AdminLogs = () => {
         <LogoutButton variant="outline-danger" size="sm" />
       </div>
       <LoadingSkeleton type="list" />
-      <LoadingSkeleton type="list" className="mt-3" />
     </Container>
   );
   if (error) return <ErrorState title="Error loading logs" description={error} onRetry={fetchLogs} />;
@@ -132,132 +153,147 @@ const AdminLogs = () => {
     <Container fluid className="px-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Audit Logs</h4>
-        <LogoutButton variant="outline-danger" size="sm" />
+        <div className="d-flex gap-2 align-items-center">
+          <Button
+            variant="outline-secondary"
+            size="sm"
+            onClick={() => setFiltersOpen(!filtersOpen)}
+            className="d-flex align-items-center gap-1"
+          >
+            {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />}
+            {filtersOpen ? 'Hide Filters' : 'Filters'}
+          </Button>
+          <LogoutButton variant="outline-danger" size="sm" />
+        </div>
       </div>
 
-      {/* Filters */}
-      <Row className="g-2 mb-3 align-items-end">
-        <Col md={3}>
-          <Input
-            label="Search"
-            name="search"
-            value={filters.search}
-            onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
-            onKeyDown={handleKeyDown}
-            placeholder="Search actions or email..."
-          />
-        </Col>
-        <Col md={2}>
-          <Select
-            label="Actor Type"
-            name="actor_type"
-            value={filters.actor_type}
-            options={[
-              { value: '', label: 'All' },
-              { value: 'user', label: 'User' },
-              { value: 'admin', label: 'Admin' },
-              { value: 'professional', label: 'Professional' },
-              { value: 'org_admin', label: 'Org Admin' },
-            ]}
-            onChange={(e) => setFilters(prev => ({ ...prev, actor_type: e.target.value }))}
-          />
-        </Col>
-        <Col md={2}>
-          <Input
-            label="Start Date"
-            name="start_date"
-            type="date"
-            value={filters.start_date}
-            onChange={(e) => setFilters(prev => ({ ...prev, start_date: e.target.value }))}
-          />
-        </Col>
-        <Col md={2}>
-          <Input
-            label="End Date"
-            name="end_date"
-            type="date"
-            value={filters.end_date}
-            onChange={(e) => setFilters(prev => ({ ...prev, end_date: e.target.value }))}
-          />
-        </Col>
-        <Col md={3} className="d-flex gap-2">
-          <Button variant="primary" onClick={handleApply}>Apply</Button>
-          <Button variant="outline-secondary" onClick={handleClear}>Clear</Button>
-        </Col>
-      </Row>
+      {/* Collapsible Filters */}
+      <Collapse in={filtersOpen}>
+        <div>
+          <Row className="g-2 mb-3 align-items-end">
+            <Col md={4} lg={3}>
+              <Input
+                label="Search"
+                name="search"
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                onKeyDown={handleKeyDown}
+                placeholder="Search actions or email..."
+              />
+            </Col>
+            <Col md={3} lg={2}>
+              <Select
+                label="Actor Type"
+                name="actor_type"
+                value={filters.actor_type}
+                options={[
+                  { value: '', label: 'All' },
+                  { value: 'user', label: 'User' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'professional', label: 'Professional' },
+                  { value: 'org_admin', label: 'Org Admin' },
+                ]}
+                onChange={(e) => setFilters(prev => ({ ...prev, actor_type: e.target.value }))}
+              />
+            </Col>
+            <Col md={3} lg={2}>
+              <Input
+                label="Start Date"
+                name="start_date"
+                type="date"
+                value={filters.start_date}
+                onChange={(e) => setFilters(prev => ({ ...prev, start_date: e.target.value }))}
+              />
+            </Col>
+            <Col md={3} lg={2}>
+              <Input
+                label="End Date"
+                name="end_date"
+                type="date"
+                value={filters.end_date}
+                onChange={(e) => setFilters(prev => ({ ...prev, end_date: e.target.value }))}
+              />
+            </Col>
+            <Col md={4} lg={3} className="d-flex gap-2">
+              <Button variant="primary" onClick={handleApply}>Apply</Button>
+              <Button variant="outline-secondary" onClick={handleClear}>Clear</Button>
+            </Col>
+          </Row>
+        </div>
+      </Collapse>
 
-      {/* Logs Table */}
-      <Table striped hover responsive>
-        <thead>
-          <tr>
-            <th>Time</th>
-            <th>Type</th>
-            <th>Actor</th>
-            <th>Action</th>
-            <th>Target</th>
-            <th>Details</th>
-          </tr>
-        </thead>
-        <tbody>
-          {logs.length === 0 ? (
-            <tr><td colSpan="6" className="text-center text-muted">No logs found.</td></tr>
-          ) : (
-            logs.map(log => (
-              <tr key={log.id}>
-                <td>{new Date(log.created_at).toLocaleString()}</td>
-                <td>
-                  <Badge bg={
-                    log.actor_type === 'admin' ? 'primary' :
-                    log.actor_type === 'professional' ? 'info' :
-                    log.actor_type === 'org_admin' ? 'dark' : 'secondary'
-                  }>
-                    {log.actor_type || 'user'}
-                  </Badge>
-                </td>
-                <td>{log.actor_email || 'System'}</td>
-                <td>{log.action}</td>
-                <td>
-                  {log.target_type ? (
-                    <Badge bg="secondary">{log.target_type} {log.target_id ? `#${log.target_id}` : ''}</Badge>
-                  ) : '-'}
-                </td>
-                <td>
-                  {log.details ? (
-                    <span
-                      style={{ cursor: 'pointer', color: '#0d6efd' }}
-                      onClick={() => openDetails(log.details)}
-                    >
-                      View
-                    </span>
-                  ) : '-'}
-                </td>
+      {/* Desktop Table */}
+      <div className="d-none d-md-block">
+        <div className="table-responsive">
+          <Table striped hover size="sm" className="mb-0">
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Type</th>
+                <th>Actor</th>
+                <th>Action</th>
+                <th>Target</th>
+                <th>Details</th>
               </tr>
-            ))
-          )}
-        </tbody>
-      </Table>
+            </thead>
+            <tbody>
+              {logs.length === 0 ? (
+                <tr><td colSpan="6" className="text-center text-muted">No logs found.</td></tr>
+              ) : (
+                logs.map(log => (
+                  <tr key={log.id}>
+                    <td className="text-nowrap">{new Date(log.created_at).toLocaleString()}</td>
+                    <td>
+                      <Badge bg={
+                        log.actor_type === 'admin' ? 'primary' :
+                        log.actor_type === 'professional' ? 'info' :
+                        log.actor_type === 'org_admin' ? 'dark' : 'secondary'
+                      }>
+                        {log.actor_type || 'user'}
+                      </Badge>
+                    </td>
+                    <td>{log.actor_email || 'System'}</td>
+                    <td>{log.action}</td>
+                    <td>
+                      {log.target_type ? (
+                        <Badge bg="secondary">{log.target_type} {log.target_id ? `#${log.target_id}` : ''}</Badge>
+                      ) : '-'}
+                    </td>
+                    <td>
+                      {log.details ? (
+                        <span style={{ cursor: 'pointer', color: '#0d6efd' }} onClick={() => openDetails(log.details)}>
+                          View
+                        </span>
+                      ) : '-'}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
+        </div>
+      </div>
+
+      {/* Mobile Cards */}
+      <div className="d-md-none">
+        {logs.length === 0 ? (
+          <p className="text-center text-muted">No logs found.</p>
+        ) : (
+          logs.map(log => <LogCard key={log.id} log={log} onView={openDetails} />)
+        )}
+      </div>
 
       {/* Pagination */}
       {pagination.totalPages > 1 && (
-        <div className="d-flex justify-content-end">
-          <Pagination>
-            <Pagination.Prev
-              disabled={pagination.page <= 1}
-              onClick={() => handlePageChange(pagination.page - 1)}
-            />
+        <div className="d-flex justify-content-end mt-3">
+          <Pagination size="sm">
+            <Pagination.Prev disabled={pagination.page <= 1} onClick={() => handlePageChange(pagination.page - 1)} />
             {[...Array(pagination.totalPages)].map((_, i) => (
-              <Pagination.Item
-                key={i + 1}
-                active={i + 1 === pagination.page}
-                onClick={() => handlePageChange(i + 1)}
-              >
+              <Pagination.Item key={i + 1} active={i + 1 === pagination.page} onClick={() => handlePageChange(i + 1)}>
                 {i + 1}
               </Pagination.Item>
             ))}
-            <Pagination.Next
-              disabled={pagination.page >= pagination.totalPages}
-              onClick={() => handlePageChange(pagination.page + 1)}
-            />
+            <Pagination.Next disabled={pagination.page >= pagination.totalPages} onClick={() => handlePageChange(pagination.page + 1)} />
           </Pagination>
         </div>
       )}
