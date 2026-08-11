@@ -1,17 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Modal, Spinner, Badge } from 'react-bootstrap';
+import { Container, Row, Col, Modal, Spinner, Badge, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import {
-  Button,
-  Input,
-  Select,
-  DataTable,
-  StatCard,
-  EmptyState,
-  ErrorState,
-} from '../../components/ui';
+import { Button, Input, Select, DataTable, StatCard, EmptyState, ErrorState } from '../../components/ui';
+
+const AppointmentCard = ({ appt, onAddNote, onUpdateStatus, showActions }) => (
+  <Card className="mb-2 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between">
+        <div>
+          <Link to={`/professional/patients/${appt.user_id}`}><strong>{appt.first_name} {appt.last_name}</strong></Link>
+          <div className="text-muted small">{new Date(appt.scheduled_time).toLocaleString()}</div>
+        </div>
+        <Badge bg={
+          appt.status === 'pending' ? 'warning' :
+          appt.status === 'confirmed' ? 'info' :
+          appt.status === 'completed' ? 'success' :
+          appt.status === 'cancelled' ? 'secondary' : 'danger'
+        }>{appt.status}</Badge>
+      </div>
+      {showActions && (
+        <div className="mt-2 d-flex gap-2 align-items-center">
+          <Button variant="outline-primary" size="sm" onClick={() => onAddNote(appt)}>Add Note</Button>
+          <Select
+            name="status"
+            value={appt.status}
+            options={[
+              { value: 'pending', label: 'Pending' },
+              { value: 'confirmed', label: 'Confirm' },
+              { value: 'completed', label: 'Complete' },
+              { value: 'cancelled', label: 'Cancel' },
+              { value: 'no_show', label: 'No Show' },
+            ]}
+            onChange={(e) => onUpdateStatus(appt.id, e.target.value)}
+            className="mb-0"
+            style={{ width: '120px' }}
+          />
+        </div>
+      )}
+      {appt.rating && <div className="mt-1">{appt.rating}⭐</div>}
+    </Card.Body>
+  </Card>
+);
 
 const ProfessionalAppointments = () => {
   const { showModal } = useModal();
@@ -23,9 +54,7 @@ const ProfessionalAppointments = () => {
   const [showNoteModal, setShowNoteModal] = useState(false);
   const [noteText, setNoteText] = useState('');
 
-  useEffect(() => {
-    fetchAppointments();
-  }, []);
+  useEffect(() => { fetchAppointments(); }, []);
 
   const fetchAppointments = async () => {
     setLoading(true);
@@ -90,10 +119,7 @@ const ProfessionalAppointments = () => {
       ) },
     { field: 'scheduled_time', label: 'Time', render: (val) => new Date(val).toLocaleString() },
     { field: 'status', label: 'Status', render: (val) => statusBadge(val) },
-    {
-      field: 'actions',
-      label: 'Actions',
-      render: (_, row) => (
+    { field: 'actions', label: 'Actions', render: (_, row) => (
         <div className="d-flex gap-1 align-items-center">
           <Button variant="outline-primary" size="sm" onClick={() => openNoteModal(row)}>Add Note</Button>
           <Select
@@ -136,7 +162,14 @@ const ProfessionalAppointments = () => {
           {upcoming.length === 0 ? (
             <EmptyState icon="📅" title="No upcoming appointments" description="You have no upcoming appointments." />
           ) : (
-            <DataTable columns={upcomingColumns} data={upcoming} keyField="id" />
+            <>
+              <div className="d-none d-md-block">
+                <DataTable columns={upcomingColumns} data={upcoming} keyField="id" />
+              </div>
+              <div className="d-md-none">
+                {upcoming.map(appt => <AppointmentCard key={appt.id} appt={appt} onAddNote={openNoteModal} onUpdateStatus={updateStatus} showActions />)}
+              </div>
+            </>
           )}
         </Col>
         <Col lg={6}>
@@ -144,12 +177,18 @@ const ProfessionalAppointments = () => {
           {past.length === 0 ? (
             <EmptyState icon="📋" title="No past appointments" description="No past appointments found." />
           ) : (
-            <DataTable columns={pastColumns} data={past} keyField="id" />
+            <>
+              <div className="d-none d-md-block">
+                <DataTable columns={pastColumns} data={past} keyField="id" />
+              </div>
+              <div className="d-md-none">
+                {past.map(appt => <AppointmentCard key={appt.id} appt={appt} showActions={false} />)}
+              </div>
+            </>
           )}
         </Col>
       </Row>
 
-      {/* Add Note Modal */}
       <Modal show={showNoteModal} onHide={() => setShowNoteModal(false)}>
         <Modal.Header closeButton><Modal.Title>Add Professional Note</Modal.Title></Modal.Header>
         <Modal.Body>
