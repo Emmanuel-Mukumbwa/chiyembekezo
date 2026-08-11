@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Container } from 'react-bootstrap';
+import { Container, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
-import {
-  Button,
-  DataTable,
-  EmptyState,
-  ErrorState,
-  LoadingSkeleton,
-} from '../../components/ui';
+import { Button, DataTable, EmptyState, ErrorState, LoadingSkeleton } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
+
+const AvailableCard = ({ req, onClaim }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <h6>{req.first_name} {req.last_name}</h6>
+      <p>{req.message}</p>
+      <small className="text-muted">{new Date(req.created_at).toLocaleString()}</small>
+      <div className="mt-2">
+        <Button variant="primary" size="sm" onClick={() => onClaim(req.id)}>Claim</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
 
 const VolunteerAvailable = () => {
   const { user } = useAuth();
@@ -20,9 +27,7 @@ const VolunteerAvailable = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchAvailable();
-  }, []);
+  useEffect(() => { fetchAvailable(); }, []);
 
   const fetchAvailable = async () => {
     setLoading(true);
@@ -52,15 +57,7 @@ const VolunteerAvailable = () => {
     { field: 'first_name', label: 'User', render: (val, row) => `${row.first_name} ${row.last_name}` },
     { field: 'message', label: 'Message' },
     { field: 'created_at', label: 'Date', render: (val) => new Date(val).toLocaleString() },
-    {
-      field: 'actions',
-      label: 'Action',
-      render: (_, row) => (
-        <Button variant="primary" size="sm" onClick={() => claimRequest(row.id)}>
-          Claim
-        </Button>
-      ),
-    },
+    { field: 'actions', label: 'Action', render: (_, row) => <Button variant="primary" size="sm" onClick={() => claimRequest(row.id)}>Claim</Button> },
   ];
 
   if (loading) return (
@@ -68,15 +65,11 @@ const VolunteerAvailable = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Available Requests</h4>
         <div className="d-flex gap-2">
-          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">
-            ← Back to Dashboard
-          </Button>
+          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">← Back</Button>
           <LogoutButton variant="outline-danger" size="sm" />
         </div>
       </div>
-      <p className="text-muted">Find a request to support</p>
       <LoadingSkeleton type="list" />
-      <LoadingSkeleton type="list" className="mt-3" />
     </Container>
   );
   if (error) return <ErrorState title="Error loading requests" description={error} onRetry={fetchAvailable} />;
@@ -86,9 +79,7 @@ const VolunteerAvailable = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h4>Available Requests</h4>
         <div className="d-flex gap-2">
-          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">
-            ← Back to Dashboard
-          </Button>
+          <Button as={Link} to="/volunteer/dashboard" variant="outline-secondary">← Back</Button>
           <LogoutButton variant="outline-danger" size="sm" />
         </div>
       </div>
@@ -96,7 +87,14 @@ const VolunteerAvailable = () => {
       {requests.length === 0 ? (
         <EmptyState icon="🤝" title="No available requests" description="All requests have been claimed." />
       ) : (
-        <DataTable columns={columns} data={requests} keyField="id" />
+        <>
+          <div className="d-none d-md-block">
+            <DataTable columns={columns} data={requests} keyField="id" />
+          </div>
+          <div className="d-md-none">
+            {requests.map(r => <AvailableCard key={r.id} req={r} onClaim={claimRequest} />)}
+          </div>
+        </>
       )}
     </Container>
   );
