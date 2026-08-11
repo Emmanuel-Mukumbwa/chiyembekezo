@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Badge } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { Row, Col, Badge, Card, ProgressBar } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import MoodTracker from '../../components/MoodTracker';
 import {
-  Card,
+  Card as UICard,
   Button,
   StatCard,
-  GoalCard,
   JournalCard,
   LoadingSkeleton,
 } from '../../components/ui';
@@ -46,6 +46,8 @@ const computeStreak = (history) => {
 
 const Dashboard = () => {
   const { user } = useAuth();
+  const { showModal } = useModal();
+  const navigate = useNavigate();
   const [moodHistory, setMoodHistory] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [journalEntries, setJournalEntries] = useState([]);
@@ -82,29 +84,62 @@ const Dashboard = () => {
     }
   };
 
-  const last7 = moodHistory.slice(0, 7).reverse();
-  const labels = last7.map(entry => new Date(entry.recorded_at).toLocaleDateString());
-  const dataPoints = last7.map(entry => entry.mood_score);
-
-  const chartData = {
-    labels: labels.length ? labels : ['No data'],
-    datasets: [
-      {
-        label: 'Mood Score (1-5)',
-        data: dataPoints.length ? dataPoints : [0],
-        fill: false,
-        backgroundColor: 'var(--color-primary-500)',
-        borderColor: 'var(--color-primary-500)',
-        tension: 0.2,
-      },
-    ],
+  const handleEditJournal = (entry) => navigate('/journal');
+  const handleDeleteJournal = async (id) => {
+    showModal('Confirm Delete', 'Delete this journal entry?', async () => {
+      try {
+        await api.delete(`/journal/${id}`);
+        fetchAllData();
+      } catch { showModal('Error', 'Failed to delete.'); }
+    });
+  };
+  const handleToggleFavorite = async (id, isFavorite) => {
+    try {
+      await api.put(`/journal/${id}`, { is_favorite: !isFavorite });
+      setJournalEntries(prev => prev.map(e => e.id === id ? { ...e, is_favorite: !isFavorite } : e));
+    } catch { showModal('Error', 'Failed to update.'); }
   };
 
-  const displayName =
-    user?.firstName && user?.lastName
-      ? `${user.firstName} ${user.lastName}`
-      : user?.firstName || user?.email || 'User';
+  const handleIncrementProgress = async (id, current) => {
+    const newVal = Math.min(current + 10, 100);
+    try {
+      await api.put(`/goals/${id}`, { progress: newVal });
+      setGoals(prev => prev.map(g => g.id === id ? { ...g, progress: newVal } : g));
+    } catch { showModal('Error', 'Failed to update progress.'); }
+  };
 
+  const handleCompleteGoal = async (id) => {
+    try {
+      await api.put(`/goals/${id}`, { status: 'completed' });
+      showModal('Success', 'Goal completed!');
+      fetchAllData();
+    } catch { showModal('Error', 'Failed to complete goal.'); }
+  };
+
+  const handleDeleteGoal = async (id) => {
+    showModal('Confirm Delete', 'Delete this goal?', async () => {
+      try {
+        await api.delete(`/goals/${id}`);
+        fetchAllData();
+      } catch { showModal('Error', 'Failed to delete.'); }
+    });
+  };
+
+  const last7 = moodHistory.slice(0, 7).reverse();
+  const labels = last7.map(e => new Date(e.recorded_at).toLocaleDateString());
+  const dataPoints = last7.map(e => e.mood_score);
+  const chartData = {
+    labels: labels.length ? labels : ['No data'],
+    datasets: [{
+      label: 'Mood Score',
+      data: dataPoints.length ? dataPoints : [0],
+      fill: false,
+      borderColor: '#0d6efd',
+      tension: 0.2,
+    }],
+  };
+
+  const displayName = user?.firstName || user?.email || 'User';
   const latestAssessments = assessments.slice(0, 3);
   const recentJournals = journalEntries.slice(0, 3);
   const activeGoals = goals.filter(g => g.status === 'active').slice(0, 3);
@@ -120,65 +155,67 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div style={{ minWidth: 0, maxWidth: '100%' }}>
-        <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
-          <LoadingSkeleton type="avatar" className="w-100" />
-        </div>
-        <Row className="g-2 g-md-3 mb-4">
-          {[1, 2, 3, 4].map(i => (
-            <Col xs={6} md={3} key={i}>
-              <LoadingSkeleton type="card" lines={2} />
-            </Col>
-          ))}
+      <div className="px-3 px-md-4 py-4">
+        <Row className="mb-4">
+          <Col><LoadingSkeleton type="avatar" /></Col>
         </Row>
-        <Row>
-          <Col lg={7}>
-            <LoadingSkeleton type="card" lines={5} withImage />
-          </Col>
-          <Col lg={5}>
-            <LoadingSkeleton type="card" lines={4} />
-          </Col>
+        <Row className="g-3 mb-4">
+          {[1,2,3,4].map(i => <Col xs={6} md={3} key={i}><LoadingSkeleton type="card" lines={2} /></Col>)}
+        </Row>
+        <Row className="g-3">
+          <Col md={8}><LoadingSkeleton type="card" lines={6} /></Col>
+          <Col md={4}><LoadingSkeleton type="card" lines={4} /></Col>
         </Row>
       </div>
     );
   }
 
   return (
-    <div style={{ minWidth: 0, maxWidth: '100%', overflowX: 'hidden' }}>
-      <div className="d-flex flex-wrap align-items-center justify-content-between mb-4">
+    <div className="px-3 px-md-4 py-4" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+      {/* Welcome Banner */}
+      <div className="d-flex flex-wrap justify-content-between align-items-center mb-4 p-3 bg-primary text-white rounded-3 shadow-sm">
         <div>
-          <h2 className="fw-bold mb-0">Welcome back, {displayName}!</h2>
-          <p className="text-muted">Let's check in on your wellness today.</p>
+          <h2 className="mb-0">Welcome back, {displayName}!</h2>
+          <p className="mb-0 opacity-75">Let's check in on your wellness today.</p>
         </div>
-        {streak > 0 && <Badge bg="success" className="p-2 mt-2 mt-sm-0">🔥 {streak}-day streak!</Badge>}
+        {streak > 0 && (
+          <Badge bg="light" text="dark" className="fs-6 mt-2 mt-sm-0">
+            🔥 {streak}-day streak!
+          </Badge>
+        )}
       </div>
 
-      <Row className="g-2 g-md-3 mb-4">
-        <Col xs={6} md={3}><StatCard icon="😊" value={moodHistory.length} label="Mood Entries" /></Col>
-        <Col xs={6} md={3}><StatCard icon="📝" value={journalEntries.length} label="Journal Entries" /></Col>
-        <Col xs={6} md={3}><StatCard icon="🎯" value={goals.filter(g => g.status === 'completed').length} label="Goals Completed" /></Col>
-        <Col xs={6} md={3}><StatCard icon="🔥" value={streak} label="Day Streak" /></Col>
+      {/* Stats Row */}
+      <Row className="g-3 mb-4">
+        <Col xs={6} md={3}><StatCard icon="😊" value={moodHistory.length} label="Mood Entries" variant="primary" /></Col>
+        <Col xs={6} md={3}><StatCard icon="📝" value={journalEntries.length} label="Journal Entries" variant="success" /></Col>
+        <Col xs={6} md={3}><StatCard icon="🎯" value={goals.filter(g => g.status === 'completed').length} label="Goals Done" variant="warning" /></Col>
+        <Col xs={6} md={3}><StatCard icon="🔥" value={streak} label="Day Streak" variant="danger" /></Col>
       </Row>
 
-      <Row>
-        <Col lg={7}>
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
+      {/* Main Content */}
+      <Row className="g-3">
+        {/* Left Column */}
+        <Col lg={8}>
+          {/* Mood Chart */}
+          <UICard className="p-3 mb-3">
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Your Mood Trend</h6>
               <Button as={Link} to="/mood-history" variant="outline-primary" size="sm">View History</Button>
             </div>
-            <div className="mt-2" style={{ height: '200px', minHeight: '180px', maxWidth: '100%' }}>
+            <div className="mt-2" style={{ height: '200px' }}>
               <Line data={chartData} options={{ maintainAspectRatio: false, responsive: true }} />
             </div>
-          </Card>
+          </UICard>
 
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
+          {/* Recent Assessments */}
+          <UICard className="p-3 mb-3">
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Recent Assessments</h6>
               <Button as={Link} to="/assessments" variant="outline-primary" size="sm">Take New</Button>
             </div>
             {latestAssessments.length === 0 ? (
-              <p className="text-muted mt-2">No assessments taken yet.</p>
+              <p className="text-muted mt-2">No assessments yet. Take your first one!</p>
             ) : (
               <Row className="mt-2 g-2">
                 {latestAssessments.map((item, idx) => (
@@ -193,15 +230,16 @@ const Dashboard = () => {
                 ))}
               </Row>
             )}
-          </Card>
+          </UICard>
 
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
+          {/* Recent Journals */}
+          <UICard className="p-3 mb-3">
             <div className="d-flex justify-content-between align-items-center">
               <h6 className="fw-bold mb-0">Recent Journal</h6>
               <Button as={Link} to="/journal" variant="outline-primary" size="sm">Write New</Button>
             </div>
             {recentJournals.length === 0 ? (
-              <p className="text-muted mt-2">No journal entries yet.</p>
+              <p className="text-muted mt-2">No journal entries yet. Write your first one!</p>
             ) : (
               <div className="mt-2">
                 {recentJournals.map(entry => (
@@ -214,77 +252,79 @@ const Dashboard = () => {
                     isFavorite={entry.is_favorite}
                     entryType={entry.entry_type}
                     moodAtEntry={entry.mood_at_entry}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    onToggleFavorite={() => {}}
+                    onEdit={() => handleEditJournal(entry)}
+                    onDelete={() => handleDeleteJournal(entry.id)}
+                    onToggleFavorite={() => handleToggleFavorite(entry.id, entry.is_favorite)}
                   />
                 ))}
               </div>
             )}
-          </Card>
+          </UICard>
         </Col>
 
-        <Col lg={5}>
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
-            <h6 className="fw-bold mb-0">Today's Check-in</h6>
-            <div style={{ maxWidth: '100%', minWidth: 0, overflow: 'hidden' }}>
-              <MoodTracker onSave={fetchAllData} />
-            </div>
-          </Card>
+        {/* Right Column */}
+        <Col lg={4}>
+          {/* Mood Check-in */}
+          <UICard className="p-3 mb-3">
+            <h6 className="fw-bold mb-3">Today's Check-in</h6>
+            <MoodTracker onSave={fetchAllData} />
+          </UICard>
 
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
-            <h6 className="fw-bold mb-2">Quick Actions</h6>
+          {/* Quick Actions */}
+          <UICard className="p-3 mb-3">
+            <h6 className="fw-bold mb-3">Quick Actions</h6>
             <div className="d-grid gap-2">
-              <Button as={Link} to="/assessments" variant="outline-primary">Take Assessment</Button>
-              <Button as={Link} to="/journal" variant="outline-primary">Write Journal</Button>
-              <Button as={Link} to="/goals" variant="outline-primary">Manage Goals</Button>
-              <Button as={Link} to="/safety-plan" variant="outline-primary">Safety Plan</Button>
-              <Button as={Link} to="/mood-history" variant="outline-primary">View History</Button>
-              <Button as={Link} to="/wellness" variant="outline-primary">Wellness Toolkit</Button>
+              <Button as={Link} to="/assessments" variant="outline-primary" size="sm" className="text-start">📊 Take Assessment</Button>
+              <Button as={Link} to="/journal" variant="outline-primary" size="sm" className="text-start">📓 Write Journal</Button>
+              <Button as={Link} to="/goals" variant="outline-primary" size="sm" className="text-start">🎯 Manage Goals</Button>
+              <Button as={Link} to="/safety-plan" variant="outline-primary" size="sm" className="text-start">🛡️ Safety Plan</Button>
+              <Button as={Link} to="/wellness" variant="outline-primary" size="sm" className="text-start">🧘 Wellness Toolkit</Button>
             </div>
-          </Card>
+          </UICard>
 
-          <Card className="p-3 mb-4" style={{ maxWidth: '100%' }}>
-            <h6 className="fw-bold mb-0">Recommended for You</h6>
+          {/* Recommendations */}
+          <UICard className="p-3 mb-3">
+            <h6 className="fw-bold mb-3">Recommended for You</h6>
             {recommendations.length === 0 ? (
-              <p className="text-muted mt-2">No recommendations yet. Keep tracking!</p>
+              <p className="text-muted mt-2">Keep tracking to get recommendations.</p>
             ) : (
-              <div className="d-flex flex-wrap gap-2 mt-2">
+              <div className="d-flex flex-wrap gap-2">
                 {recommendations.map((rec, idx) => (
-                  <Button as={Link} to={rec.link} variant="outline-primary" key={idx} size="sm">
-                    {rec.name}
-                  </Button>
+                  <Button as={Link} to={rec.link} variant="outline-primary" key={idx} size="sm">{rec.name}</Button>
                 ))}
               </div>
             )}
-          </Card>
+          </UICard>
 
-          <Card className="p-3" style={{ maxWidth: '100%' }}>
-            <div className="d-flex justify-content-between align-items-center">
+          {/* Active Goals */}
+          <UICard className="p-3">
+            <div className="d-flex justify-content-between align-items-center mb-3">
               <h6 className="fw-bold mb-0">Active Goals</h6>
               <Button as={Link} to="/goals" variant="outline-primary" size="sm">Manage</Button>
             </div>
             {activeGoals.length === 0 ? (
               <p className="text-muted mt-2">No active goals. Set one!</p>
             ) : (
-              <div className="mt-2">
-                {activeGoals.map(goal => (
-                  <GoalCard
-                    key={goal.id}
-                    id={goal.id}
-                    title={goal.title}
-                    description={goal.description}
-                    progress={goal.progress}
-                    status={goal.status}
-                    targetDate={goal.target_date}
-                    onEdit={() => {}}
-                    onDelete={() => {}}
-                    onUpdateProgress={() => {}}
-                  />
-                ))}
-              </div>
+              activeGoals.map(goal => (
+                <Card key={goal.id} className="mb-2 shadow-sm">
+                  <Card.Body>
+                    <h6>{goal.title}</h6>
+                    <div className="d-flex justify-content-between small text-muted mb-1">
+                      <span>{goal.description}</span>
+                      <span>Due: {goal.target_date ? new Date(goal.target_date).toLocaleDateString() : '-'}</span>
+                    </div>
+                    <ProgressBar now={goal.progress} label={`${goal.progress}%`} className="mb-2" />
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Button size="sm" variant="outline-secondary" onClick={() => handleIncrementProgress(goal.id, goal.progress)}>+10%</Button>
+                      <Button size="sm" variant="outline-success" onClick={() => handleCompleteGoal(goal.id)}>Complete</Button>
+                      <Button size="sm" variant="outline-primary" onClick={() => navigate('/goals')}>Edit</Button>
+                      <Button size="sm" variant="outline-danger" onClick={() => handleDeleteGoal(goal.id)}>Delete</Button>
+                    </div>
+                  </Card.Body>
+                </Card>
+              ))
             )}
-          </Card>
+          </UICard>
         </Col>
       </Row>
     </div>
