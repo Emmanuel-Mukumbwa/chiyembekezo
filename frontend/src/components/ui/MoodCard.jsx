@@ -7,7 +7,7 @@ const moodLabels = { 5: 'Happy', 4: 'Okay', 3: 'Neutral', 2: 'Sad', 1: 'Overwhel
 
 const MoodCard = ({ moodScore, date, note, energy, stress, sleep, exercise, water, onEdit, ...rest }) => {
   return (
-    <Card className="p-3" hoverable {...rest}>
+    <Card className="p-3" hoverable="true" {...rest}>
       <div className="d-flex align-items-center gap-3">
         <div style={{ fontSize: '3rem' }}>{moodEmojis[moodScore] || '😐'}</div>
         <div className="flex-grow-1">
