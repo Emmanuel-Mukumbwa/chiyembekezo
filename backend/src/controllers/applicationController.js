@@ -1,30 +1,76 @@
 const pool = require('../config/db');
 const { logAuditAction } = require('../services/auditLogService');
+const { uploadToCloudinary } = require('../utils/upload');
 
-// @desc    Submit application (authenticated user)
+// @desc    Submit application (authenticated user) – now with file upload
 // @route   POST /api/applications
 exports.submitApplication = async (req, res) => {
   try {
     const userId = req.user.id;
-    const { type, message, qualifications, experience, specialization, license_number, languages, availability } = req.body;
+    const {
+      type, message, qualifications, experience, specialization, license_number,
+      languages, availability, profession, registration_body, registration_number,
+      registration_expiry, employer, motivation, role_preference,
+    } = req.body;
+
     if (!type || !['professional','volunteer'].includes(type)) {
       return res.status(400).json({ error: 'Valid application type required' });
     }
-    // Check if user already has pending application
+
+    // Check for existing pending application
     const [existing] = await pool.query(
-      'SELECT id FROM applications WHERE user_id = ? AND type = ? AND status = "pending"',
-      [userId, type]
+      'SELECT id FROM applications WHERE user_id = ? AND type = ? AND status = ?',
+      [userId, type, 'pending']
     );
     if (existing.length > 0) {
       return res.status(409).json({ error: 'You already have a pending application for this role.' });
     }
-    await pool.query(
-      `INSERT INTO applications 
-       (user_id, type, message, qualifications, experience, specialization, license_number, languages, availability)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [userId, type, message || null, qualifications || null, experience || null, specialization || null, license_number || null, languages || null, availability || null]
+
+    // ---- Handle file uploads (documents) ----
+    let documentUrls = [];
+    if (req.files && req.files.documents) {
+      const files = req.files.documents; // array of files
+      for (const file of files) {
+        const result = await uploadToCloudinary(file.buffer, 'application_docs', 'auto');
+        documentUrls.push({
+          originalName: file.originalname,
+          url: result.secure_url,
+        });
+      }
+    }
+
+    const parsedLanguages = languages ? (typeof languages === 'string' ? JSON.parse(languages) : languages) : [];
+
+    // Insert application with extended fields
+    const [result] = await pool.query(
+      `INSERT INTO applications
+       (user_id, type, message, qualifications, experience, specialization,
+        license_number, languages, availability, documents,
+        profession, registration_body, registration_number, registration_expiry,
+        employer, motivation, role_preference)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        type,
+        message || null,
+        qualifications || null,
+        experience || null,
+        specialization || null,
+        license_number || null,
+        JSON.stringify(parsedLanguages),
+        availability || null,
+        JSON.stringify(documentUrls),
+        profession || null,
+        registration_body || null,
+        registration_number || null,
+        registration_expiry || null,
+        employer || null,
+        motivation || null,
+        role_preference || null,
+      ]
     );
-    await logAuditAction(userId, 'user', req.user.email, `Submitted application for ${type}`, 'application', null);
+
+    await logAuditAction(userId, 'user', req.user.email, `Submitted application for ${type}`, 'application', result.insertId);
     res.status(201).json({ message: 'Application submitted successfully.' });
   } catch (err) {
     console.error(err);
@@ -38,7 +84,11 @@ exports.getMyApplications = async (req, res) => {
   try {
     const userId = req.user.id;
     const [rows] = await pool.query(
-      `SELECT id, type, status, message, qualifications, experience, specialization, license_number, languages, availability, created_at, updated_at
+      `SELECT id, type, status, message, qualifications, experience,
+              specialization, license_number, languages, availability,
+              documents, profession, registration_body, registration_number,
+              registration_expiry, employer, motivation, role_preference,
+              created_at, updated_at
        FROM applications
        WHERE user_id = ?
        ORDER BY created_at DESC`,
@@ -57,29 +107,21 @@ exports.adminGetApplications = async (req, res) => {
   try {
     const { status, type } = req.query;
     let query = `
-      SELECT a.id, a.type, a.status, a.message, a.qualifications, a.experience,
-             a.specialization, a.license_number, a.languages, a.availability,
-             a.created_at,
+      SELECT a.*,
              u.id as user_id, u.email, u.first_name, u.last_name, u.phone
       FROM applications a
       JOIN users u ON a.user_id = u.id
       WHERE 1=1
     `;
     const params = [];
-    if (status) {
-      query += ' AND a.status = ?';
-      params.push(status);
-    }
-    if (type) {
-      query += ' AND a.type = ?';
-      params.push(type);
-    }
+    if (status) { query += ' AND a.status = ?'; params.push(status); }
+    if (type)   { query += ' AND a.type = ?';   params.push(type); }
     query += ' ORDER BY a.created_at DESC';
     const [rows] = await pool.query(query, params);
-    // Parse JSON fields
     const applications = rows.map(a => ({
       ...a,
-      languages: a.languages ? JSON.parse(a.languages) : [],
+      languages: a.languages ? (typeof a.languages === 'string' ? JSON.parse(a.languages) : a.languages) : [],
+      documents: a.documents ? (typeof a.documents === 'string' ? JSON.parse(a.documents) : a.documents) : [],
     }));
     res.json(applications);
   } catch (err) {
@@ -88,7 +130,7 @@ exports.adminGetApplications = async (req, res) => {
   }
 };
 
-// @desc    Admin: Review application (approve/reject)
+// @desc    Admin: Review application (unchanged logic)
 // @route   PUT /api/admin/applications/:id
 exports.adminReviewApplication = async (req, res) => {
   try {
@@ -97,7 +139,6 @@ exports.adminReviewApplication = async (req, res) => {
     if (!['approved','rejected'].includes(status)) {
       return res.status(400).json({ error: 'Status must be approved or rejected' });
     }
-    // Get application
     const [app] = await pool.query('SELECT * FROM applications WHERE id = ?', [id]);
     if (app.length === 0) return res.status(404).json({ error: 'Application not found' });
     const application = app[0];
@@ -105,28 +146,22 @@ exports.adminReviewApplication = async (req, res) => {
       return res.status(400).json({ error: 'Application already reviewed' });
     }
 
-    // Update application
     await pool.query(
       'UPDATE applications SET status = ?, reviewed_by = ?, reviewed_at = NOW() WHERE id = ?',
       [status, req.user.id, id]
     );
 
-    // If approved, promote user
     if (status === 'approved') {
       const userId = application.user_id;
       if (application.type === 'professional') {
-        // Update user role
         await pool.query('UPDATE users SET role = "professional", is_professional = 1 WHERE id = ?', [userId]);
-        // Create professional record (basic)
         await pool.query(
           `INSERT INTO professionals (user_id, specialization, license_number, languages, is_verified)
            VALUES (?, ?, ?, ?, 1)`,
           [userId, application.specialization, application.license_number, application.languages || '[]']
         );
       } else if (application.type === 'volunteer') {
-        // Update user role
         await pool.query('UPDATE users SET role = "volunteer" WHERE id = ?', [userId]);
-        // Create volunteer listener record
         await pool.query(
           `INSERT INTO volunteer_listeners (user_id, is_verified, available_languages, bio, is_online)
            VALUES (?, 1, ?, ?, 0)`,
