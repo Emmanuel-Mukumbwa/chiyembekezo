@@ -10,9 +10,7 @@ const OrganizationInsights = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchInsights();
-  }, []);
+  useEffect(() => { fetchInsights(); }, []);
 
   const fetchInsights = async () => {
     setLoading(true);
@@ -33,14 +31,12 @@ const OrganizationInsights = () => {
       <h4 className="mb-4">Organization Insights</h4>
       <Row className="g-3 mb-4">
         {[...Array(4)].map((_, i) => (
-          <Col md={3} sm={6} key={i}>
-            <LoadingSkeleton type="card" lines={2} />
-          </Col>
+          <Col xs={6} md={3} key={i}><LoadingSkeleton type="card" lines={2} /></Col>
         ))}
       </Row>
       <Row>
-        <Col md={6}><LoadingSkeleton type="article" lines={5} /></Col>
-        <Col md={6}><LoadingSkeleton type="article" lines={5} /></Col>
+        <Col xs={12} md={6}><LoadingSkeleton type="article" lines={5} /></Col>
+        <Col xs={12} md={6}><LoadingSkeleton type="article" lines={5} /></Col>
       </Row>
     </Container>
   );
@@ -51,15 +47,15 @@ const OrganizationInsights = () => {
     <Container fluid className="px-4">
       <h4 className="mb-4">Organization Insights</h4>
       <Row className="g-3 mb-4">
-        <Col md={3} sm={6}><StatCard icon="👥" value={stats.total_members} label="Total Members" variant="info" /></Col>
-        <Col md={3} sm={6}><StatCard icon="😊" value={stats.mood_avg} label="Avg Mood" variant="primary" /></Col>
-        <Col md={3} sm={6}><StatCard icon="😰" value={stats.stress_avg} label="Avg Stress" variant="warning" /></Col>
-        <Col md={3} sm={6}><StatCard icon="📊" value={`${stats.engagement_rate}%`} label="Engagement" variant="success" /></Col>
+        <Col xs={6} md={3}><StatCard icon="👥" value={stats.total_members} label="Total Members" variant="info" /></Col>
+        <Col xs={6} md={3}><StatCard icon="😊" value={stats.mood_avg} label="Avg Mood" variant="primary" /></Col>
+        <Col xs={6} md={3}><StatCard icon="😰" value={stats.stress_avg} label="Avg Stress" variant="warning" /></Col>
+        <Col xs={6} md={3}><StatCard icon="📊" value={`${stats.engagement_rate}%`} label="Engagement" variant="success" /></Col>
       </Row>
 
       <Row>
-        <Col md={6}>
-          <Card className="p-3">
+        <Col xs={12} md={6}>
+          <Card className="p-3 mb-3">
             <h6 className="fw-bold">Mood Distribution</h6>
             {stats.mood_distribution && stats.mood_distribution.map(d => (
               <div key={d.mood_score} className="d-flex justify-content-between border-bottom py-1">
@@ -69,8 +65,8 @@ const OrganizationInsights = () => {
             ))}
           </Card>
         </Col>
-        <Col md={6}>
-          <Card className="p-3">
+        <Col xs={12} md={6}>
+          <Card className="p-3 mb-3">
             <h6 className="fw-bold">Top Wellness Activities</h6>
             {stats.top_wellness_types && stats.top_wellness_types.length > 0 ? (
               stats.top_wellness_types.map(w => (
