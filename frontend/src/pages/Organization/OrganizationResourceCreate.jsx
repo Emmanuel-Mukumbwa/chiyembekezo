@@ -27,9 +27,7 @@ const OrganizationResourceCreate = () => {
     file: null,
   });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  useEffect(() => { fetchCategories(); }, []);
 
   const fetchCategories = async () => {
     setCategoriesLoading(true);
@@ -133,20 +131,20 @@ const OrganizationResourceCreate = () => {
       <Card className="p-4">
         <Form onSubmit={handleSubmit}>
           <Row>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Input label="Title *" name="title" value={formData.title} onChange={handleChange} required />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Select label="Type *" name="type" value={formData.type} options={typeOptions} onChange={handleChange} required />
             </Col>
           </Row>
           <Row>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               {categoriesLoading ? <Spinner animation="border" size="sm" /> : (
                 <Select label="Category" name="category_id" value={formData.category_id} options={categories.map(c => ({ value: c.id, label: c.name }))} onChange={handleChange} />
               )}
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Input label="Author" name="author" value={formData.author} onChange={handleChange} />
             </Col>
           </Row>
@@ -155,18 +153,18 @@ const OrganizationResourceCreate = () => {
             <Textarea label="Content" name="content" rows={5} value={formData.content} onChange={handleChange} />
           )}
           <Row>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Input label="External URL" name="url" value={formData.url} onChange={handleChange} placeholder="https://example.com/resource" />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Input label="Duration (minutes)" name="duration_minutes" type="number" value={formData.duration_minutes} onChange={handleChange} placeholder="e.g., 5" />
             </Col>
           </Row>
           <Row>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               <Input label="Tags (comma separated)" name="tags" value={formData.tags} onChange={handleChange} />
             </Col>
-            <Col md={6}>
+            <Col xs={12} md={6}>
               {showFileUpload ? (
                 <Form.Group className="mb-3">
                   <Form.Label>Upload File</Form.Label>
