@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Form, Badge, Modal } from 'react-bootstrap';
+import { Container, Row, Col, Card, Form, Badge, Modal, Collapse } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { Button, Input, Select, Textarea, EmptyState, ErrorState, LoadingSkeleton } from '../../components/ui';
 import api from '../../services/api';
 import { formatDistanceToNow } from 'date-fns';
+import { FiFilter, FiX } from 'react-icons/fi';
 
 const CommunityHome = () => {
   const { user } = useAuth();
@@ -17,38 +18,41 @@ const CommunityHome = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({ category: '', sort: 'recent' });
+  const [appliedFilters, setAppliedFilters] = useState({ category: '', sort: 'recent' });
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [showNewPost, setShowNewPost] = useState(false);
   const [newPost, setNewPost] = useState({ title: '', content: '', categoryId: '', isAnonymous: true });
   const [submitting, setSubmitting] = useState(false);
 
-  useEffect(() => {
-    fetchCategories();
-    fetchPosts();
-  }, [filters]);
+  useEffect(() => { fetchCategories(); }, []);
+  useEffect(() => { fetchPosts(); }, [appliedFilters]);
 
   const fetchCategories = async () => {
     try {
       const res = await api.get('/community/categories');
       setCategories(res.data);
-    } catch (err) {
-      console.error('Failed to fetch categories:', err);
-    }
+    } catch (err) { console.error('Failed to fetch categories:', err); }
   };
 
   const fetchPosts = async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams(filters);
+      const params = new URLSearchParams(appliedFilters);
       const res = await api.get(`/community/posts?${params}`);
       setPinnedPosts(res.data.pinned || []);
       setPosts(res.data.posts || []);
     } catch (err) {
       setError('Failed to load posts.');
       showModal('Error', 'Failed to load posts.');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
+  };
+
+  const handleApply = () => setAppliedFilters({ ...filters });
+  const handleClearFilters = () => {
+    const reset = { category: '', sort: 'recent' };
+    setFilters(reset);
+    setAppliedFilters(reset);
   };
 
   const handleCreatePost = async (e) => {
@@ -62,23 +66,17 @@ const CommunityHome = () => {
       fetchPosts();
     } catch (err) {
       showModal('Error', err.response?.data?.error || 'Failed to create post.');
-    } finally {
-      setSubmitting(false);
-    }
+    } finally { setSubmitting(false); }
   };
 
-if (loading && posts.length === 0) {
+  if (loading && posts.length === 0) {
     return (
       <Container fluid className="px-4 my-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <LoadingSkeleton type="article" lines={2} className="flex-grow-1" />
         </div>
         <Row>
-          {[...Array(3)].map((_, i) => (
-            <Col md={4} key={i} className="mb-3">
-              <LoadingSkeleton type="card" lines={4} />
-            </Col>
-          ))}
+          {[...Array(3)].map((_, i) => <Col md={4} key={i} className="mb-3"><LoadingSkeleton type="card" lines={4} /></Col>)}
         </Row>
         <LoadingSkeleton type="list" />
       </Container>
@@ -87,51 +85,41 @@ if (loading && posts.length === 0) {
   if (error) return <ErrorState title="Error loading community" description={error} onRetry={fetchPosts} />;
 
   return (
-    <Container fluid className="px-4 my-4">
+    <Container fluid className="px-3 px-md-4 my-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2>Community</h2>
-        {user && (
-          <Button variant="primary" onClick={() => setShowNewPost(true)}>
-            + New Post
+        <div className="d-flex gap-2 align-items-center">
+          <Button variant="outline-secondary" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="d-flex align-items-center gap-1">
+            {filtersOpen ? <FiX size={14} /> : <FiFilter size={14} />}
+            {filtersOpen ? 'Hide Filters' : 'Filters'}
           </Button>
-        )}
+          {user && <Button variant="primary" size="sm" onClick={() => setShowNewPost(true)}>+ New Post</Button>}
+        </div>
       </div>
 
-      {/* Filters */}
-      <Card className="feature-card p-3 mb-4">
-        <Row className="g-3 align-items-end">
-          <Col md={4}>
-            <Select
-              label="Category"
-              name="category"
-              value={filters.category}
-              options={[
-                { value: '', label: 'All Categories' },
-                ...categories.map(cat => ({ value: cat.id, label: cat.name })),
-              ]}
-              onChange={(e) => setFilters({ ...filters, category: e.target.value })}
-            />
-          </Col>
-          <Col md={3}>
-            <Select
-              label="Sort By"
-              name="sort"
-              value={filters.sort}
-              options={[
-                { value: 'recent', label: 'Most Recent' },
-                { value: 'popular', label: 'Most Popular' },
-                { value: 'most_commented', label: 'Most Discussed' },
-              ]}
-              onChange={(e) => setFilters({ ...filters, sort: e.target.value })}
-            />
-          </Col>
-          <Col md={2}>
-            <Button variant="primary" onClick={fetchPosts}>Apply</Button>
-          </Col>
-        </Row>
-      </Card>
+      <Collapse in={filtersOpen}>
+        <div>
+          <Card className="feature-card p-3 mb-4">
+            <Row className="g-3 align-items-end">
+              <Col md={4}>
+                <Select label="Category" name="category" value={filters.category}
+                  options={[{ value: '', label: 'All Categories' }, ...categories.map(cat => ({ value: cat.id, label: cat.name }))]}
+                  onChange={(e) => setFilters({ ...filters, category: e.target.value })} />
+              </Col>
+              <Col md={3}>
+                <Select label="Sort By" name="sort" value={filters.sort}
+                  options={[{ value: 'recent', label: 'Most Recent' }, { value: 'popular', label: 'Most Popular' }, { value: 'most_commented', label: 'Most Discussed' }]}
+                  onChange={(e) => setFilters({ ...filters, sort: e.target.value })} />
+              </Col>
+              <Col md={2} className="d-flex gap-2">
+                <Button variant="primary" onClick={handleApply}>Apply</Button>
+                <Button variant="outline-secondary" onClick={handleClearFilters}>Clear</Button>
+              </Col>
+            </Row>
+          </Card>
+        </div>
+      </Collapse>
 
-      {/* Pinned Posts */}
       {pinnedPosts.length > 0 && (
         <div className="mb-4">
           <h5 className="text-muted">📌 Pinned</h5>
@@ -151,15 +139,9 @@ if (loading && posts.length === 0) {
         </div>
       )}
 
-      {/* Posts List */}
       {posts.length === 0 ? (
-        <EmptyState
-          icon="💬"
-          title="No posts yet"
-          description="Be the first to start a conversation."
-          actionText={user ? 'Create Post' : 'Login to Post'}
-          onAction={() => user ? setShowNewPost(true) : navigate('/login')}
-        />
+        <EmptyState icon="💬" title="No posts yet" description="Be the first to start a conversation."
+          actionText={user ? 'Create Post' : 'Login to Post'} onAction={() => user ? setShowNewPost(true) : navigate('/login')} />
       ) : (
         posts.map(post => (
           <Card key={post.id} className="feature-card mb-3">
@@ -171,57 +153,27 @@ if (loading && posts.length === 0) {
                   {post.category_name && <Badge bg="secondary" className="ms-2">{post.category_name}</Badge>}
                 </div>
                 <div className="text-muted small">{post.content.substring(0, 200)}...</div>
-                <div className="mt-2 small text-muted">
-                  💬 {post.comment_count} comments · ❤️ {post.reaction_count || 0} reactions
-                </div>
+                <div className="mt-2 small text-muted">💬 {post.comment_count} comments · ❤️ {post.reaction_count || 0} reactions</div>
               </Link>
             </Card.Body>
           </Card>
         ))
       )}
 
-      {/* New Post Modal */}
       <Modal show={showNewPost} onHide={() => setShowNewPost(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Create New Post</Modal.Title>
-        </Modal.Header>
+        <Modal.Header closeButton><Modal.Title>Create New Post</Modal.Title></Modal.Header>
         <form onSubmit={handleCreatePost}>
           <Modal.Body>
-            <Input
-              label="Title"
-              name="title"
-              value={newPost.title}
-              onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-              required
-            />
-            <Select
-              label="Category"
-              name="categoryId"
-              value={newPost.categoryId}
+            <Input label="Title" name="title" value={newPost.title} onChange={(e) => setNewPost({ ...newPost, title: e.target.value })} required />
+            <Select label="Category" name="categoryId" value={newPost.categoryId}
               options={categories.map(cat => ({ value: cat.id, label: cat.name }))}
-              onChange={(e) => setNewPost({ ...newPost, categoryId: e.target.value })}
-              required
-            />
-            <Textarea
-              label="Content"
-              name="content"
-              rows={5}
-              value={newPost.content}
-              onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-              required
-            />
-            <Form.Check
-              type="checkbox"
-              label="Post anonymously"
-              checked={newPost.isAnonymous}
-              onChange={(e) => setNewPost({ ...newPost, isAnonymous: e.target.checked })}
-            />
+              onChange={(e) => setNewPost({ ...newPost, categoryId: e.target.value })} required />
+            <Textarea label="Content" name="content" rows={5} value={newPost.content} onChange={(e) => setNewPost({ ...newPost, content: e.target.value })} required />
+            <Form.Check type="checkbox" label="Post anonymously" checked={newPost.isAnonymous} onChange={(e) => setNewPost({ ...newPost, isAnonymous: e.target.checked })} />
           </Modal.Body>
           <Modal.Footer>
             <Button variant="secondary" onClick={() => setShowNewPost(false)}>Cancel</Button>
-            <Button variant="primary" type="submit" disabled={submitting}>
-              {submitting ? 'Posting...' : 'Post'}
-            </Button>
+            <Button variant="primary" type="submit" disabled={submitting}>{submitting ? 'Posting...' : 'Post'}</Button>
           </Modal.Footer>
         </form>
       </Modal>
