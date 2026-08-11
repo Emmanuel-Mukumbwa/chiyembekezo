@@ -100,137 +100,37 @@ const Profile = () => {
         {error && <Alert variant="danger">{error}</Alert>}
         <form onSubmit={handleSubmit}>
           <Row>
+            <Col md={6}><Input label="First Name" name="firstName" value={formData.firstName} onChange={handleChange} /></Col>
+            <Col md={6}><Input label="Last Name" name="lastName" value={formData.lastName} onChange={handleChange} /></Col>
+          </Row>
+          <Input label="Email" name="email" value={user.email} disabled />
+          <Input label="Phone" name="phone" value={formData.phone} onChange={handleChange} />
+          <Row>
+            <Col md={6}><DatePicker label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} /></Col>
             <Col md={6}>
-              <Input
-                label="First Name"
-                name="firstName"
-                value={formData.firstName}
-                onChange={handleChange}
-              />
-            </Col>
-            <Col md={6}>
-              <Input
-                label="Last Name"
-                name="lastName"
-                value={formData.lastName}
-                onChange={handleChange}
-              />
+              <Select label="Gender" name="gender" value={formData.gender}
+                options={[{ value: '', label: 'Prefer not to say' }, { value: 'Male', label: 'Male' }, { value: 'Female', label: 'Female' }, { value: 'Non-binary', label: 'Non-binary' }, { value: 'Other', label: 'Other' }]}
+                onChange={handleChange} />
             </Col>
           </Row>
-          <Input
-            label="Email"
-            name="email"
-            value={user.email}
-            disabled
-          />
-          <Input
-            label="Phone"
-            name="phone"
-            value={formData.phone}
-            onChange={handleChange}
-          />
+          <Textarea label="Bio" name="bio" rows={3} value={formData.bio} onChange={handleChange} />
           <Row>
-            <Col md={6}>
-              <DatePicker
-                label="Date of Birth"
-                name="dateOfBirth"
-                value={formData.dateOfBirth}
-                onChange={handleChange}
-              />
-            </Col>
-            <Col md={6}>
-              <Select
-                label="Gender"
-                name="gender"
-                value={formData.gender}
-                options={[
-                  { value: '', label: 'Prefer not to say' },
-                  { value: 'Male', label: 'Male' },
-                  { value: 'Female', label: 'Female' },
-                  { value: 'Non-binary', label: 'Non-binary' },
-                  { value: 'Other', label: 'Other' },
-                ]}
-                onChange={handleChange}
-              />
-            </Col>
-          </Row>
-          <Textarea
-            label="Bio"
-            name="bio"
-            rows={3}
-            value={formData.bio}
-            onChange={handleChange}
-          />
-          <Row>
-            <Col md={6}>
-              <Input
-                label="Location"
-                name="location"
-                value={formData.location}
-                onChange={handleChange}
-              />
-            </Col>
-            <Col md={6}>
-              <Input
-                label="District"
-                name="district"
-                value={formData.district}
-                onChange={handleChange}
-              />
-            </Col>
+            <Col md={6}><Input label="Location" name="location" value={formData.location} onChange={handleChange} /></Col>
+            <Col md={6}><Input label="District" name="district" value={formData.district} onChange={handleChange} /></Col>
           </Row>
           <Row>
-            <Col md={6}>
-              <Input
-                label="City"
-                name="city"
-                value={formData.city}
-                onChange={handleChange}
-              />
-            </Col>
-            <Col md={6}>
-              <Input
-                label="Occupation"
-                name="occupation"
-                value={formData.occupation}
-                onChange={handleChange}
-              />
-            </Col>
+            <Col md={6}><Input label="City" name="city" value={formData.city} onChange={handleChange} /></Col>
+            <Col md={6}><Input label="Occupation" name="occupation" value={formData.occupation} onChange={handleChange} /></Col>
           </Row>
           <h6 className="mt-3">Emergency Contact</h6>
           <Row>
-            <Col md={6}>
-              <Input
-                label="Name"
-                name="emergencyContactName"
-                value={formData.emergencyContactName}
-                onChange={handleChange}
-              />
-            </Col>
-            <Col md={6}>
-              <Input
-                label="Phone"
-                name="emergencyContactPhone"
-                value={formData.emergencyContactPhone}
-                onChange={handleChange}
-              />
-            </Col>
+            <Col md={6}><Input label="Name" name="emergencyContactName" value={formData.emergencyContactName} onChange={handleChange} /></Col>
+            <Col md={6}><Input label="Phone" name="emergencyContactPhone" value={formData.emergencyContactPhone} onChange={handleChange} /></Col>
           </Row>
-          <Select
-            label="Preferred Language"
-            name="preferredLanguage"
-            value={formData.preferredLanguage}
-            options={[
-              { value: 'en', label: 'English' },
-              { value: 'ch', label: 'Chichewa' },
-              { value: 'tu', label: 'Tumbuka' },
-              { value: 'ya', label: 'Yao' },
-            ]}
-            onChange={handleChange}
-          />
-          <Button variant="primary" type="submit" className="mt-3" disabled={saving}>
-            {saving ? 'Saving...' : 'Save Profile'}
-          </Button>
+          <Select label="Preferred Language" name="preferredLanguage" value={formData.preferredLanguage}
+            options={[{ value: 'en', label: 'English' }, { value: 'ch', label: 'Chichewa' }, { value: 'tu', label: 'Tumbuka' }, { value: 'ya', label: 'Yao' }]}
+            onChange={handleChange} />
+          <Button variant="primary" type="submit" className="mt-3" disabled={saving}>{saving ? 'Saving...' : 'Save Profile'}</Button>
         </form>
       </Card>
     </Container>
