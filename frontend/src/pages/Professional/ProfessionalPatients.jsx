@@ -5,6 +5,18 @@ import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import { Button, DataTable, EmptyState, ErrorState } from '../../components/ui';
 
+const PatientCard = ({ patient, onViewHistory }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <h6>{patient.first_name} {patient.last_name}</h6>
+      <small className="text-muted">{patient.email} · {patient.phone || 'No phone'}</small>
+      <div className="mt-2">
+        <Button variant="outline-primary" size="sm" onClick={() => onViewHistory(patient.id)}>View History</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
+
 const ProfessionalPatients = () => {
   const { patientId } = useParams();
   const { showModal } = useModal();
@@ -15,11 +27,8 @@ const ProfessionalPatients = () => {
   const [showHistory, setShowHistory] = useState(false);
 
   useEffect(() => {
-    if (patientId) {
-      fetchPatientHistory(patientId);
-    } else {
-      fetchPatients();
-    }
+    if (patientId) fetchPatientHistory(patientId);
+    else fetchPatients();
   }, [patientId]);
 
   const fetchPatients = async () => {
@@ -54,12 +63,7 @@ const ProfessionalPatients = () => {
     try {
       const res = await api.get(`/professional/appointments/patient/${id}`);
       setHistory(res.data);
-      if (res.data.length > 0) {
-        setShowHistory(true);
-      } else {
-        showModal('Info', 'No history found for this patient.');
-        setShowHistory(false);
-      }
+      setShowHistory(true);
     } catch (err) {
       setError('Failed to load patient history.');
       showModal('Error', 'Failed to load patient history.');
@@ -96,15 +100,9 @@ const ProfessionalPatients = () => {
     { field: 'first_name', label: 'Name', render: (val, row) => `${row.first_name} ${row.last_name}` },
     { field: 'email', label: 'Email' },
     { field: 'phone', label: 'Phone', render: (val) => val || '-' },
-    {
-      field: 'actions',
-      label: 'Action',
-      render: (_, row) => (
-        <Button variant="outline-primary" size="sm" onClick={() => fetchPatientHistory(row.id)}>
-          View History
-        </Button>
-      ),
-    },
+    { field: 'actions', label: 'Action', render: (_, row) => (
+      <Button variant="outline-primary" size="sm" onClick={() => fetchPatientHistory(row.id)}>View History</Button>
+    )},
   ];
 
   return (
@@ -113,7 +111,14 @@ const ProfessionalPatients = () => {
       {patients.length === 0 ? (
         <EmptyState icon="👥" title="No patients yet" description="You have no patients." />
       ) : (
-        <DataTable columns={columns} data={patients} keyField="id" />
+        <>
+          <div className="d-none d-md-block">
+            <DataTable columns={columns} data={patients} keyField="id" />
+          </div>
+          <div className="d-md-none">
+            {patients.map(p => <PatientCard key={p.id} patient={p} onViewHistory={fetchPatientHistory} />)}
+          </div>
+        </>
       )}
     </Container>
   );
