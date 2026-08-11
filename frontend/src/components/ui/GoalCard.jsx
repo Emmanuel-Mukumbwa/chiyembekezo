@@ -7,7 +7,7 @@ const statusColors = { active: 'primary', completed: 'success', archived: 'secon
 
 const GoalCard = ({ id, title, description, progress = 0, status = 'active', targetDate, onEdit, onDelete, onUpdateProgress, ...rest }) => {
   return (
-    <Card className="p-3" hoverable {...rest}>
+    <Card className="p-3" hoverable="true" {...rest}>
       <div className="d-flex justify-content-between align-items-start">
         <div>
           <h6 className="fw-bold mb-1">{title}</h6>
