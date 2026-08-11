@@ -14,7 +14,7 @@ const ListenerDashboard = () => {
   usePrompt(
     () => {
       logout();
-      window.location.href = '/login';
+      window.location.href = '/login'; 
     },
     () => {}
   );
@@ -29,14 +29,14 @@ const ListenerDashboard = () => {
         <LogoutButton variant="outline-danger" size="sm" />
       </div>
       <Row className="mt-3 g-3">
-        <Col md={6}>
-          <Card className="p-3 text-center">
+        <Col xs={12} md={6}>
+          <Card className="p-3 text-center h-100">
             <h6>Active Sessions</h6>
             <Button variant="outline-primary">View Sessions</Button>
           </Card>
         </Col>
-        <Col md={6}>
-          <Card className="p-3 text-center">
+        <Col xs={12} md={6}>
+          <Card className="p-3 text-center h-100">
             <h6>Availability</h6>
             <Button variant="outline-primary">Set Availability</Button>
           </Card>
