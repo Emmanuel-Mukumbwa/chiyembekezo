@@ -1,11 +1,29 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Row, Col, Badge, Table } from 'react-bootstrap';
+import { Container, Row, Col, Badge, Table, Card } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
 import { usePrompt } from '../../hooks/usePrompt';
 import api from '../../services/api';
-import { Card, Button, StatCard, LoadingSkeleton } from '../../components/ui';
+import { Button, StatCard, LoadingSkeleton } from '../../components/ui';
+
+const AppointmentCard = ({ appt }) => (
+  <Card className="mb-2 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between">
+        <strong>{appt.first_name} {appt.last_name}</strong>
+        <Badge bg={
+          appt.status === 'pending' ? 'warning' :
+          appt.status === 'confirmed' ? 'info' :
+          appt.status === 'completed' ? 'success' :
+          appt.status === 'cancelled' ? 'secondary' : 'danger'
+        }>{appt.status}</Badge>
+      </div>
+      <div className="text-muted small">{new Date(appt.scheduled_time).toLocaleString()}</div>
+      <div className="small">{appt.meeting_type || 'N/A'}</div>
+    </Card.Body>
+  </Card>
+);
 
 const ProfessionalDashboard = () => {
   const { logout } = useAuth();
@@ -14,17 +32,9 @@ const ProfessionalDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  usePrompt(
-    () => {
-      logout();
-      window.location.href = '/login';
-    },
-    () => {}
-  );
+  usePrompt(() => { logout(); window.location.href = '/login'; }, () => {});
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -41,7 +51,7 @@ const ProfessionalDashboard = () => {
     }
   };
 
-if (loading) {
+  if (loading) {
     return (
       <Container fluid className="px-4">
         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -49,18 +59,12 @@ if (loading) {
         </div>
         <Row className="g-3 mb-4">
           {[...Array(4)].map((_, i) => (
-            <Col md={3} sm={6} key={i}>
-              <LoadingSkeleton type="card" lines={3} />
-            </Col>
+            <Col md={3} sm={6} key={i}><LoadingSkeleton type="card" lines={3} /></Col>
           ))}
         </Row>
         <Row className="g-3">
-          <Col md={8}>
-            <LoadingSkeleton type="card" lines={6} />
-          </Col>
-          <Col md={4}>
-            <LoadingSkeleton type="card" lines={4} />
-          </Col>
+          <Col md={8}><LoadingSkeleton type="card" lines={6} /></Col>
+          <Col md={4}><LoadingSkeleton type="card" lines={4} /></Col>
         </Row>
       </Container>
     );
@@ -87,53 +91,52 @@ if (loading) {
       </div>
 
       <Row className="g-3 mb-4">
-        <Col md={3} sm={6}><StatCard icon="📅" value={todayAppointments} label="Today's Appointments" variant="info" /></Col>
-        <Col md={3} sm={6}><StatCard icon="👤" value={totalPatients} label="Total Patients" variant="primary" /></Col>
-        <Col md={3} sm={6}><StatCard icon="⏳" value={appointmentStats.pending} label="Pending Appointments" variant="warning" /></Col>
-        <Col md={3} sm={6}><StatCard icon="✅" value={appointmentStats.completed} label="Completed" variant="success" /></Col>
+        <Col xs={6} md={3}><StatCard icon="📅" value={todayAppointments} label="Today's Appointments" variant="info" /></Col>
+        <Col xs={6} md={3}><StatCard icon="👤" value={totalPatients} label="Total Patients" variant="primary" /></Col>
+        <Col xs={6} md={3}><StatCard icon="⏳" value={appointmentStats.pending} label="Pending Appointments" variant="warning" /></Col>
+        <Col xs={6} md={3}><StatCard icon="✅" value={appointmentStats.completed} label="Completed" variant="success" /></Col>
       </Row>
 
       <Row>
         <Col md={8}>
-          <Card className="p-3">
+          <div className="d-none d-md-block">
+            <Card className="p-3">
+              <h6 className="fw-bold">Recent Appointments</h6>
+              {recentAppointments.length === 0 ? (
+                <p className="text-muted mt-2">No recent appointments.</p>
+              ) : (
+                <Table striped hover responsive size="sm" className="mt-2">
+                  <thead>
+                    <tr><th>Date/Time</th><th>Patient</th><th>Status</th><th>Type</th></tr>
+                  </thead>
+                  <tbody>
+                    {recentAppointments.map(appt => (
+                      <tr key={appt.id}>
+                        <td>{new Date(appt.scheduled_time).toLocaleString()}</td>
+                        <td>{appt.first_name} {appt.last_name}</td>
+                        <td>
+                          <Badge bg={appt.status === 'pending' ? 'warning' : appt.status === 'confirmed' ? 'info' : appt.status === 'completed' ? 'success' : appt.status === 'cancelled' ? 'secondary' : 'danger'}>
+                            {appt.status}
+                          </Badge>
+                        </td>
+                        <td>{appt.meeting_type || 'N/A'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </Table>
+              )}
+              <Button as={Link} to="/professional/appointments" variant="outline-primary" size="sm">View All Appointments</Button>
+            </Card>
+          </div>
+          <div className="d-md-none">
             <h6 className="fw-bold">Recent Appointments</h6>
             {recentAppointments.length === 0 ? (
-              <p className="text-muted mt-2">No recent appointments.</p>
+              <p className="text-muted">No recent appointments.</p>
             ) : (
-              <Table striped hover responsive size="sm" className="mt-2">
-                <thead>
-                  <tr>
-                    <th>Date/Time</th>
-                    <th>Patient</th>
-                    <th>Status</th>
-                    <th>Type</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentAppointments.map(appt => (
-                    <tr key={appt.id}>
-                      <td>{new Date(appt.scheduled_time).toLocaleString()}</td>
-                      <td>{appt.first_name} {appt.last_name}</td>
-                      <td>
-                        <Badge bg={
-                          appt.status === 'pending' ? 'warning' :
-                          appt.status === 'confirmed' ? 'info' :
-                          appt.status === 'completed' ? 'success' :
-                          appt.status === 'cancelled' ? 'secondary' : 'danger'
-                        }>
-                          {appt.status}
-                        </Badge>
-                      </td>
-                      <td>{appt.meeting_type || 'N/A'}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+              recentAppointments.map(appt => <AppointmentCard key={appt.id} appt={appt} />)
             )}
-            <Button as={Link} to="/professional/appointments" variant="outline-primary" size="sm">
-              View All Appointments
-            </Button>
-          </Card>
+            <Button as={Link} to="/professional/appointments" variant="outline-primary" size="sm" className="mt-2">View All</Button>
+          </div>
         </Col>
         <Col md={4}>
           <Card className="p-3">
