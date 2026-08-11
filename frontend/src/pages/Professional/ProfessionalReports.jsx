@@ -15,9 +15,7 @@ const ProfessionalReports = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
+  useEffect(() => { fetchData(); }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -41,38 +39,30 @@ const ProfessionalReports = () => {
   if (error) return <ErrorState title="Error loading reports" description={error} onRetry={fetchData} />;
   if (!stats) return <p className="text-center mt-5">No data.</p>;
 
-  // Chart: appointments per month (last 6 months)
-  const months = [];
-  const counts = [];
+  const months = [], counts = [];
   const now = new Date();
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    const label = d.toLocaleString('default', { month: 'short' });
-    months.push(label);
-    const count = appointments.filter(a => {
+    months.push(d.toLocaleString('default', { month: 'short' }));
+    counts.push(appointments.filter(a => {
       const ad = new Date(a.scheduled_time);
       return ad.getMonth() === d.getMonth() && ad.getFullYear() === d.getFullYear();
-    }).length;
-    counts.push(count);
+    }).length);
   }
 
   const chartData = {
     labels: months,
-    datasets: [{
-      label: 'Appointments',
-      data: counts,
-      backgroundColor: '#0d6efd',
-    }]
+    datasets: [{ label: 'Appointments', data: counts, backgroundColor: '#0d6efd' }],
   };
 
   return (
     <Container fluid className="px-4">
       <h4>Reports</h4>
       <Row className="g-3 mb-4">
-        <Col md={3}><StatCard icon="👤" value={stats.total_patients} label="Total Patients" variant="primary" /></Col>
-        <Col md={3}><StatCard icon="📅" value={stats.total_appointments} label="Total Appointments" variant="info" /></Col>
-        <Col md={3}><StatCard icon="⭐" value={stats.avg_rating || 'N/A'} label="Avg Rating" variant="warning" /></Col>
-        <Col md={3}><StatCard icon="⏳" value={stats.upcoming} label="Upcoming" variant="success" /></Col>
+        <Col xs={6} md={3}><StatCard icon="👤" value={stats.total_patients} label="Total Patients" variant="primary" /></Col>
+        <Col xs={6} md={3}><StatCard icon="📅" value={stats.total_appointments} label="Total Appointments" variant="info" /></Col>
+        <Col xs={6} md={3}><StatCard icon="⭐" value={stats.avg_rating || 'N/A'} label="Avg Rating" variant="warning" /></Col>
+        <Col xs={6} md={3}><StatCard icon="⏳" value={stats.upcoming} label="Upcoming" variant="success" /></Col>
       </Row>
       <Card className="p-3">
         <h6>Appointment Trend (Last 6 Months)</h6>
