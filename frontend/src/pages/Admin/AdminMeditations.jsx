@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Spinner, Badge, Button, Modal, Form, Row, Col } from 'react-bootstrap';
+import { Container, Spinner, Badge, Button, Modal, Form, Row, Col, Card } from 'react-bootstrap';
 import { useModal } from '../../context/ModalContext';
 import api from '../../services/api';
 import {
@@ -13,6 +13,25 @@ import {
 } from '../../components/ui';
 import LogoutButton from '../../components/LogoutButton';
 
+const MeditationCard = ({ med, onPreview, onEdit, onDelete }) => (
+  <Card className="mb-3 shadow-sm">
+    <Card.Body>
+      <div className="d-flex justify-content-between align-items-start">
+        <div>
+          <h6 className="mb-1">🧘 {med.title}</h6>
+          <small className="text-muted">{med.category} · {med.duration} min · {med.narrator || 'No narrator'}</small>
+        </div>
+        <Badge bg={med.is_active ? 'success' : 'secondary'}>{med.is_active ? 'Active' : 'Inactive'}</Badge>
+      </div>
+      <div className="d-flex gap-1 mt-3 flex-wrap">
+        <Button variant="outline-info" size="sm" onClick={() => onPreview(med)}>Preview</Button>
+        <Button variant="outline-primary" size="sm" onClick={() => onEdit(med)}>Edit</Button>
+        <Button variant="danger" size="sm" onClick={() => onDelete(med.id)}>Delete</Button>
+      </div>
+    </Card.Body>
+  </Card>
+);
+
 const AdminMeditations = () => {
   const { showModal } = useModal();
   const [meditations, setMeditations] = useState([]);
@@ -22,7 +41,7 @@ const AdminMeditations = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [selectedAudioFile, setSelectedAudioFile] = useState(null);
   const [selectedImageFile, setSelectedImageFile] = useState(null);
-  const [previewItem, setPreviewItem] = useState(null); // Preview modal state
+  const [previewItem, setPreviewItem] = useState(null);
   const [formData, setFormData] = useState({
     title: '',
     category: '',
@@ -127,7 +146,7 @@ const AdminMeditations = () => {
   };
 
   const handleDelete = async (id) => {
-    showModal('Confirm Delete', 'Are you sure you want to delete this meditation?', async () => {
+    showModal('Confirm Delete', 'Are you sure?', async () => {
       try {
         await api.delete(`/admin/wellness/meditations/${id}`);
         showModal('Success', 'Meditation deleted.');
@@ -204,7 +223,13 @@ const AdminMeditations = () => {
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h4>Meditations</h4>
           <div className="d-flex gap-2">
-            <Button variant="primary" onClick={() => { setEditingItem(null); setFormData({ title: '', category: '', duration: '', description: '', narrator: '', background_sound: '', sort_order: 0, is_active: true, audio_url: '', image_url: '' }); setSelectedAudioFile(null); setSelectedImageFile(null); setShowModalItem(true); }}>+ New Meditation</Button>
+            <Button variant="primary" onClick={() => {
+              setEditingItem(null);
+              setFormData({ title: '', category: '', duration: '', description: '', narrator: '', background_sound: '', sort_order: 0, is_active: true, audio_url: '', image_url: '' });
+              setSelectedAudioFile(null);
+              setSelectedImageFile(null);
+              setShowModalItem(true);
+            }}>+ New Meditation</Button>
             <LogoutButton variant="outline-danger" size="sm" />
           </div>
         </div>
@@ -212,7 +237,16 @@ const AdminMeditations = () => {
         {meditations.length === 0 ? (
           <EmptyState icon="🧘" title="No meditations" description="Create your first meditation." />
         ) : (
-          <DataTable columns={columns} data={meditations} keyField="id" />
+          <>
+            <div className="d-none d-md-block">
+              <DataTable columns={columns} data={meditations} keyField="id" />
+            </div>
+            <div className="d-md-none">
+              {meditations.map(m => (
+                <MeditationCard key={m.id} med={m} onPreview={openPreview} onEdit={openEdit} onDelete={handleDelete} />
+              ))}
+            </div>
+          </>
         )}
 
         {/* Create/Edit Modal */}
@@ -320,7 +354,7 @@ const AdminMeditations = () => {
       {/* Preview Modal */}
       <Modal show={!!previewItem} onHide={() => setPreviewItem(null)} size="lg" centered>
         <Modal.Header closeButton>
-          <Modal.Title>{previewItem?.title || previewItem?.name}</Modal.Title>
+          <Modal.Title>{previewItem?.title}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           {previewItem && (
